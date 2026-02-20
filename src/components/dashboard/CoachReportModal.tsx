@@ -38,7 +38,8 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                 transform: 'translate(-50%, -50%)',
                 width: '95vw',
                 maxWidth: '1000px',
-                height: '85vh',
+                height: 'auto', // 고정 높이 대신 내용에 맞게
+                maxHeight: '90vh', // 저해상도 대응
                 display: 'flex',
                 flexDirection: 'column',
                 animation: 'fadeIn 0.4s ease',
@@ -96,7 +97,7 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                 </div>
 
                 {/* Content Area - Scrollable */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div style={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                     {/* Intelligence Analysis Section */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>

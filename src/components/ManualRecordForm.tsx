@@ -327,7 +327,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
             transform: 'translate(-50%, -50%)',
             width: '95vw',
             maxWidth: '1000px',
-            height: '85vh',
+            maxHeight: '90vh', // 85vh에서 90vh로 유연성 확대
+            height: 'auto', // 고정 높이 대신 내용에 맞게 조정
             display: 'flex',
             flexDirection: 'column',
             animation: 'fadeIn 0.4s ease',
@@ -412,7 +413,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
 
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* Left Side: Calendar & Quick Summary */}
-                <div style={{ flex: 1.2, padding: '1.5rem', borderRight: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)', overflowY: 'auto' }}>
+                <div style={{ flex: 1.2, padding: '1.5rem', borderRight: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
                     <div className="calendar-container premium-calendar">
                         <Calendar
                             onChange={(val) => handleDateChange(val as Date)}
@@ -469,7 +470,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
                 </div>
 
                 {/* Right Side: Data Entry Form */}
-                <div style={{ flex: 1, padding: '1.5rem 2rem', overflowY: 'auto', background: 'rgba(255,255,255,0.01)' }}>
+                <div style={{ flex: 1, padding: '1.5rem 2rem', overflowY: 'auto', background: 'rgba(255,255,255,0.01)', overscrollBehavior: 'contain' }}>
                     <form onSubmit={handleSubmit}>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', opacity: 0.6, marginBottom: '0.5rem' }}>

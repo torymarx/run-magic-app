@@ -37,8 +37,10 @@ const AuthSection: React.FC<AuthSectionProps> = ({ onSignIn, onSignUp, loading }
             console.error(`[Auth] ${isLogin ? 'Login' : 'SignUp'} Error:`, error);
             let userFriendlyMsg = error.message || "연결 중 오류가 발생했습니다.";
 
-            if (error.message === "Failed to fetch") {
-                userFriendlyMsg = "서버에 연결할 수 없습니다. 📡\nVercel 대시보드에 환경 변수(URL/Key)가 정확히 등록되었는지 확인해 주세요!";
+            if (error.message === "Failed to fetch" || error.message?.includes("NetworkError")) {
+                userFriendlyMsg = "서버 요새에 접속할 수 없습니다! 📡\n\n1. 인터넷 연결 상태를 확인해 주세요.\n2. Vercel 환경 변수(URL/Key)가 정확한지 체크가 필요합니다.\n3. 브라우저의 광고 차단 확장 프로그램이 Supabase 통신을 방해하고 있을 수 있습니다. 🛡️";
+            } else if (error.message?.includes("Invalid login credentials")) {
+                userFriendlyMsg = "이메일 또는 비밀번호가 올바르지 않습니다. 다시 한번 확인해 주세요! 🫡";
             }
 
             setErrorMsg(userFriendlyMsg);
@@ -75,7 +77,7 @@ const AuthSection: React.FC<AuthSectionProps> = ({ onSignIn, onSignUp, loading }
                         <Sparkles size={30} color="white" />
                     </div>
                     <h1 style={{ fontSize: '2rem', fontWeight: 'bold', letterSpacing: '-0.5px' }} className="neon-text-blue">
-                        Run-Magic V2
+                        Run-Magic
                     </h1>
                     <p style={{ opacity: 0.7, fontSize: '0.9rem', marginTop: '0.5rem' }}>
                         {isLogin ? "런너님의 위대한 질주를 계속하세요 ✨" : "새로운 질주의 시작, 런매직에 합류하세요 🚀"}

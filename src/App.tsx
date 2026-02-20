@@ -140,6 +140,22 @@ function App() {
         downloadAnchorNode.remove();
     };
 
+    // 5. Scroll Lock for Modals
+    React.useEffect(() => {
+        const isAnyModalOpen = showManualForm || showProfileModal || showCoachReport || !!lastSavedRecord;
+        if (isAnyModalOpen) {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.documentElement.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.documentElement.style.overflow = 'unset';
+        };
+    }, [showManualForm, showProfileModal, showCoachReport, lastSavedRecord]);
+
     if (authLoading) {
         return (
             <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -171,39 +187,6 @@ function App() {
                 onSignOut={signOut}
             />
 
-            {/* 신규 런너를 위한 Magic Key 안내 브릿지! */}
-            {records.length === 0 && !isRecording && (
-                <div
-                    className="glass-card"
-                    style={{
-                        margin: '1rem 0',
-                        padding: '1.2rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        background: 'linear-gradient(90deg, rgba(0,209,255,0.1) 0%, rgba(189,0,255,0.1) 100%)',
-                        border: '1px solid rgba(0,209,255,0.2)',
-                        animation: 'pulse 2s infinite'
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ background: 'var(--vibrant-purple)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <span style={{ fontSize: '1.2rem' }}>✨</span>
-                        </div>
-                        <div>
-                            <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--electric-blue)' }}>이미 질주 중인 런너님이신가요?</p>
-                            <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>기존에 사용하시던 **Magic Key**를 입력하면 모든 기록이 즉시 복구됩니다!</p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setShowProfileModal(true)}
-                        className="glass-button"
-                        style={{ background: 'var(--vibrant-purple)', color: 'white', padding: '0.6rem 1.2rem' }}
-                    >
-                        지금 기록 불러오기 🫡
-                    </button>
-                </div>
-            )}
 
             {showManualForm && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>

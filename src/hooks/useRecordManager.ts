@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { initialRecords } from '../data/initialRecords';
 import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTime, parseTimeToSeconds } from '../utils/calculations';
 
-// This is a large hook, but it encapsulates all the complex state management for records
+// 이 훅은 레코드 관리에 필요한 모든 복잡한 상태 관리를 캡슐화합니다.
 export const useRecordManager = (
     points: number,
     setPoints: (p: number) => void,
@@ -12,7 +12,7 @@ export const useRecordManager = (
     setUnlockedBadges: (b: string[]) => void,
     unlockedMedals: string[],
     setUnlockedMedals: (m: string[]) => void,
-    userId: string = '00000000-0000-0000-0000-000000000000' // Magic Key!
+    userId: string = '00000000-0000-0000-0000-000000000000' // 계정 키
 ) => {
     const [records, setRecords] = useState<any[]>([]);
     const [lastSavedRecord, setLastSavedRecord] = useState<any>(null);
@@ -21,11 +21,15 @@ export const useRecordManager = (
     const [baselines, setBaselines] = useState<any>({});
     const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
 
-    // Initial Data Loading & Smart Cloud-Local Sync
+    // 초기 데이터 로딩 및 스마트 클라우드-로컬 동기화
     useEffect(() => {
         const syncData = async () => {
-            if (!userId) return;
-            console.log(`🔄 코다리 부장의 동기화 엔진 가동! (Key: ${userId.substring(0, 8)}...)`);
+            if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+                console.log("🛡️ 익명 모드 또는 로그인 대기 중... 클라우드 동기화가 제한됩니다.");
+                return;
+            }
+
+            console.log(`🔄 [Online Service] 코다리 부장의 동기화 엔진 가동! (Key: ${userId.substring(0, 8)}...)`);
 
             // 1. 클라우드에서 데이터 가져오기 (해당 유저의 것만!)
             const { data: cloudRecords, error } = await supabase
@@ -40,19 +44,20 @@ export const useRecordManager = (
 
             if (!error) {
                 setIsCloudConnected(true);
+                console.log(`✅ Supabase 요새에 성공적으로 연결되었습니다! (${cloudRecords?.length || 0}개의 기록 확인)`);
 
                 // 3. 지능형 통합 (Merge Logic)
                 const cloudIds = new Set(cloudRecords?.map(r => r.id) || []);
                 const onlyInLocal = localRecords.filter((r: any) => !cloudIds.has(r.id));
 
                 if (onlyInLocal.length > 0) {
-                    console.log(`📡 로컬 전용 데이터 ${onlyInLocal.length}개를 클라우드 요새로 전송합니다!`);
+                    console.log(`📡 로컬에만 있는 데이터 ${onlyInLocal.length}개를 클라우드 요새로 백업합니다!`);
                     // 업로드 시 user_id 강제 할당
                     const toUpload = onlyInLocal.map((r: any) => ({ ...r, user_id: userId }));
                     await supabase.from('records').upsert(toUpload);
                 }
 
-                // 통합된 최종 데이터셋 구성
+                // 통합된 최종 데이터셋 구성 (클라우드 데이터 우선)
                 const mergedRecords = [...(cloudRecords || [])];
                 onlyInLocal.forEach((r: any) => {
                     if (!mergedRecords.find(mr => mr.id === r.id)) {
@@ -75,6 +80,7 @@ export const useRecordManager = (
 
                 // 연결 실패 시 로컬 데이터라도 보여주기
                 if (localRecords.length > 0) {
+                    console.warn("⚠️ 서버 연결 실패. 로컬 방어선의 데이터를 불러옵니다.");
                     setRecords(localRecords);
                     calculateBaselineData(localRecords);
                     updateStreak(localRecords);
@@ -82,6 +88,7 @@ export const useRecordManager = (
                     recalculateAllAchievements(localRecords);
                 } else {
                     // 로컬도 없으면 초기 데이터
+                    console.warn("⚠️ 데이터가 없습니다. 초기 훈련 데이터를 로드합니다.");
                     setRecords(initialRecords);
                     calculateBaselineData(initialRecords);
                 }
@@ -99,7 +106,7 @@ export const useRecordManager = (
                 schema: 'public',
                 filter: `user_id=eq.${userId}`
             }, (payload) => {
-                console.log('📡 DB 변경 감지! 동기화 리로드:', payload);
+                console.log('📡 실시간 DB 변경 감지! 동기화 리로드:', payload);
                 syncData();
             })
             .subscribe();
@@ -222,7 +229,7 @@ export const useRecordManager = (
         const newRecord = {
             ...data,
             id: recordId,
-            user_id: userId, // Magic Key 연동!
+            user_id: userId, // 계정 연동!
             totalTime: formatSecondsToTime(totalSeconds),
             pace: formatPace(avgPaceSeconds),
             calories,
@@ -236,7 +243,7 @@ export const useRecordManager = (
 
         setRecords(updatedRecords);
 
-        // Supabase Save
+        // Supabase에 저장
         const { error } = await supabase.from('records').upsert([newRecord]);
         if (error) console.error("Supabase Save Failed:", error);
 
@@ -246,7 +253,7 @@ export const useRecordManager = (
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
 
-        // Gamification logic (Simplified for clarity)
+        // 게이미피케이션 로직 (가독성을 위해 단순화됨)
         let earnedPoints = Math.floor(newRecord.distance * 100);
         if (newRecord.isImproved) earnedPoints += 300;
 

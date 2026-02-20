@@ -58,8 +58,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onCl
                 padding: '2rem',
                 width: '100%',
                 maxWidth: '800px',
+                maxHeight: '90vh', // 저해상도 대응: 최대 높이 제한
+                overflowY: 'auto', // 저해상도 대응: 스크롤바 허용
+                overscrollBehavior: 'contain',
                 position: 'relative',
-                overflow: 'hidden',
+                overflowX: 'hidden',
                 animation: 'slideUp 0.3s ease-out'
             }}>
                 {/* Background Decorative Element */}
