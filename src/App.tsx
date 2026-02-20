@@ -61,7 +61,7 @@ function App() {
     const [showCoachReport, setShowCoachReport] = useState(false);
 
     // 2.5 Profile Management
-    const { profile, updateProfile, isLoading: isProfileLoading } = useProfileManager();
+    const { profile, updateProfile, loginWithMagicKey, isLoading: isProfileLoading } = useProfileManager();
 
     // 3. Record Management Logic
     const {
@@ -74,7 +74,7 @@ function App() {
         handleDeleteRecord,
         handleImportRecords,
         totalDays
-    } = useRecordManager(points, setPoints, unlockedBadges, setUnlockedBadges, unlockedMedals, setUnlockedMedals);
+    } = useRecordManager(points, setPoints, unlockedBadges, setUnlockedBadges, unlockedMedals, setUnlockedMedals, profile.id);
 
     // 4. AI Coach System Logic (Refactored)
     const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
@@ -198,6 +198,7 @@ function App() {
                 <ProfileSection
                     profile={profile}
                     onUpdate={updateProfile}
+                    loginWithMagicKey={loginWithMagicKey}
                     isLoading={isProfileLoading}
                     onClose={() => setShowProfileModal(false)}
                 />

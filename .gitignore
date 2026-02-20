@@ -31,4 +31,4 @@ dist-ssr
 .env.production.local
 
 # Supabase
-supabase_setup.sql
+supabase_search.csv

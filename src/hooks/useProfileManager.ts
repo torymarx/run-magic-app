@@ -78,9 +78,33 @@ export const useProfileManager = () => {
         }
     };
 
+    const loginWithMagicKey = async (key: string) => {
+        setIsLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', key)
+                .single();
+
+            if (data && !error) {
+                setProfile(data);
+                localStorage.setItem('run-magic-profile', JSON.stringify(data));
+                return { success: true, data };
+            } else {
+                return { success: false, error: error?.message || "존재하지 않는 Magic Key입니다." };
+            }
+        } catch (err) {
+            return { success: false, error: "서버 연결 오류가 발생했습니다." };
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return {
         profile,
         updateProfile,
+        loginWithMagicKey,
         isLoading,
         fetchProfile
     };

@@ -6,6 +6,7 @@ import { UserProfile } from '../../hooks/useProfileManager';
 interface ProfileSectionProps {
     profile: UserProfile;
     onUpdate: (updates: Partial<UserProfile>) => void;
+    loginWithMagicKey: (key: string) => Promise<{ success: boolean; data?: any; error?: string }>;
     isLoading: boolean;
     onClose: () => void;
 }
@@ -27,7 +28,7 @@ const KODARI_CHARACTERS: Record<string, any[]> = {
     ]
 };
 
-const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onClose }) => {
+const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, loginWithMagicKey, onClose }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
@@ -226,7 +227,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onCl
                     </div>
                 </div>
 
-                {/* 영자 실장의 한마디 */}
                 <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(189,0,255,0.05)', borderRadius: '12px', borderLeft: '4px solid var(--vibrant-purple)' }}>
                     <p style={{ fontSize: '0.9rem', color: 'var(--vibrant-purple)', fontWeight: 'bold' }}>✨ 영자 실장의 분석 :</p>
                     <p style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.3rem' }}>
@@ -234,6 +234,67 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onCl
                             `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다. 런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
                             "런너님의 상세 정보를 입력해 주시면 더욱 정밀한 영자 분석 리포트를 제공해 드릴 수 있습니다."}
                     </p>
+                </div>
+
+                {/* 코다리 부장의 필살기: Magic Key 동기화 섹션 */}
+                <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(0,209,255,0.03)', borderRadius: '12px', border: '1px solid rgba(0,209,255,0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+                        <Target size={20} className="neon-text-blue" />
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>런매직 Magic Key (데이터 동기화)</h3>
+                    </div>
+
+                    <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1rem' }}>
+                        이 키는 런너님의 소중한 기록을 찾는 열쇠입니다. 다른 기기나 브라우저에서 아래 키를 입력하면 즉시 내 기록과 동기화됩니다! 🫡✨
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1rem' }}>
+                        <div className="neon-border-blue" style={{ flex: 1, padding: '0.8rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', fontSize: '0.9rem', color: 'var(--electric-blue)', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                            {profile.id}
+                        </div>
+                        <button
+                            onClick={() => {
+                                navigator.clipboard.writeText(profile.id);
+                                alert("Magic Key가 복사되었습니다! 소중히 보관해 주세요. 🐟🚀");
+                            }}
+                            className="glass-button"
+                            style={{ whiteSpace: 'nowrap' }}
+                        >
+                            키 복사
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.8rem' }}>
+                        <input
+                            type="text"
+                            id="magic-key-input"
+                            placeholder="이미 사용 중인 Magic Key가 있나요? 여기에 입력하세요"
+                            className="neon-input"
+                            style={{ flex: 1 }}
+                        />
+                        <button
+                            onClick={async () => {
+                                const input = document.getElementById('magic-key-input') as HTMLInputElement;
+                                const key = input?.value.trim();
+                                if (key) {
+                                    if (window.confirm("새로운 Magic Key로 동기화할까요? 현재 기기의 데이터는 해당 키의 클라우드 데이터와 병합됩니다.")) {
+                                        const result = await loginWithMagicKey(key);
+                                        if (result.success) {
+                                            alert("Magic Key 동기화 성공! 🫡🐟🚀 \n새로운 질주 데이터가 로드되었습니다.");
+                                            onClose();
+                                        } else {
+                                            alert(result.error);
+                                        }
+                                    }
+                                } else {
+                                    alert("Magic Key를 입력해 주세요!");
+                                }
+                            }}
+                            className="glass-button"
+                            style={{ background: 'var(--neon-green)', color: 'black' }}
+                        >
+                            데이터 불러오기
+                        </button>
+                    </div>
                 </div>
             </section>
         </div>

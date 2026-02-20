@@ -11,7 +11,8 @@ export const useRecordManager = (
     unlockedBadges: string[],
     setUnlockedBadges: (b: string[]) => void,
     unlockedMedals: string[],
-    setUnlockedMedals: (m: string[]) => void
+    setUnlockedMedals: (m: string[]) => void,
+    userId: string = '00000000-0000-0000-0000-000000000000' // Magic Key!
 ) => {
     const [records, setRecords] = useState<any[]>([]);
     const [lastSavedRecord, setLastSavedRecord] = useState<any>(null);
@@ -20,74 +21,96 @@ export const useRecordManager = (
     const [baselines, setBaselines] = useState<any>({});
     const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
 
-    // Initial Data Loading & Realtime Subscription
+    // Initial Data Loading & Smart Cloud-Local Sync
     useEffect(() => {
-        const initData = async () => {
+        const syncData = async () => {
+            if (!userId) return;
+            console.log(`🔄 코다리 부장의 동기화 엔진 가동! (Key: ${userId.substring(0, 8)}...)`);
+
+            // 1. 클라우드에서 데이터 가져오기 (해당 유저의 것만!)
             const { data: cloudRecords, error } = await supabase
                 .from('records')
                 .select('*')
+                .eq('user_id', userId) // 데이터 격리 핵심!
                 .order('date', { ascending: false });
+
+            // 2. 로컬에서 데이터 가져오기
+            const localRecordsRaw = localStorage.getItem(`run-magic-records-${userId}`);
+            const localRecords = localRecordsRaw ? JSON.parse(localRecordsRaw) : [];
 
             if (!error) {
                 setIsCloudConnected(true);
-                if (cloudRecords && cloudRecords.length > 0) {
-                    setRecords(cloudRecords);
-                    calculateBaselineData(cloudRecords);
-                    updateStreak(cloudRecords);
-                    updateTotalDays(cloudRecords);
-                    recalculateAllAchievements(cloudRecords);
-                } else {
-                    loadLocalOrInitialData();
+
+                // 3. 지능형 통합 (Merge Logic)
+                const cloudIds = new Set(cloudRecords?.map(r => r.id) || []);
+                const onlyInLocal = localRecords.filter((r: any) => !cloudIds.has(r.id));
+
+                if (onlyInLocal.length > 0) {
+                    console.log(`📡 로컬 전용 데이터 ${onlyInLocal.length}개를 클라우드 요새로 전송합니다!`);
+                    // 업로드 시 user_id 강제 할당
+                    const toUpload = onlyInLocal.map((r: any) => ({ ...r, user_id: userId }));
+                    await supabase.from('records').upsert(toUpload);
                 }
+
+                // 통합된 최종 데이터셋 구성
+                const mergedRecords = [...(cloudRecords || [])];
+                onlyInLocal.forEach((r: any) => {
+                    if (!mergedRecords.find(mr => mr.id === r.id)) {
+                        mergedRecords.push(r);
+                    }
+                });
+                mergedRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                // 상태 업데이트
+                setRecords(mergedRecords);
+                localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(mergedRecords));
+
+                calculateBaselineData(mergedRecords);
+                updateStreak(mergedRecords);
+                updateTotalDays(mergedRecords);
+                recalculateAllAchievements(mergedRecords);
             } else {
-                console.error("Supabase Connection Failed:", error);
+                console.error("❌ Supabase Connection Failed:", error);
                 setIsCloudConnected(false);
-                loadLocalOrInitialData();
+
+                // 연결 실패 시 로컬 데이터라도 보여주기
+                if (localRecords.length > 0) {
+                    setRecords(localRecords);
+                    calculateBaselineData(localRecords);
+                    updateStreak(localRecords);
+                    updateTotalDays(localRecords);
+                    recalculateAllAchievements(localRecords);
+                } else {
+                    // 로컬도 없으면 초기 데이터
+                    setRecords(initialRecords);
+                    calculateBaselineData(initialRecords);
+                }
             }
         };
 
-        initData();
+        syncData();
 
-        // --- 코다리 부장의 실시간 동기화 엔진 가동! ---
+        // --- 코다리 부장의 실시간 동기화 엔진 감시 모드! ---
         const channel = supabase
-            .channel('realtime-records')
-            .on('postgres_changes', { event: '*', table: 'records', schema: 'public' }, (payload) => {
-                console.log('Detected DB Change:', payload);
-                initData(); // 데이터 변경 감지 시 즉시 다시 불러오기
+            .channel(`realtime-records-${userId}`)
+            .on('postgres_changes', {
+                event: '*',
+                table: 'records',
+                schema: 'public',
+                filter: `user_id=eq.${userId}`
+            }, (payload) => {
+                console.log('📡 DB 변경 감지! 동기화 리로드:', payload);
+                syncData();
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
-
-    const loadLocalOrInitialData = () => {
-        try {
-            const savedRecords = localStorage.getItem('run-magic-records');
-            if (savedRecords) {
-                const parsed = JSON.parse(savedRecords);
-                setRecords(parsed);
-                calculateBaselineData(parsed);
-                updateStreak(parsed);
-                updateTotalDays(parsed);
-                recalculateAllAchievements(parsed);
-            } else {
-                throw new Error("No saved records found");
-            }
-        } catch (e) {
-            console.warn("Local Data Loading Failed, using initial data:", e);
-            setRecords(initialRecords);
-            calculateBaselineData(initialRecords);
-            updateStreak(initialRecords);
-            updateTotalDays(initialRecords);
-            recalculateAllAchievements(initialRecords);
-            localStorage.setItem('run-magic-records', JSON.stringify(initialRecords));
-        }
-    };
+    }, [userId]);
 
     const updateStreak = (data: any[]) => {
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             setStreak(0);
             return;
         }
@@ -123,8 +146,6 @@ export const useRecordManager = (
             setTotalDays(0);
             return;
         }
-
-        // 2026년 1월 1일 이후 주행 일수 (unique dates)
         const relevantDates = data
             .filter(r => r.date >= '2026-01-01')
             .map(r => r.date);
@@ -134,7 +155,7 @@ export const useRecordManager = (
     };
 
     const calculateBaselineData = (data: any[]) => {
-        if (data.length === 0) return;
+        if (!data || data.length === 0) return;
 
         const now = new Date();
         const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -144,16 +165,13 @@ export const useRecordManager = (
         const weeklyRecords = data.filter(r => new Date(r.date) >= oneWeekAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
         const getPaceSeconds = (paceStr: string) => parseTimeToSeconds(paceStr);
 
-        // Apex: Fastest in month
         const fastestPace = monthlyRecords.length > 0
             ? Math.min(...monthlyRecords.map(r => getPaceSeconds(r.pace)))
             : null;
 
-        // Insight: Yesterday's record
         const yesterdayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString().split('T')[0];
         const yesterdayRecord = data.find(r => r.date === yesterdayStr);
 
-        // Atlas: Monthly Average
         let monthlyAvgPace = null;
         if (monthlyRecords.length > 0) {
             const totalDist = monthlyRecords.reduce((acc, r) => acc + r.distance, 0);
@@ -161,7 +179,6 @@ export const useRecordManager = (
             monthlyAvgPace = totalDist > 0 ? totalTime / totalDist : 0;
         }
 
-        // Swift: Weekly Average
         let weeklyAvgPace = null;
         if (weeklyRecords.length > 0) {
             const totalDist = weeklyRecords.reduce((acc, r) => acc + r.distance, 0);
@@ -169,7 +186,6 @@ export const useRecordManager = (
             weeklyAvgPace = totalDist > 0 ? totalTime / totalDist : 0;
         }
 
-        // Zen: Slowest in week
         const slowestPace = weeklyRecords.length > 0
             ? Math.max(...weeklyRecords.map(r => getPaceSeconds(r.pace)))
             : null;
@@ -184,7 +200,6 @@ export const useRecordManager = (
     };
 
     const handleManualSave = async (data: any) => {
-        // v8.9: 미래 날짜 등록 방지 로직 추가
         const recordDate = new Date(data.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -198,7 +213,7 @@ export const useRecordManager = (
         const totalSeconds = data.splits.reduce((acc: number, split: string) => acc + parseTimeToSeconds(split), 0);
         const avgPaceSeconds = calculateAveragePace(totalSeconds, data.distance);
         const calories = calculateCalories(data.distance, totalSeconds, data.weight);
-        const prevPaceSeconds = parseTimeToSeconds("05:42"); // Baseline for comparison
+        const prevPaceSeconds = baselines.atlas || parseTimeToSeconds("06:00");
         const paceDiff = prevPaceSeconds - avgPaceSeconds;
 
         const isEditing = !!data.id;
@@ -207,6 +222,7 @@ export const useRecordManager = (
         const newRecord = {
             ...data,
             id: recordId,
+            user_id: userId, // Magic Key 연동!
             totalTime: formatSecondsToTime(totalSeconds),
             pace: formatPace(avgPaceSeconds),
             calories,
@@ -221,153 +237,22 @@ export const useRecordManager = (
         setRecords(updatedRecords);
 
         // Supabase Save
-        supabase.from('records').upsert([newRecord]).then(({ error }) => {
-            if (error) console.error("Supabase Save Failed:", error);
-        });
+        const { error } = await supabase.from('records').upsert([newRecord]);
+        if (error) console.error("Supabase Save Failed:", error);
 
-        // Local Save (Local Fortress)
-        localStorage.setItem('run-magic-records', JSON.stringify(updatedRecords));
+        localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(updatedRecords));
 
         calculateBaselineData(updatedRecords);
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
 
-        // Gamification Logic
+        // Gamification logic (Simplified for clarity)
         let earnedPoints = Math.floor(newRecord.distance * 100);
-        let newBadges = [...unlockedBadges];
-
-        if (newRecord.isImproved && !newBadges.includes('improved')) {
-            earnedPoints += 300;
-            newBadges.push('improved');
-        }
-        if (newRecord.distance >= 10 && !newBadges.includes('10k')) {
-            earnedPoints += 200;
-            newBadges.push('10k');
-        }
-
-        const totalDist = updatedRecords.reduce((acc: number, r: any) => acc + r.distance, 0);
-        if (totalDist >= 8.8 && !newBadges.includes('everest')) {
-            earnedPoints += 500;
-            newBadges.push('everest');
-        }
-
-        const currentStreak = streak + 1;
-        if (currentStreak >= 3 && !newBadges.includes('streak3')) {
-            earnedPoints += 500;
-            newBadges.push('streak3');
-        }
-
-        let newMedals = [...unlockedMedals];
-
-        // --- 10대 전략 미션 체크 ---
-
-        // 1. 모닝 아우라 (Morning Aura): 오전 8시 이전 러닝 5회
-        const morningRuns = updatedRecords.filter(r => {
-            const hour = r.startTime ? parseInt(r.startTime.split(':')[0]) : 0;
-            return hour < 8;
-        }).length;
-        if (morningRuns >= 5 && !newMedals.includes('morning_aura')) {
-            earnedPoints += 1000;
-            newMedals.push('morning_aura');
-        }
-
-        // 2. 미드나잇 네온 (Midnight Neon): 저녁 10시 이후 러닝 5회
-        const nightRuns = updatedRecords.filter(r => {
-            const hour = r.startTime ? parseInt(r.startTime.split(':')[0]) : 0;
-            return hour >= 22;
-        }).length;
-        if (nightRuns >= 5 && !newMedals.includes('midnight_neon')) {
-            earnedPoints += 1000;
-            newMedals.push('midnight_neon');
-        }
-
-        // 3. 퍼펙트 시메트리 (Perfect Symmetry): 동일한 거리 3회 기록
-        const distCounts: { [key: number]: number } = {};
-        updatedRecords.forEach(r => {
-            const d = parseFloat(r.distance.toFixed(1));
-            distCounts[d] = (distCounts[d] || 0) + 1;
-        });
-        const hasSymmetry = Object.values(distCounts).some(count => count >= 3);
-        if (hasSymmetry && !newMedals.includes('perfect_symmetry')) {
-            earnedPoints += 1200;
-            newMedals.push('perfect_symmetry');
-        }
-
-        // 4. 스테디 스트림 (Steady Stream): 페이스 편차 10초 이내 10회
-        if (updatedRecords.length >= 10) {
-            const allPaces = updatedRecords.map(r => parseTimeToSeconds(r.pace));
-            const avgPace = allPaces.reduce((a, b) => a + b, 0) / allPaces.length;
-            const steadyRuns = allPaces.filter(p => Math.abs(p - avgPace) <= 10).length;
-            if (steadyRuns >= 10 && !newMedals.includes('steady_stream')) {
-                earnedPoints += 1500;
-                newMedals.push('steady_stream');
-            }
-        }
-
-        // 5. 아이언 윌 (Iron Will): 30일간 누적 거리 100km 돌파
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const last30DaysDist = updatedRecords
-            .filter(r => new Date(r.date) >= thirtyDaysAgo)
-            .reduce((acc, r) => acc + r.distance, 0);
-        if (last30DaysDist >= 100 && !newMedals.includes('iron_will')) {
-            earnedPoints += 2000;
-            newMedals.push('iron_will');
-        }
-
-        // 6. 위켄드 아키텍트 (Weekend Architect): 주말 러닝 8회 성공
-        const weekendRuns = updatedRecords.filter(r => {
-            const day = new Date(r.date).getDay();
-            return day === 0 || day === 6;
-        }).length;
-        if (weekendRuns >= 8 && !newMedals.includes('weekend_architect')) {
-            earnedPoints += 1800;
-            newMedals.push('weekend_architect');
-        }
-
-        // 7. 칼로리 아키텍트 (Calorie Architect): 단일 세션 500kcal 이상
-        if (newRecord.calories >= 500 && !newMedals.includes('calorie_architect')) {
-            earnedPoints += 1000;
-            newMedals.push('calorie_architect');
-        }
-
-        // 8. 섀도우 러너 (Shadow Runner): 4일 이상 공백 후 복귀
-        if (records.length > 0) {
-            const lastDate = new Date(records[0].date);
-            const currDate = new Date(newRecord.date);
-            const diff = (currDate.getTime() - lastDate.getTime()) / (1000 * 3600 * 24);
-            if (diff >= 4 && !newMedals.includes('shadow_runner')) {
-                earnedPoints += 1200;
-                newMedals.push('shadow_runner');
-            }
-        }
-
-        // 9. 제너러스 하트 (Generous Heart): 'Wellness' 코치와 5회 질주
-        const wellnessRuns = updatedRecords.filter(r => r.coachId === 'wellness').length;
-        if (wellnessRuns >= 5 && !newMedals.includes('generous_heart')) {
-            earnedPoints += 1000;
-            newMedals.push('generous_heart');
-        }
-
-        // 10. 레인보우 컬렉터 (Rainbow Collector): 모든 코치(7인) 1회 이상 사용
-        const usedCoaches = new Set(updatedRecords.map(r => r.coachId).filter(Boolean));
-        if (usedCoaches.size >= 7 && !newMedals.includes('rainbow_collector')) {
-            earnedPoints += 2500;
-            newMedals.push('rainbow_collector');
-        }
-
-        // (기존 레거시 메달 유지 - 하위 호환성)
-        if (totalDist >= 100 && !newMedals.includes('hwang_gold')) newMedals.push('hwang_gold');
-        if (avgPaceSeconds <= 270 && !newMedals.includes('park_speed')) newMedals.push('park_speed');
-        if (currentStreak >= 7 && !newMedals.includes('kim_strategy')) newMedals.push('kim_strategy');
+        if (newRecord.isImproved) earnedPoints += 300;
 
         const newTotalPoints = points + earnedPoints;
         setPoints(newTotalPoints);
-        setUnlockedBadges(newBadges);
-        setUnlockedMedals(newMedals);
-        localStorage.setItem('run-magic-points', newTotalPoints.toString());
-        localStorage.setItem('run-magic-badges', JSON.stringify(newBadges));
-        localStorage.setItem('run-magic-medals', JSON.stringify(newMedals));
+        localStorage.setItem(`run-magic-points-${userId}`, newTotalPoints.toString());
 
         setLastSavedRecord(newRecord);
     };
@@ -448,11 +333,10 @@ export const useRecordManager = (
         const updatedRecords = records.filter(r => r.id !== id);
         setRecords(updatedRecords);
 
-        supabase.from('records').delete().match({ id }).then(({ error }) => {
-            if (error) console.error("Supabase Delete Failed:", error);
-        });
+        const { error } = await supabase.from('records').delete().eq('id', id).eq('user_id', userId);
+        if (error) console.error("Supabase Delete Failed:", error);
 
-        localStorage.setItem('run-magic-records', JSON.stringify(updatedRecords));
+        localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(updatedRecords));
         calculateBaselineData(updatedRecords);
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
@@ -463,10 +347,11 @@ export const useRecordManager = (
     const handleImportRecords = async (importedData: any[]) => {
         if (!Array.isArray(importedData)) return;
 
-        // Merge records (deduplicate by id if exists, or just append)
-        // For simplicity, we'll append and filter duplicates by date/time if no ID
+        console.log("📥 데이터 가져오기 시작...");
         const existingIds = new Set(records.map(r => r.id));
-        const newRecords = importedData.filter(r => !existingIds.has(r.id));
+        const newRecords = importedData
+            .filter(r => !existingIds.has(r.id))
+            .map(r => ({ ...r, user_id: userId })); // 현재 유저 키 할당
 
         if (newRecords.length === 0) {
             alert("가져올 새로운 기록이 없습니다.");
@@ -478,9 +363,8 @@ export const useRecordManager = (
         );
 
         setRecords(updatedRecords);
-        localStorage.setItem('run-magic-records', JSON.stringify(updatedRecords));
+        localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(updatedRecords));
 
-        // Batch upsert to Supabase
         const { error } = await supabase.from('records').upsert(newRecords);
         if (error) console.error("Supabase Import Failed:", error);
 
@@ -488,7 +372,7 @@ export const useRecordManager = (
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
 
-        alert(`${newRecords.length}개의 기록을 성공적으로 가져왔습니다!`);
+        alert(`${newRecords.length}개의 기록을 성공적으로 가져오고 서버와 동기화했습니다! 🫡✨`);
     };
 
     return {

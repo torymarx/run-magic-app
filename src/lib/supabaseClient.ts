@@ -1,9 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 주의: 런너님, 실제 Supabase 프로젝트의 URL과 Anon Key를 아래에 입력해 주셔야 합니다!
-// .env 파일에 보관하는 것이 보안상 가장 좋지만, 우선 구조를 잡아두겠습니다.
-const env = (import.meta as any).env || {};
-const supabaseUrl = env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
-const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+/**
+ * 코다리 부장의 보안 팁 🐟✨
+ * Vite 환경에서는 import.meta.env를 통해 변수를 로드합니다.
+ * Vercel 배포 시에는 대시보드에서 해당 변수들을 반드시 설정해 주셔야 합니다!
+ */
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("⚠️ Supabase 접속 정보가 누락되었습니다! 로컬 모드로 동작합니다. (Vercel 환경 변수 설정을 확인해 주세요)");
+}
+
+export const supabase = createClient(
+    supabaseUrl || 'https://placeholder-url.supabase.co',
+    supabaseAnonKey || 'placeholder-key'
+);
