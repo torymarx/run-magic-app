@@ -6,13 +6,10 @@ import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTim
 
 // 이 훅은 레코드 관리에 필요한 모든 복잡한 상태 관리를 캡슐화합니다.
 export const useRecordManager = (
-    points: number,
     setPoints: (p: number) => void,
-    unlockedBadges: string[],
     setUnlockedBadges: (b: string[]) => void,
-    unlockedMedals: string[],
     setUnlockedMedals: (m: string[]) => void,
-    userId: string = '00000000-0000-0000-0000-000000000000' // 계정 키
+    userId: string = '00000000-0000-0000-0000-000000000000'
 ) => {
     const [records, setRecords] = useState<any[]>([]);
     const [lastSavedRecord, setLastSavedRecord] = useState<any>(null);
@@ -243,7 +240,6 @@ export const useRecordManager = (
 
         setRecords(updatedRecords);
 
-        // Supabase에 저장
         const { error } = await supabase.from('records').upsert([newRecord]);
         if (error) console.error("Supabase Save Failed:", error);
 
@@ -253,43 +249,46 @@ export const useRecordManager = (
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
 
-        // 게이미피케이션 로직 (가독성을 위해 단순화됨)
-        let earnedPoints = Math.floor(newRecord.distance * 100);
-        if (newRecord.isImproved) earnedPoints += 300;
-
-        const newTotalPoints = points + earnedPoints;
-        setPoints(newTotalPoints);
-        localStorage.setItem(`run-magic-points-${userId}`, newTotalPoints.toString());
+        // v10.5: 단순 더하기가 아닌 전체 기록 기반 재계산 트리거
+        recalculateAllAchievements(updatedRecords);
 
         setLastSavedRecord(newRecord);
     };
 
-    // 코다리 부장의 특약 처방: 모든 기록을 훑어서 누락된 업적을 싹 찾아내기!
+    // 코다리 부장의 특약 처방: 모든 기록을 훑어서 누락된 업적과 포인트를 싹 찾아내기!
     const recalculateAllAchievements = (data: any[]) => {
-        if (!data || data.length === 0) return;
+        if (!data) return;
 
         let newBadges: string[] = [];
         let newMedals: string[] = [];
+        let recalculatedPoints = 0;
 
-        // --- 배지/트로피 체크 ---
+        // 1. 포인트 전수 재계산 (동기화의 핵심)
+        data.forEach(r => {
+            let earned = Math.floor(r.distance * 100);
+            if (r.isImproved) earned += 300;
+            recalculatedPoints += earned;
+        });
+
+        // 2. 배지/트로피 체크
         const totalDist = data.reduce((acc, r) => acc + r.distance, 0);
         if (data.some(r => r.isImproved)) newBadges.push('improved');
         if (data.some(r => r.distance >= 10)) newBadges.push('10k');
         if (totalDist >= 8.8) newBadges.push('everest');
         if (streak >= 3) newBadges.push('streak3');
-        if (totalDist >= 42.195) newBadges.push('marathoner'); // 신규 추가분 반영
+        if (totalDist >= 42.195) newBadges.push('marathoner');
 
-        // --- 10대 전략 미션 체크 ---
+        // 3. 10대 전략 미션 체크
         // 1. 모닝 아우라
         const morningRuns = data.filter(r => {
-            const hour = r.startTime ? parseInt(r.startTime.split(':')[0]) : 0;
+            const hour = r.time ? parseInt(r.time.split(':')[0]) : 0;
             return hour < 8;
         }).length;
         if (morningRuns >= 5) newMedals.push('morning_aura');
 
         // 2. 미드나잇 네온
         const nightRuns = data.filter(r => {
-            const hour = r.startTime ? parseInt(r.startTime.split(':')[0]) : 0;
+            const hour = r.time ? parseInt(r.time.split(':')[0]) : 0;
             return hour >= 22;
         }).length;
         if (nightRuns >= 5) newMedals.push('midnight_neon');
@@ -310,7 +309,6 @@ export const useRecordManager = (
             if (steadyRuns >= 10) newMedals.push('steady_stream');
         }
 
-        // ... 나머지 미션들도 동일한 로직으로 전수 조사 (생략 가능하나 코다리 부장은 철두철미함)
         // 5. 아이언 윌
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -328,10 +326,17 @@ export const useRecordManager = (
         const usedCoaches = new Set(data.map(r => r.coachId).filter(Boolean));
         if (usedCoaches.size >= 7) newMedals.push('rainbow_collector');
 
-        // 상태 업데이트 및 저장
-        setUnlockedBadges(Array.from(new Set([...unlockedBadges, ...newBadges])));
-        setUnlockedMedals(Array.from(new Set([...unlockedMedals, ...newMedals])));
-        // 포인트는 누적형이므로 전수 재계산보다는 기존 유지 (혹은 로직에 따라 합산)
+        // 상태 업데이트 및 저장 (userId별 격리 저장소 사용)
+        const finalBadges = Array.from(new Set(newBadges));
+        const finalMedals = Array.from(new Set(newMedals));
+
+        setPoints(recalculatedPoints);
+        setUnlockedBadges(finalBadges);
+        setUnlockedMedals(finalMedals);
+
+        localStorage.setItem(`run-magic-points-${userId}`, recalculatedPoints.toString());
+        localStorage.setItem(`run-magic-badges-${userId}`, JSON.stringify(finalBadges));
+        localStorage.setItem(`run-magic-medals-${userId}`, JSON.stringify(finalMedals));
     };
 
     const handleDeleteRecord = async (id: number) => {

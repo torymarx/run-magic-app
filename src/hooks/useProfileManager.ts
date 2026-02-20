@@ -105,6 +105,6 @@ export const useProfileManager = (userId?: string) => {
         profile,
         updateProfile,
         isLoading,
-        fetchProfile
+        refreshProfile: fetchProfile
     };
 };

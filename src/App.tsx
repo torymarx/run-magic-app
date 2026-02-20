@@ -30,33 +30,31 @@ function App() {
     // 1. Run Timer & Distance Logic
     const { isRecording, timer, distance, handleStartRun } = useRunTimer();
 
-    // 2. Local State for UI Control & Points (Syncs with localStorage)
-    const [points, setPoints] = useState<number>(() => {
-        try {
-            return parseInt(localStorage.getItem('run-magic-points') || '0');
-        } catch (e) {
-            console.error("Failed to parse points from localStorage", e);
-            return 0;
-        }
-    });
+    const [points, setPoints] = useState<number>(0);
+    const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
+    const [unlockedMedals, setUnlockedMedals] = useState<string[]>([]);
 
-    const [unlockedBadges, setUnlockedBadges] = useState<string[]>(() => {
-        try {
-            return JSON.parse(localStorage.getItem('run-magic-badges') || '[]');
-        } catch (e) {
-            console.error("Failed to parse badges from localStorage", e);
-            return [];
-        }
-    });
+    // v10.5: 사용자 변경 시 해당 계정의 고유 로컬 데이터 로드
+    React.useEffect(() => {
+        if (user?.id) {
+            try {
+                const savedPoints = localStorage.getItem(`run-magic-points-${user.id}`);
+                setPoints(savedPoints ? parseInt(savedPoints) : 0);
 
-    const [unlockedMedals, setUnlockedMedals] = useState<string[]>(() => {
-        try {
-            return JSON.parse(localStorage.getItem('run-magic-medals') || '[]');
-        } catch (e) {
-            console.error("Failed to parse medals from localStorage", e);
-            return [];
+                const savedBadges = localStorage.getItem(`run-magic-badges-${user.id}`);
+                setUnlockedBadges(savedBadges ? JSON.parse(savedBadges) : []);
+
+                const savedMedals = localStorage.getItem(`run-magic-medals-${user.id}`);
+                setUnlockedMedals(savedMedals ? JSON.parse(savedMedals) : []);
+            } catch (e) {
+                console.error("Failed to load user-specific data", e);
+            }
+        } else {
+            setPoints(0);
+            setUnlockedBadges([]);
+            setUnlockedMedals([]);
         }
-    });
+    }, [user?.id]);
     const [showManualForm, setShowManualForm] = useState(false);
     const [initialManualDate, setInitialManualDate] = useState<string | null>(null);
     const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -79,7 +77,7 @@ function App() {
         handleDeleteRecord,
         handleImportRecords,
         totalDays
-    } = useRecordManager(points, setPoints, unlockedBadges, setUnlockedBadges, unlockedMedals, setUnlockedMedals, user?.id);
+    } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id);
 
     // 4. AI Coach System Logic (Refactored)
     const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
@@ -192,7 +190,17 @@ function App() {
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
                     <div style={{ width: '100%', maxWidth: '1000px' }}>
                         <ManualRecordForm
-                            onSave={(data) => handleManualSave({ ...data, coachId: selectedCoach.id })}
+                            onSave={async (data) => {
+                                // 1. 운동 기록 저장
+                                await handleManualSave({ ...data, coachId: selectedCoach.id });
+                                // 2. 개인정보(체중) 자동 업데이트 (v10.0)
+                                if (data.weight) {
+                                    console.log("⚖️ 체중 변화 감지! 프로필을 정밀 동기화합니다...");
+                                    await updateProfile({ weight: data.weight });
+                                }
+                                setShowManualForm(false);
+                                setEditingRecord(null);
+                            }}
                             onCancel={() => { setShowManualForm(false); setEditingRecord(null); setInitialManualDate(null); }}
                             lastRecord={editingRecord || records[0]}
                             initialDate={initialManualDate}
