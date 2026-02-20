@@ -33,6 +33,13 @@ export const useAuth = () => {
                 data: metadata
             }
         });
+
+        if (error) {
+            console.error("Supabase SignUp Error:", error.message);
+        } else {
+            console.log("Supabase SignUp Success:", data.user?.email);
+        }
+
         return { data, error };
     };
 

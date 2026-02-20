@@ -3,8 +3,8 @@ import { Mail, Lock, Sparkles, ShieldCheck } from 'lucide-react';
 import AuroraBackground from './layout/AuroraBackground';
 
 interface AuthSectionProps {
-    onSignIn: (email: string, password: string) => Promise<{ error: any }>;
-    onSignUp: (email: string, password: string) => Promise<{ error: any }>;
+    onSignIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
+    onSignUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
     loading: boolean;
 }
 
@@ -23,12 +23,32 @@ const AuthSection: React.FC<AuthSectionProps> = ({ onSignIn, onSignUp, loading }
             return;
         }
 
-        const { error } = isLogin
+        if (!isLogin && password.length < 6) {
+            setErrorMsg("비밀번호는 최소 6자 이상이어야 합니다. 🛡️");
+            return;
+        }
+
+        console.log(`[Auth] Attempting ${isLogin ? 'Login' : 'SignUp'} for:`, email);
+        const { data, error } = isLogin
             ? await onSignIn(email, password)
             : await onSignUp(email, password);
 
         if (error) {
-            setErrorMsg(error.message || "연결 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            console.error(`[Auth] ${isLogin ? 'Login' : 'SignUp'} Error:`, error);
+            let userFriendlyMsg = error.message || "연결 중 오류가 발생했습니다.";
+
+            if (error.message === "Failed to fetch") {
+                userFriendlyMsg = "서버에 연결할 수 없습니다. 📡\nVercel 대시보드에 환경 변수(URL/Key)가 정확히 등록되었는지 확인해 주세요!";
+            }
+
+            setErrorMsg(userFriendlyMsg);
+        } else {
+            console.log(`[Auth] ${isLogin ? 'Login' : 'SignUp'} Success!`);
+            if (!isLogin && !data?.session) {
+                // 회원가입 성공했으나 세션이 없는 경우 (이메일 인증 대기)
+                alert("회원가입 성공! 📧\n입력하신 이메일함에서 인증 링크를 클릭해 주세요.\n인증 후 로그인이 가능합니다.");
+                setIsLogin(true); // 로그인 화면으로 전환
+            }
         }
     };
 

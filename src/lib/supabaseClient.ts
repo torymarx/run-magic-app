@@ -10,7 +10,8 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("⚠️ Supabase 접속 정보가 누락되었습니다! 로컬 모드로 동작합니다. (Vercel 환경 변수 설정을 확인해 주세요)");
+    console.error("%c⚠️ Supabase Connection Error!", "color: #ff4b4b; font-size: 1.2rem; font-weight: bold;");
+    console.warn("VITE_SUPABASE_URL 또는 VITE_SUPABASE_ANON_KEY가 설정되지 않았습니다. \nVercel 대시보드(Settings > Environment Variables)에서 설정 후 Redeploy 해주세요! 🫡🛡️");
 }
 
 export const supabase = createClient(
