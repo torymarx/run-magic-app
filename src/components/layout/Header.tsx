@@ -13,6 +13,7 @@ interface HeaderProps {
     onOpenProfile: () => void;
     onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onExport: () => void;
+    onSignOut: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -25,7 +26,8 @@ const Header: React.FC<HeaderProps> = ({
     onOpenManualForm,
     onOpenProfile,
     onImport,
-    onExport
+    onExport,
+    onSignOut
 }) => {
     const KODARI_EMOJIS: Record<string, Record<number, string>> = {
         male: { 1: '🐣', 2: '🔥', 3: '💪', 4: '⚡', 5: '👑' },
@@ -128,10 +130,27 @@ const Header: React.FC<HeaderProps> = ({
                         color: 'white',
                         padding: '0.6rem',
                         borderRadius: '12px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        marginRight: '0.5rem'
                     }}
                 >
                     <Download size={18} />
+                </button>
+                <button
+                    onClick={onSignOut}
+                    title="로그아웃"
+                    style={{
+                        background: 'rgba(255, 75, 75, 0.1)',
+                        border: '1px solid rgba(255, 75, 75, 0.3)',
+                        color: '#ff4b4b',
+                        padding: '0.6rem 1rem',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '0.85rem'
+                    }}
+                >
+                    로그아웃 🫡
                 </button>
             </div>
         </header>

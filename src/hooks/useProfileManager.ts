@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -15,7 +14,7 @@ export interface UserProfile {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-    id: '00000000-0000-0000-0000-000000000000',
+    id: '',
     name: '런너님',
     weight: 70.0,
     height: 175.0,
@@ -26,32 +25,34 @@ const DEFAULT_PROFILE: UserProfile = {
     updated_at: new Date().toISOString()
 };
 
-export const useProfileManager = () => {
-    const [profile, setProfile] = useState<UserProfile>(() => {
-        const saved = localStorage.getItem('run-magic-profile');
-        return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
-    });
-
+export const useProfileManager = (userId?: string) => {
+    const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        fetchProfile();
-    }, []);
+        if (userId) {
+            fetchProfile();
+        }
+    }, [userId]);
 
     const fetchProfile = async () => {
+        if (!userId) return;
         setIsLoading(true);
         try {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', profile.id)
+                .eq('id', userId)
                 .single();
 
             if (data && !error) {
                 setProfile(data);
-                localStorage.setItem('run-magic-profile', JSON.stringify(data));
+                localStorage.setItem(`run-magic-profile-${userId}`, JSON.stringify(data));
             } else if (error && error.code !== 'PGRST116') {
                 console.error("Profile Fetch Error:", error);
+            } else if (error && error.code === 'PGRST116') {
+                // 프로필이 없는 신규 유저라면 기본 프로필로 세팅
+                setProfile({ ...DEFAULT_PROFILE, id: userId });
             }
         } catch (err) {
             console.error("Profile Manager Init Error:", err);
@@ -61,9 +62,10 @@ export const useProfileManager = () => {
     };
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
-        const newProfile = { ...profile, ...updates, updated_at: new Date().toISOString() };
+        if (!userId) return;
+        const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
         setProfile(newProfile);
-        localStorage.setItem('run-magic-profile', JSON.stringify(newProfile));
+        localStorage.setItem(`run-magic-profile-${userId}`, JSON.stringify(newProfile));
 
         try {
             const { error } = await supabase
@@ -78,33 +80,9 @@ export const useProfileManager = () => {
         }
     };
 
-    const loginWithMagicKey = async (key: string) => {
-        setIsLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', key)
-                .single();
-
-            if (data && !error) {
-                setProfile(data);
-                localStorage.setItem('run-magic-profile', JSON.stringify(data));
-                return { success: true, data };
-            } else {
-                return { success: false, error: error?.message || "존재하지 않는 Magic Key입니다." };
-            }
-        } catch (err) {
-            return { success: false, error: "서버 연결 오류가 발생했습니다." };
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     return {
         profile,
         updateProfile,
-        loginWithMagicKey,
         isLoading,
         fetchProfile
     };

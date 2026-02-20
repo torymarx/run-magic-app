@@ -6,6 +6,7 @@ import { useRunTimer } from './hooks/useRunTimer';
 import { useRecordManager } from './hooks/useRecordManager';
 import { useAICoachSystem } from './hooks/useAICoachSystem';
 import { useProfileManager } from './hooks/useProfileManager';
+import { useAuth } from './hooks/useAuth';
 
 // Components
 import AuroraBackground from './components/layout/AuroraBackground';
@@ -18,10 +19,14 @@ import CalendarSection from './components/CalendarSection';
 import BadgeHallOfFame from './components/BadgeHallOfFame';
 import BioPerformanceChart from './components/BioPerformanceChart';
 import ProfileSection from './components/profile/ProfileSection';
+import AuthSection from './components/AuthSection';
 
 import { coaches } from './data/coaches';
 
 function App() {
+    // 0. Auth Session Logic
+    const { session, user, loading: authLoading, signIn, signUp, signOut } = useAuth();
+
     // 1. Run Timer & Distance Logic
     const { isRecording, timer, distance, handleStartRun } = useRunTimer();
 
@@ -61,7 +66,7 @@ function App() {
     const [showCoachReport, setShowCoachReport] = useState(false);
 
     // 2.5 Profile Management
-    const { profile, updateProfile, loginWithMagicKey, isLoading: isProfileLoading } = useProfileManager();
+    const { profile, updateProfile, isLoading: isProfileLoading } = useProfileManager(user?.id);
 
     // 3. Record Management Logic
     const {
@@ -74,7 +79,7 @@ function App() {
         handleDeleteRecord,
         handleImportRecords,
         totalDays
-    } = useRecordManager(points, setPoints, unlockedBadges, setUnlockedBadges, unlockedMedals, setUnlockedMedals, profile.id);
+    } = useRecordManager(points, setPoints, unlockedBadges, setUnlockedBadges, unlockedMedals, setUnlockedMedals, user?.id);
 
     // 4. AI Coach System Logic (Refactored)
     const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
@@ -135,6 +140,19 @@ function App() {
         downloadAnchorNode.remove();
     };
 
+    if (authLoading) {
+        return (
+            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <AuroraBackground />
+                <p className="neon-text-blue" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>런매직 보안 체크 중... 🛡️</p>
+            </div>
+        );
+    }
+
+    if (!session) {
+        return <AuthSection onSignIn={signIn} onSignUp={signUp} loading={authLoading} />;
+    }
+
     return (
         <div className="app-container" style={{ position: 'relative', minHeight: '100vh', padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
             <AuroraBackground />
@@ -150,7 +168,42 @@ function App() {
                 onOpenProfile={() => setShowProfileModal(true)}
                 onImport={handleImport}
                 onExport={handleExport}
+                onSignOut={signOut}
             />
+
+            {/* 신규 런너를 위한 Magic Key 안내 브릿지! */}
+            {records.length === 0 && !isRecording && (
+                <div
+                    className="glass-card"
+                    style={{
+                        margin: '1rem 0',
+                        padding: '1.2rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'linear-gradient(90deg, rgba(0,209,255,0.1) 0%, rgba(189,0,255,0.1) 100%)',
+                        border: '1px solid rgba(0,209,255,0.2)',
+                        animation: 'pulse 2s infinite'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ background: 'var(--vibrant-purple)', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <span style={{ fontSize: '1.2rem' }}>✨</span>
+                        </div>
+                        <div>
+                            <p style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--electric-blue)' }}>이미 질주 중인 런너님이신가요?</p>
+                            <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>기존에 사용하시던 **Magic Key**를 입력하면 모든 기록이 즉시 복구됩니다!</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setShowProfileModal(true)}
+                        className="glass-button"
+                        style={{ background: 'var(--vibrant-purple)', color: 'white', padding: '0.6rem 1.2rem' }}
+                    >
+                        지금 기록 불러오기 🫡
+                    </button>
+                </div>
+            )}
 
             {showManualForm && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
@@ -198,7 +251,6 @@ function App() {
                 <ProfileSection
                     profile={profile}
                     onUpdate={updateProfile}
-                    loginWithMagicKey={loginWithMagicKey}
                     isLoading={isProfileLoading}
                     onClose={() => setShowProfileModal(false)}
                 />

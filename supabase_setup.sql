@@ -1,43 +1,42 @@
--- Run-Magic Records 테이블 생성 SQL
--- Supabase SQL Editor에 복사해서 실행해 주세요!
+-- Run-Magic Records & Profiles 테이블 보안 설정 최신화 (Auth 기반)
+-- Supabase SQL Editor에 복사해서 실행해 주세요! 🫡🐟🚀
 
-create table records (
-  id bigint primary key,
-  date date not null,
-  time text not null,
-  distance float8 not null,
-  pace text not null,
-  calories integer not null,
-  weather text,
-  dust text,
-  condition text,
-  temp float8,
-  weight float8,
-  memo text,
-  isImproved boolean,
-  paceDiff text,
-  splits jsonb,
-  user_id uuid not null, -- Magic Key 연동 필드
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+-- 1. 기존 정책 삭제 (깔끔한 재시작을 위해)
+drop policy if exists "Allow all access" on records;
+drop policy if exists "Allow all access on profiles" on profiles;
+drop policy if exists "Individuals can view their own records" on records;
+drop policy if exists "Individuals can create their own records" on records;
+drop policy if exists "Individuals can update their own records" on records;
+drop policy if exists "Individuals can delete their own records" on records;
+drop policy if exists "Individuals can view their own profile" on profiles;
+drop policy if exists "Individuals can update their own profile" on profiles;
 
--- RLS 보안 설정 (모두 허용 - 나중에 사용자 인증 추가 시 강화 가능)
+-- 2. Records 테이블 RLS 정책 (본인 데이터만!)
 alter table records enable row level security;
-create policy "Allow all access" on records for all using (true) with check (true);
 
--- profiles 테이블 생성
-create table if not exists profiles (
-  id uuid primary key, -- Magic Key
-  name text default '런너님',
-  weight float8,
-  height float8,
-  goal text,
-  birthdate date,
-  gender text,
-  characterId integer,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+create policy "Users can view their own records" on records
+  for select using (auth.uid() = user_id);
 
--- Profiles RLS 보안 설정
+create policy "Users can insert their own records" on records
+  for insert with check (auth.uid() = user_id);
+
+create policy "Users can update their own records" on records
+  for update using (auth.uid() = user_id);
+
+create policy "Users can delete their own records" on records
+  for delete using (auth.uid() = user_id);
+
+-- 3. Profiles 테이블 RLS 정책 (본인 데이터만!)
 alter table profiles enable row level security;
-create policy "Allow all access on profiles" on profiles for all using (true) with check (true);
+
+create policy "Users can view their own profile" on profiles
+  for select using (auth.uid() = id);
+
+create policy "Users can insert their own profile" on profiles
+  for insert with check (auth.uid() = id);
+
+create policy "Users can update their own profile" on profiles
+  for update using (auth.uid() = id);
+
+-- 4. Auth 연동을 위한 트리거 (회원가입 시 프로필 자동 생성 - 선택 사항이지만 권장)
+-- 이 부분은 필요 시 추가 가능하나, 현재는 useProfileManager에서 수동 upsert로 관리 중입니다.
