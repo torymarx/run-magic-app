@@ -86,7 +86,11 @@ function App() {
     const [showRecordResult, setShowRecordResult] = useState<any>(null); // v18.0
 
     // 2.5 Profile Management
-    const { profile, updateProfile, isLoading: isProfileLoading } = useProfileManager(user?.id);
+    const {
+        profile,
+        updateProfile,
+        refreshProfile: refreshProfileData
+    } = useProfileManager(user?.id);
 
     // 3. Record Management Logic
     const {
@@ -99,7 +103,6 @@ function App() {
         handleImportRecords,
         totalDays,
         lastSyncStatus, // v13.2
-        refreshData, // v13.3
         calculateLevelInfo, // v16.0
         medalAchievements: currentMedalAchievements // v17.0
     } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id);
@@ -335,10 +338,8 @@ function App() {
                 <ProfileSection
                     profile={profile}
                     onUpdate={updateProfile}
-                    isLoading={isProfileLoading}
                     syncStatus={lastSyncStatus} // v13.2
-                    recordCount={records.length} // v13.2
-                    onRefreshData={refreshData} // v13.3
+                    onRefreshData={refreshProfileData} // v19.8: Named correctly to avoid conflict
                     onClose={() => setShowProfileModal(false)}
                     points={points}
                     calculateLevelInfo={calculateLevelInfo}
