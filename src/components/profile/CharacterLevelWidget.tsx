@@ -32,12 +32,12 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints
             borderRadius: '20px',
             border: `1px solid ${theme.color}33`,
             boxShadow: `0 0 20px ${theme.color}11`,
-            width: '240px'
+            width: '200px'
         }}>
             {/* Character Avatar Box */}
             <div style={{
-                width: '120px',
-                height: '120px',
+                width: '100px',
+                height: '100px',
                 borderRadius: '50%',
                 background: theme.bg,
                 border: `2px solid ${theme.color}`,
@@ -46,7 +46,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints
                 justifyContent: 'center',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: `0 0 30px ${theme.color}22`
+                boxShadow: `0 0 20px ${theme.color}22`
             }}>
                 {/* Visual Effects Layer */}
                 {levelInfo.level >= 2 && (

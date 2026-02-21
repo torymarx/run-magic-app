@@ -138,26 +138,28 @@ const VirtualRaceTrack: React.FC<VirtualRaceTrackProps> = ({ currentRecord, allR
                 {/* Finish Line - Perfectly Aligned at the end of the track area */}
                 <div style={{
                     position: 'absolute',
-                    top: '20px',
-                    bottom: '20px',
+                    top: '15px',
+                    bottom: '15px',
                     right: '80px',
-                    width: '4px',
-                    background: 'linear-gradient(to bottom, transparent, var(--electric-blue), transparent)',
+                    width: '3px',
+                    background: 'linear-gradient(to bottom, transparent, var(--electric-blue), var(--electric-blue), transparent)',
                     zIndex: 2,
-                    boxShadow: '0 0 20px var(--electric-blue)'
+                    boxShadow: '0 0 15px var(--electric-blue), 0 0 30px rgba(0, 209, 255, 0.3)',
+                    opacity: 0.8
                 }}>
-                    <div style={{ position: 'absolute', top: '-15px', left: '-10px', color: 'var(--electric-blue)' }}>
-                        <Flag size={20} />
+                    <div style={{ position: 'absolute', top: '-18px', left: '50%', transform: 'translateX(-50%)', color: 'var(--electric-blue)', filter: 'drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))' }}>
+                        <Flag size={22} strokeWidth={2.5} />
                     </div>
                     <span style={{
                         position: 'absolute',
-                        bottom: '-25px',
+                        bottom: '-30px',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
+                        fontSize: '0.8rem',
+                        fontWeight: '800',
                         color: 'var(--electric-blue)',
                         whiteSpace: 'nowrap',
+                        letterSpacing: '1px',
                         textShadow: '0 0 10px rgba(0, 209, 255, 0.5)'
                     }}>FINISH ({currentRecord.distance.toFixed(2)}km)</span>
                 </div>

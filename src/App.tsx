@@ -74,7 +74,11 @@ function App() {
 
     const [initialManualDate, setInitialManualDate] = useState<string | null>(null);
     const [editingRecord, setEditingRecord] = useState<any>(null);
-    const [selectedCoach, setSelectedCoach] = useState(coaches[6]); // Default: Wellness (New!)
+    // v19.2: 앱 시작 시 조언 코치 랜덤 지정 (항상 같은 코치가 나오지 않도록 개선)
+    const [selectedCoach, setSelectedCoach] = useState(() => {
+        const randomIndex = Math.floor(Math.random() * coaches.length);
+        return coaches[randomIndex];
+    });
     const [viewingDate, setViewingDate] = useState(new Date()); // 전역 조회 날짜 (코칭 연동용)
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showCoachReport, setShowCoachReport] = useState(false);
@@ -221,7 +225,7 @@ function App() {
     }
 
     return (
-        <div className="app-container" style={{ position: 'relative', minHeight: '100vh', padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="app-container" style={{ position: 'relative', minHeight: '100vh', padding: '80px 1rem 2rem 1rem', maxWidth: '1400px', margin: '0 auto' }}>
             <AuroraBackground />
 
             {/* v12.3: 로그아웃/저장 중 오버레이 */}

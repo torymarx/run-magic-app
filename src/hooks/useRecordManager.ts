@@ -230,7 +230,14 @@ export const useRecordManager = (
                 time: new Date().toLocaleTimeString(),
                 message: error.message
             });
-            alert(`클라우드 저장 실패! ⛔\n이유: ${error.message}\n(SQL 명령어를 실행하셨는지 다시 한번 확인해 주세요)`);
+
+            // v18.1: 스키마 불일치 에러에 대한 구체적인 가이드 추가
+            const isSchemaError = error.message.includes('column') || error.message.includes('raceComparisons');
+            const alertMsg = isSchemaError
+                ? `클라우드 저장 실패! ⛔\n데이터베이스 스키마가 최신이 아닙니다.\n\n해결방법: 프로젝트의 'schema_update.sql' 파일 내용을 Supabase SQL Editor에서 실행해 주세요.`
+                : `클라우드 저장 실패! ⛔\n이유: ${error.message}`;
+
+            alert(alertMsg);
             console.groupEnd();
             throw error;
         }

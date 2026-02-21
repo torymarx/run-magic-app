@@ -116,15 +116,31 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                     </div>
                     <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
                         {!isEditing ? (
-                            <button onClick={() => setIsEditing(true)} className="glass-button" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="nav-chip"
+                                style={{
+                                    padding: '0.6rem 1.2rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    background: 'var(--electric-blue)',
+                                    color: 'black',
+                                    border: 'none',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    borderRadius: '12px',
+                                    boxShadow: '0 0 15px rgba(0, 209, 255, 0.4)'
+                                }}
+                            >
                                 <Edit3 size={16} /> 정보 수정
                             </button>
                         ) : (
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={handleSave} className="glass-button" style={{ background: 'var(--neon-green)', color: 'black', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <button onClick={handleSave} className="nav-chip" style={{ background: 'var(--neon-green)', color: 'black', border: 'none', fontWeight: 'bold', padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '12px' }}>
                                     <Save size={16} /> 저장
                                 </button>
-                                <button onClick={() => setIsEditing(false)} className="glass-button" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <button onClick={() => setIsEditing(false)} className="nav-chip" style={{ padding: '0.6rem 1.2rem', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '12px' }}>
                                     <X size={16} /> 취소
                                 </button>
                             </div>
@@ -135,63 +151,65 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                     </div>
                 </div>
 
-                {isEditing && (
-                    <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.8, margin: 0 }}>나에게 맞는 고유 캐릭터(DNA) 선택:</p>
+                {/* v18.2: 캐릭터 레벨 카드 전시기능 (스크롤 가능) */}
+                <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <p style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', margin: 0, fontFamily: 'Outfit, sans-serif' }}>🧬 캐릭터 진화 타임라인</p>
+                        {isEditing && (
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
-                                    onClick={() => setEditData({ ...editData, gender: 'male' })}
-                                    style={{
-                                        padding: '0.3rem 0.8rem',
-                                        borderRadius: '20px',
-                                        fontSize: '0.8rem',
-                                        cursor: 'pointer',
-                                        background: editData.gender === 'male' ? 'rgba(0,209,255,0.2)' : 'transparent',
-                                        border: editData.gender === 'male' ? '1px solid var(--electric-blue)' : '1px solid rgba(255,255,255,0.1)',
-                                        color: editData.gender === 'male' ? 'var(--electric-blue)' : 'white'
-                                    }}
-                                >
-                                    남성
-                                </button>
-                                <button
-                                    onClick={() => setEditData({ ...editData, gender: 'female' })}
-                                    style={{
-                                        padding: '0.3rem 0.8rem',
-                                        borderRadius: '20px',
-                                        fontSize: '0.8rem',
-                                        cursor: 'pointer',
-                                        background: editData.gender === 'female' ? 'rgba(189,0,255,0.2)' : 'transparent',
-                                        border: editData.gender === 'female' ? '1px solid var(--vibrant-purple)' : '1px solid rgba(255,255,255,0.1)',
-                                        color: editData.gender === 'female' ? 'var(--vibrant-purple)' : 'white'
-                                    }}
-                                >
-                                    여성
-                                </button>
+                                <button onClick={() => setEditData({ ...editData, gender: 'male' })} style={{ padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', cursor: 'pointer', background: editData.gender === 'male' ? 'rgba(0,209,255,0.2)' : 'rgba(255,255,255,0.05)', border: editData.gender === 'male' ? '1px solid var(--electric-blue)' : '1px solid transparent', color: editData.gender === 'male' ? 'var(--electric-blue)' : 'white' }}>남성</button>
+                                <button onClick={() => setEditData({ ...editData, gender: 'female' })} style={{ padding: '4px 12px', borderRadius: '10px', fontSize: '0.75rem', cursor: 'pointer', background: editData.gender === 'female' ? 'rgba(189,0,255,0.2)' : 'rgba(255,255,255,0.05)', border: editData.gender === 'female' ? '1px solid var(--vibrant-purple)' : '1px solid transparent', color: editData.gender === 'female' ? 'var(--vibrant-purple)' : 'white' }}>여성</button>
                             </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.8rem' }}>
-                            {KODARI_CHARACTERS[editData.gender === 'female' ? 'female' : 'male'].map(char => (
+                        )}
+                    </div>
+
+                    <div className="custom-scrollbar" style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        overflowX: 'auto',
+                        paddingBottom: '1.2rem',
+                        paddingTop: '0.5rem',
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
+                    }}>
+                        <div style={{ minWidth: '5px' }} />
+                        {KODARI_CHARACTERS[editData.gender === 'female' ? 'female' : 'male'].map(char => {
+                            const isCurrent = profile.characterId === char.id;
+                            const isAchieved = levelInfo.level >= char.id;
+                            const isSelected = editData.characterId === char.id;
+
+                            return (
                                 <div
                                     key={char.id}
-                                    onClick={() => setEditData({ ...editData, characterId: char.id })}
+                                    onClick={() => isEditing && setEditData({ ...editData, characterId: char.id })}
                                     style={{
-                                        cursor: 'pointer',
-                                        padding: '0.8rem',
-                                        borderRadius: '12px',
+                                        minWidth: '160px',
+                                        width: '160px',
+                                        padding: '1.5rem 1rem',
+                                        borderRadius: '20px',
                                         textAlign: 'center',
-                                        background: editData.characterId === char.id ? 'rgba(0,209,255,0.1)' : 'transparent',
-                                        border: editData.characterId === char.id ? '1px solid var(--electric-blue)' : '1px solid rgba(255,255,255,0.1)',
-                                        transition: 'all 0.2s ease'
+                                        background: isSelected ? 'rgba(0,209,255,0.1)' : 'rgba(255,255,255,0.03)',
+                                        border: isSelected ? '2px solid var(--electric-blue)' : '1px solid rgba(255,255,255,0.05)',
+                                        boxShadow: isSelected ? '0 0 20px rgba(0,209,255,0.2)' : 'none',
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        opacity: isAchieved || isEditing ? 1 : 0.4,
+                                        cursor: isEditing ? 'pointer' : 'default',
+                                        position: 'relative',
+                                        transform: isSelected ? 'translateY(-5px)' : 'none'
                                     }}
                                 >
-                                    <div style={{ fontSize: '1.5rem', marginBottom: '0.4rem' }}>{char.emoji}</div>
-                                    <div style={{ fontSize: '0.7rem', opacity: editData.characterId === char.id ? 1 : 0.6 }}>{char.name}</div>
+                                    {isCurrent && (
+                                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'var(--electric-blue)', color: 'black', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>ACTIVE</div>
+                                    )}
+                                    <div style={{ fontSize: '3rem', marginBottom: '1rem', filter: isAchieved || isEditing ? 'none' : 'grayscale(100%)' }}>{char.emoji}</div>
+                                    <div style={{ fontSize: '1rem', fontWeight: 'bold', color: isAchieved || isEditing ? 'white' : 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>Lv.{char.id} {char.name}</div>
+                                    <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>{char.description}</div>
                                 </div>
-                            ))}
-                        </div>
+                            );
+                        })}
+                        <div style={{ minWidth: '5px' }} />
                     </div>
-                )}
+                </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                     {/* Weight Card */}
@@ -253,13 +271,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 </div>
 
                 <div style={{ marginTop: '1.5rem', padding: '1.2rem', background: 'rgba(189,0,255,0.05)', borderRadius: '16px', borderLeft: '4px solid var(--vibrant-purple)', boxShadow: 'var(--inner-light)' }}>
-                    <p style={{ fontSize: '0.95rem', color: 'var(--vibrant-purple)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>✨ 영자 실장의 분석 :</p>
+                    <p style={{ fontSize: '0.95rem', color: 'var(--vibrant-purple)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>✨ 코칭 시스템 전문 분석 :</p>
                     <p style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.3rem' }}>
                         {profile.weight && profile.height ?
-                            `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다.런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
-                            "런너님의 상세 정보를 입력해 주시면 더욱 정밀한 영자 분석 리포트를 제공해 드릴 수 있습니다."}
+                            `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다. 런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
+                            "런너님의 상세 정보를 입력해 주시면 더욱 정밀한 코칭 분석 리포트를 제공해 드릴 수 있습니다."}
                     </p>
                 </div>
+
 
 
                 {/* 계정 관리 섹션 (신규) */}
