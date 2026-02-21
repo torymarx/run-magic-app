@@ -93,7 +93,6 @@ function App() {
         records,
         lastSavedRecord,
         setLastSavedRecord,
-        baselines,
         isCloudConnected,
         handleManualSave,
         handleDeleteRecord,
@@ -113,7 +112,7 @@ function App() {
     }, [currentMedalAchievements]);
 
     // 4. AI Coach System Logic (Refactored)
-    const { message: coachMessage, recommendation, periodStats, recentStats } = useAICoachSystem(
+    const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
         selectedCoach.id,
         isRecording,
         distance,
