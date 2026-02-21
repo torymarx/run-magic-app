@@ -7,6 +7,8 @@ const AuroraBackground = () => {
             <div className="aurora-blob aurora-1"></div>
             <div className="aurora-blob aurora-2"></div>
             <div className="aurora-blob aurora-3"></div>
+            <div className="aurora-blob aurora-4"></div>
+            <div className="aurora-blob aurora-5"></div>
         </div>
     );
 };

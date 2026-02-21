@@ -396,8 +396,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <h3 className="neon-text-blue" style={{ margin: 0, fontSize: '1.1rem' }}>
-                        {editingId ? '📝 기록 수정 모드' : '🏁 정밀 러닝 기록 & 히스토리 (v7.4)'}
+                    <h3 className="neon-text-blue" style={{ margin: 0, fontSize: '1.2rem', fontFamily: 'Outfit, sans-serif' }}>
+                        {editingId ? '📝 기록 수정 모드' : '🏁 정밀 러닝 기록 & 히스토리'}
                     </h3>
                     {editingId && (
                         <button

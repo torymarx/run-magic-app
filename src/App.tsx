@@ -318,10 +318,12 @@ function App() {
                 />
             )}
 
-            <BadgeHallOfFame
-                unlockedBadges={unlockedBadges}
-                unlockedMedals={unlockedMedals}
-            />
+            <div className="reveal delay-1">
+                <BadgeHallOfFame
+                    unlockedBadges={unlockedBadges}
+                    unlockedMedals={unlockedMedals}
+                />
+            </div>
 
             {showProfileModal && (
                 <ProfileSection
@@ -337,7 +339,7 @@ function App() {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ position: 'relative' }}>
+                <div className="reveal delay-2" style={{ position: 'relative' }}>
                     <BioPerformanceChart
                         records={records}
                         viewingDate={viewingDate}
@@ -359,7 +361,7 @@ function App() {
                 </div>
 
                 {/* 2. Action Zone */}
-                <div className="action-zone" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                <div className="action-zone reveal delay-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
                     <CalendarSection
                         records={records}
                         onDelete={handleDeleteRecord}

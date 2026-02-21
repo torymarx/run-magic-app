@@ -16,8 +16,8 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, unit, trend, tr
                 <span className="neon-text-blue">{icon}</span>
                 <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>{label}</span>
             </div>
-            <h2 style={{ fontSize: '2rem' }}>
-                {value} {unit && <span style={{ fontSize: '1rem', opacity: 0.6 }}>{unit}</span>}
+            <h2 style={{ fontSize: '2.4rem', margin: '0.2rem 0', fontFamily: 'Outfit, sans-serif' }}>
+                {value} <span style={{ fontSize: '1.1rem', opacity: 0.4, fontWeight: 400, fontFamily: 'Inter, sans-serif' }}>{unit}</span>
             </h2>
             {trend && (
                 <p className={trendType === 'positive' ? 'neon-text-green' : 'neon-text-blue'} style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>

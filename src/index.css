@@ -1,11 +1,13 @@
 :root {
-  --core-dark: #0a0a0c;
-  --surface: rgba(255, 255, 255, 0.05);
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --core-dark: #050507;
+  --surface: rgba(255, 255, 255, 0.03);
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --inner-light: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   --electric-blue: #00d1ff;
   --neon-green: #39ff14;
   --vibrant-purple: #bd00ff;
+  --soft-blue: rgba(0, 209, 255, 0.15);
 }
 
 * {
@@ -20,42 +22,61 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .glass-card {
   background: var(--surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--inner-light), 0 10px 40px rgba(0, 0, 0, 0.3);
+  border-radius: 24px;
   padding: 2rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-4px);
+  box-shadow: var(--inner-light), 0 15px 50px rgba(0, 209, 255, 0.1);
 }
 
 .global-nav {
-  background: rgba(10, 10, 12, 0.6);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 0.8rem 1.5rem;
+  background: rgba(10, 10, 12, 0.4);
+  backdrop-filter: blur(30px) saturate(150%);
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+  border-bottom: 0.5px solid var(--glass-border);
+  padding: 0.7rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  margin-bottom: 2.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 .nav-chip {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.5px solid var(--glass-border);
   padding: 0.5rem 1rem;
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-size: 0.85rem;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  box-shadow: var(--inner-light);
 }
 
 .nav-chip:hover {
@@ -178,7 +199,7 @@ h3 {
   }
 }
 
-/* Aurora Background */
+/* Aurora Background 2.0 */
 .aurora-container {
   position: fixed;
   top: 0;
@@ -187,52 +208,123 @@ h3 {
   bottom: 0;
   z-index: -1;
   overflow: hidden;
-  background: #050505;
+  background: #020204;
+  /* 더 깊은 심해 색상 */
 }
 
 .aurora-blob {
   position: absolute;
-  width: 600px;
-  height: 600px;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.15;
-  animation: move 25s infinite alternate;
+  filter: blur(140px);
+  opacity: 0.12;
+  animation: move 30s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95);
 }
 
 .aurora-1 {
+  width: 800px;
+  height: 800px;
   background: var(--electric-blue);
-  top: -10%;
+  top: -20%;
   left: -10%;
 }
 
 .aurora-2 {
+  width: 600px;
+  height: 600px;
   background: var(--vibrant-purple);
   bottom: -10%;
-  right: -10%;
-  animation-delay: -5s;
+  right: -5%;
+  animation-delay: -7s;
 }
 
 .aurora-3 {
+  width: 500px;
+  height: 500px;
   background: var(--neon-green);
-  top: 30%;
-  right: 20%;
+  top: 40%;
+  right: 15%;
+  animation-delay: -15s;
+}
+
+.aurora-4 {
+  width: 700px;
+  height: 700px;
+  background: #ff007a;
+  bottom: 10%;
+  left: 10%;
+  opacity: 0.08;
+  animation-delay: -22s;
+}
+
+.aurora-5 {
+  width: 400px;
+  height: 400px;
+  background: #00ffcc;
+  top: 10%;
+  right: 30%;
+  opacity: 0.06;
   animation-delay: -10s;
 }
 
 @keyframes move {
-  from {
-    transform: translate(0, 0) scale(1);
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
   }
 
-  to {
-    transform: translate(100px, 100px) scale(1.2);
+  50% {
+    transform: translate(150px, 100px) scale(1.1) rotate(45deg);
+  }
+
+  100% {
+    transform: translate(-50px, 200px) scale(0.9) rotate(-45deg);
   }
 }
 
-/* Neon Text Glow */
+/* Staggered Reveal Animation */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: revealIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes revealIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.delay-1 {
+  animation-delay: 0.1s;
+}
+
+.delay-2 {
+  animation-delay: 0.2s;
+}
+
+.delay-3 {
+  animation-delay: 0.3s;
+}
+
+.delay-4 {
+  animation-delay: 0.4s;
+}
+
+/* Existing Animations keep... */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .neon-glow {
-  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  text-shadow: 0 0 10px currentColor, 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
 /* Hide Number Input Spinners */

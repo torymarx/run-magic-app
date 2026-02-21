@@ -90,7 +90,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                                     placeholder="성함을 입력하세요"
                                 />
                             ) : (
-                                <h2 className="neon-text-blue" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{profile.name} {profile.name === '런너님' ? '' : '런너님'}</h2>
+                                <h2 className="neon-text-blue" style={{ fontSize: '1.6rem', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>{profile.name} {profile.name === '런너님' ? '' : '런너님'}</h2>
                             )}
                             <p style={{ opacity: 0.6, fontSize: '0.9rem' }}>{currentCharacter.name} ({currentCharacter.description}) 모드로 질주 중</p>
                         </div>
@@ -233,8 +233,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                     </div>
                 </div>
 
-                <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(189,0,255,0.05)', borderRadius: '12px', borderLeft: '4px solid var(--vibrant-purple)' }}>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--vibrant-purple)', fontWeight: 'bold' }}>✨ 영자 실장의 분석 :</p>
+                <div style={{ marginTop: '1.5rem', padding: '1.2rem', background: 'rgba(189,0,255,0.05)', borderRadius: '16px', borderLeft: '4px solid var(--vibrant-purple)', boxShadow: 'var(--inner-light)' }}>
+                    <p style={{ fontSize: '0.95rem', color: 'var(--vibrant-purple)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>✨ 영자 실장의 분석 :</p>
                     <p style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.3rem' }}>
                         {profile.weight && profile.height ?
                             `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다. 런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
@@ -271,7 +271,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                 <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(0,209,255,0.03)', borderRadius: '12px', border: '1px solid rgba(0,209,255,0.1)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
                         <ShieldCheck size={20} className="neon-text-blue" />
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>런매직 공식 인증 계정</h3>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: 0, fontFamily: 'Outfit, sans-serif' }}>런매직 공식 인증 계정</h3>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '10px' }}>
@@ -308,7 +308,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                         }} />
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-                            <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--electric-blue)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--electric-blue)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>
                                 <ShieldCheck size={18} /> 클라우드 연동 정밀 진단
                             </h4>
                             {onRefreshData && (

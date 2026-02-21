@@ -24,9 +24,9 @@ const AICoachSidebar: React.FC<AICoachSidebarProps> = ({
             boxShadow: isRecording ? `0 0 20px ${selectedCoach.color}22` : 'none',
             transition: 'all 0.5s ease-in-out'
         }}>
-            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }} className="neon-text-blue">
-                <span style={{ fontSize: '1.2rem' }}>{selectedCoach.emoji}</span>
-                <span style={{ color: selectedCoach.color }}>{selectedCoach.name} 코칭 스튜디오</span>
+            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', fontFamily: 'Outfit, sans-serif' }} className="neon-text-blue">
+                <span style={{ fontSize: '1.3rem' }}>{selectedCoach.emoji}</span>
+                <span style={{ color: selectedCoach.color, fontSize: '1.1rem' }}>{selectedCoach.name} 코칭 스튜디오</span>
             </h3>
 
             {/* Coach Selection */}
@@ -112,14 +112,16 @@ const AICoachSidebar: React.FC<AICoachSidebarProps> = ({
                     style={{
                         background: isRecording ? 'var(--core-dark)' : `linear-gradient(90deg, ${selectedCoach.color}, #BD00FF)`,
                         border: isRecording ? `1px solid ${selectedCoach.color}` : 'none',
-                        padding: '1.2rem',
-                        borderRadius: '16px',
+                        padding: '1.3rem',
+                        borderRadius: '18px',
                         color: 'white',
                         fontWeight: 'bold',
+                        fontFamily: 'Outfit, sans-serif',
+                        fontSize: '1rem',
                         cursor: 'pointer',
                         marginTop: '1rem',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        boxShadow: isRecording ? 'none' : `0 10px 20px ${selectedCoach.color}33`,
+                        boxShadow: isRecording ? 'none' : `0 10px 30px ${selectedCoach.color}44`,
                         transform: 'scale(1)',
                     }}
                     onMouseOver={(e) => !isRecording && (e.currentTarget.style.transform = 'scale(1.02)')}

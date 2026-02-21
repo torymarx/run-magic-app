@@ -190,11 +190,12 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
             {/* Header */}
             <h3 className="neon-text-blue" style={{
                 margin: 0,
-                fontSize: '1.1rem',
+                fontSize: '1.2rem',
+                fontFamily: 'Outfit, sans-serif',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.8rem',
-                letterSpacing: '0.5px'
+                letterSpacing: '-0.02em'
             }}>
                 <div style={{
                     display: 'flex',
