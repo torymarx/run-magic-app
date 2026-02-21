@@ -12,9 +12,10 @@ import { MEDAL_DATA } from '../data/medals';
 interface BadgeHallOfFameProps {
     unlockedBadges: string[];
     unlockedMedals: string[];
+    medalAchievements?: { [id: string]: string }; // v17.0
 }
 
-const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unlockedMedals }) => {
+const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unlockedMedals, medalAchievements }) => {
     // Rarity Colors
     const RARITY = {
         COMMON: '#8C8C8C',
@@ -95,13 +96,22 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         COMMON: 1
     };
 
-    // v15.0: Phase 우선 정렬 로직
-    const sortedItems = [...allItems].sort((a, b) => {
+    // v17.0: 복합 정렬 로직 (획득 우선 -> Phase -> Rarity)
+    const sortedItems = [...allItems].map(item => ({
+        ...item,
+        isUnlocked: item.type === 'trophy' ? unlockedBadges.includes(item.id) : unlockedMedals.includes(item.id),
+        date: medalAchievements?.[item.id] || null
+    })).sort((a, b) => {
+        // 1. 획득 여부 우선 (획득한 것이 위로)
+        if (a.isUnlocked !== b.isUnlocked) return a.isUnlocked ? -1 : 1;
+
+        // 2. Phase 순 (낮은 단계부터)
         if (a.phase !== b.phase) return a.phase - b.phase;
+
+        // 3. Rarity 순 (Common -> Legendary)
         const rankA = RARITY_RANK[a.rarity as keyof typeof RARITY_RANK];
         const rankB = RARITY_RANK[b.rarity as keyof typeof RARITY_RANK];
-        if (rankA !== rankB) return rankB - rankA;
-        return a.id.localeCompare(b.id);
+        return rankA - rankB;
     });
 
     // State for auto-scrolling & Info Panel
@@ -144,42 +154,51 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         };
     }, []);
 
-    const InventorySlot = ({ item, isUnlocked }: any) => {
+    const InventorySlot = ({ item }: any) => {
         const color = RARITY[item.rarity as keyof typeof RARITY];
         const isSelected = hoveredItem?.id === item.id;
+        const isUnlocked = item.isUnlocked;
 
         return (
             <div
                 className="inventory-slot"
-                onMouseEnter={() => setHoveredItem({ ...item, isUnlocked })}
+                onMouseEnter={() => setHoveredItem(item)}
                 style={{
                     position: 'relative',
-                    minWidth: '60px',
-                    width: '60px',
-                    height: '60px',
+                    minWidth: '70px',
+                    width: '70px',
+                    height: '80px',
                     background: isUnlocked
-                        ? `radial-gradient(circle at center, ${color}22 0%, rgba(20,20,25,0.8) 100%)`
-                        : 'rgba(255,255,255,0.03)',
-                    border: isUnlocked
-                        ? `1px solid ${isSelected ? color : `${color}66`}`
-                        : '1px solid rgba(255,255,255,0.05)',
-                    borderRadius: '12px',
+                        ? `linear-gradient(135deg, ${color}33 0%, rgba(20,20,30,0.9) 100%)`
+                        : 'rgba(255,255,255,0.02)',
+                    // v17.0: 고유 육각형 디자인 적용
+                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    boxShadow: isUnlocked && isSelected ? `0 0 20px ${color}66` : (isUnlocked ? `0 0 10px ${color}22` : 'none'),
-                    transform: isSelected ? 'scale(1.15) translateY(-5px)' : 'scale(1)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isSelected ? 'scale(1.15) rotate(5deg)' : 'scale(1)',
                     zIndex: isSelected ? 10 : 1,
-                    flexShrink: 0
+                    flexShrink: 0,
+                    border: 'none', // Clip-path uses outline/shadow via pseudo or parent
+                    boxShadow: isUnlocked && isSelected ? `0 0 20px ${color}88` : 'none',
+                    opacity: isUnlocked ? 1 : 0.4
                 }}
             >
+                {/* Border layer using clip-path trick */}
+                <div style={{
+                    position: 'absolute',
+                    top: '2px', left: '2px', right: '2px', bottom: '2px',
+                    background: isUnlocked ? 'rgba(20,20,30,0.95)' : 'rgba(10,10,15,0.8)',
+                    clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+                    zIndex: -1
+                }} />
+
                 <div style={{
                     color: isUnlocked ? color : 'rgba(255,255,255,0.1)',
-                    filter: isUnlocked ? `drop-shadow(0 0 5px ${color})` : 'none',
-                    opacity: isUnlocked ? 1 : 0.4,
-                    transition: 'all 0.2s'
+                    filter: isUnlocked ? `drop-shadow(0 0 8px ${color})` : 'none',
+                    transition: 'all 0.3s'
                 }}>
                     {item.icon}
                 </div>
@@ -187,14 +206,22 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                 {isUnlocked && (
                     <div style={{
                         position: 'absolute',
-                        bottom: '5px',
-                        right: '5px',
-                        width: '6px',
-                        height: '6px',
+                        top: '15%',
+                        right: '15%',
+                        width: '8px',
+                        height: '8px',
                         borderRadius: '50%',
                         background: color,
-                        boxShadow: `0 0 5px ${color}`
+                        boxShadow: `0 0 10px ${color}`,
+                        animation: 'pulse 2s infinite'
                     }} />
+                )}
+
+                {/* 미달성 시 락 아이콘 오버레이 */}
+                {!isUnlocked && (
+                    <div style={{ position: 'absolute', opacity: 0.3 }}>
+                        <Lock size={14} color="#fff" />
+                    </div>
                 )}
             </div>
         );
@@ -270,7 +297,6 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     <InventorySlot
                         key={idx}
                         item={item}
-                        isUnlocked={item.type === 'trophy' ? unlockedBadges.includes(item.id) : unlockedMedals.includes(item.id)}
                     />
                 ))}
 
@@ -336,7 +362,17 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                 </span>
                             </div>
                             <span style={{ fontSize: '0.85rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', fontWeight: hoveredItem.isUnlocked ? 'normal' : 'bold' }}>
-                                {hoveredItem.isUnlocked ? (hoveredItem.detail || hoveredItem.description) : `🛑 미션: ${hoveredItem.description}`}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY], fontWeight: 'bold' }}>[달성 미션]</span>
+                                        {hoveredItem.description}
+                                    </div>
+                                    {hoveredItem.date && (
+                                        <div style={{ fontSize: '0.75rem', opacity: 0.7, color: 'var(--electric-blue)' }}>
+                                            📅 달성일: {hoveredItem.date}
+                                        </div>
+                                    )}
+                                </div>
                             </span>
                         </div>
 

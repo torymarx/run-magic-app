@@ -35,6 +35,7 @@ export const useRecordManager = (
             setPoints(0);
             setUnlockedBadges([]);
             setUnlockedMedals([]);
+            setMedalAchievements({}); // v17.0
             setLastSyncStatus({
                 status: 'IDLE',
                 time: '-',
@@ -220,11 +221,18 @@ export const useRecordManager = (
         setLastSavedRecord(newRecord);
     };
 
-    // v15.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
+    // v17.0: 메달 달성 시점(날짜) 추적을 위한 상태 추가
+    const [medalAchievements, setMedalAchievements] = useState<{ [id: string]: string }>({});
+
+    // v15.0/v17.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
     const recalculateAllAchievements = (data: any[]) => {
         if (!data) return;
 
+        // v17.0: 날짜순 정렬된 복사본 (달성 시점 추적용)
+        const chronologicalData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
         let newMedals: string[] = [];
+        let newMedalAchievements: { [id: string]: string } = {};
         let recalculatedPoints = 0;
 
         // 기초 통계 산출
@@ -236,84 +244,315 @@ export const useRecordManager = (
         // 메달별 조건 체크 (50개)
         MEDAL_DATA.forEach(medal => {
             let isUnlocked = false;
+            let achievementDate = '-';
+
+            // 달성일 추적 도우미
+            const findFirstOccurrence = (predicate: (r: any, idx: number, arr: any[]) => boolean) => {
+                const first = chronologicalData.find(predicate);
+                return first ? first.date : null;
+            };
 
             switch (medal.id) {
                 // Phase 1
-                case 'm1': isUnlocked = true; break; // 프로필 활성화 (현 시점 기본)
-                case 'm2': isUnlocked = data.some(r => r.distance >= 1); break;
-                case 'm3': isUnlocked = data.some(r => parseTimeToSeconds(r.totalTime) >= 600); break;
-                case 'm4': isUnlocked = data.some(r => {
-                    const h = parseInt(r.time.split(':')[0]);
-                    return h >= 5 && h < 9;
-                }); break;
-                case 'm5': isUnlocked = data.some(r => {
-                    const h = parseInt(r.time.split(':')[0]);
-                    return h >= 19 || h < 24;
-                }); break;
+                case 'm1':
+                    isUnlocked = true;
+                    achievementDate = data.length > 0 ? chronologicalData[0].date : new Date().toISOString().split('T')[0];
+                    break;
+                case 'm2':
+                    const d2 = findFirstOccurrence(r => r.distance >= 1);
+                    if (d2) { isUnlocked = true; achievementDate = d2; }
+                    break;
+                case 'm3':
+                    const d3 = findFirstOccurrence(r => parseTimeToSeconds(r.totalTime) >= 600);
+                    if (d3) { isUnlocked = true; achievementDate = d3; }
+                    break;
+                case 'm4':
+                    const d4 = findFirstOccurrence(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 5 && h < 9;
+                    });
+                    if (d4) { isUnlocked = true; achievementDate = d4; }
+                    break;
+                case 'm5':
+                    const d5 = findFirstOccurrence(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 19 || h < 24;
+                    });
+                    if (d5) { isUnlocked = true; achievementDate = d5; }
+                    break;
 
                 // Phase 2
-                case 'm6': isUnlocked = streak >= 3; break;
-                case 'm7': isUnlocked = data.length >= 3; break; // 실제론 1주일 조건이나 누적 3회로 일단 체크
-                case 'm8': isUnlocked = data.some(r => {
-                    const day = new Date(r.date).getDay();
-                    return day === 0 || day === 6;
-                }); break;
-                case 'm9': isUnlocked = totalDist >= 10; break;
-                case 'm10': isUnlocked = data.some(r => r.distance >= 3); break;
+                case 'm6':
+                    // 스트릭은 실시간 계산이므로 현재 세션 데이터 중 streak 요건 충족 시점 추정
+                    if (streak >= 3) {
+                        isUnlocked = true;
+                        achievementDate = chronologicalData[chronologicalData.length - 1].date;
+                    }
+                    break;
+                case 'm7':
+                    if (data.length >= 3) {
+                        isUnlocked = true;
+                        achievementDate = chronologicalData[2].date;
+                    }
+                    break;
+                case 'm8':
+                    const d8 = findFirstOccurrence(r => {
+                        const day = new Date(r.date).getDay();
+                        return day === 0 || day === 6;
+                    });
+                    if (d8) { isUnlocked = true; achievementDate = d8; }
+                    break;
+                case 'm9':
+                    // 누적 거리 10km 시점 추적
+                    let accDist9 = 0;
+                    for (const r of chronologicalData) {
+                        accDist9 += r.distance;
+                        if (accDist9 >= 10) {
+                            isUnlocked = true;
+                            achievementDate = r.date;
+                            break;
+                        }
+                    }
+                    break;
+                case 'm10':
+                    const d10 = findFirstOccurrence(r => r.distance >= 3);
+                    if (d10) { isUnlocked = true; achievementDate = d10; }
+                    break;
 
                 // Phase 3
-                case 'm11': isUnlocked = data.some(r => new Date(r.date).getDay() === 1); break;
-                case 'm12': isUnlocked = totalMinutes >= 100; break;
-                case 'm13': isUnlocked = data.filter(r => r.distance <= 2).length >= 5; break;
-                case 'm14': isUnlocked = data.some(r => r.distance >= 7); break;
+                case 'm11':
+                    const d11 = findFirstOccurrence(r => new Date(r.date).getDay() === 1);
+                    if (d11) { isUnlocked = true; achievementDate = d11; }
+                    break;
+                case 'm12':
+                    let accTime12 = 0;
+                    for (const r of chronologicalData) {
+                        accTime12 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime12 >= 100) {
+                            isUnlocked = true;
+                            achievementDate = r.date;
+                            break;
+                        }
+                    }
+                    break;
+                case 'm13':
+                    const shortRuns = chronologicalData.filter(r => r.distance <= 2);
+                    if (shortRuns.length >= 5) {
+                        isUnlocked = true;
+                        achievementDate = shortRuns[4].date;
+                    }
+                    break;
+                case 'm14':
+                    const d14 = findFirstOccurrence(r => r.distance >= 7);
+                    if (d14) { isUnlocked = true; achievementDate = d14; }
+                    break;
 
                 // Phase 4
-                case 'm15': isUnlocked = data.some(r => parseTimeToSeconds(r.totalTime) >= 1800); break;
-                case 'm16': isUnlocked = data.some(r => r.isImproved); break;
-                case 'm17': isUnlocked = data.some(r => r.distance >= 5); break;
-                case 'm18': isUnlocked = totalDist >= 30; break;
-                case 'm19': isUnlocked = data.length >= 10; break; // 한달 내 조건은 단순 누적 10회로 처리
-                case 'm20': isUnlocked = data.some(r => r.distance >= 10); break;
+                case 'm15':
+                    const d15 = findFirstOccurrence(r => parseTimeToSeconds(r.totalTime) >= 1800);
+                    if (d15) { isUnlocked = true; achievementDate = d15; }
+                    break;
+                case 'm16':
+                    const d16 = findFirstOccurrence(r => r.isImproved);
+                    if (d16) { isUnlocked = true; achievementDate = d16; }
+                    break;
+                case 'm17':
+                    const d17 = findFirstOccurrence(r => r.distance >= 5);
+                    if (d17) { isUnlocked = true; achievementDate = d17; }
+                    break;
+                case 'm18':
+                    let accDist18 = 0;
+                    for (const r of chronologicalData) {
+                        accDist18 += r.distance;
+                        if (accDist18 >= 30) {
+                            isUnlocked = true;
+                            achievementDate = r.date;
+                            break;
+                        }
+                    }
+                    break;
+                case 'm19':
+                    if (data.length >= 10) {
+                        isUnlocked = true;
+                        achievementDate = chronologicalData[9].date;
+                    }
+                    break;
+                case 'm20':
+                    const d20 = findFirstOccurrence(r => r.distance >= 10);
+                    if (d20) { isUnlocked = true; achievementDate = d20; }
+                    break;
 
                 // Phase 5 (누적 기록)
-                case 'm21': isUnlocked = totalDist >= 20; break;
-                case 'm22': isUnlocked = totalDist >= 50; break;
-                case 'm23': isUnlocked = totalMinutes >= 300; break;
-                case 'm24': isUnlocked = totalSessions >= 15; break;
-                case 'm25': isUnlocked = totalSessions >= 30; break;
-                case 'm26': isUnlocked = totalDist >= 100; break;
-                case 'm27': isUnlocked = totalMinutes >= 500; break;
-                case 'm28': isUnlocked = totalSessions >= 50; break;
-                case 'm29': isUnlocked = totalMinutes >= 1000; break;
-                case 'm30': isUnlocked = totalSessions >= 100; break;
+                case 'm21':
+                    let accDist21 = 0;
+                    for (const r of chronologicalData) {
+                        accDist21 += r.distance;
+                        if (accDist21 >= 20) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm22':
+                    let accDist22 = 0;
+                    for (const r of chronologicalData) {
+                        accDist22 += r.distance;
+                        if (accDist22 >= 50) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm23':
+                    let accTime23 = 0;
+                    for (const r of chronologicalData) {
+                        accTime23 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime23 >= 300) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm24':
+                    if (totalSessions >= 15) { isUnlocked = true; achievementDate = chronologicalData[14].date; }
+                    break;
+                case 'm25':
+                    if (totalSessions >= 30) { isUnlocked = true; achievementDate = chronologicalData[29].date; }
+                    break;
+                case 'm26':
+                    let accDist26 = 0;
+                    for (const r of chronologicalData) {
+                        accDist26 += r.distance;
+                        if (accDist26 >= 100) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm27':
+                    let accTime27 = 0;
+                    for (const r of chronologicalData) {
+                        accTime27 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime27 >= 500) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm28':
+                    if (totalSessions >= 50) { isUnlocked = true; achievementDate = chronologicalData[49].date; }
+                    break;
+                case 'm29':
+                    let accTime29 = 0;
+                    for (const r of chronologicalData) {
+                        accTime29 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime29 >= 1000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm30':
+                    if (totalSessions >= 100) { isUnlocked = true; achievementDate = chronologicalData[99].date; }
+                    break;
 
                 // Phase 6
-                case 'm31': isUnlocked = totalDist >= 150; break;
-                case 'm32': isUnlocked = totalDist >= 200; break;
-                case 'm33': isUnlocked = totalDist >= 300; break;
-                case 'm34': isUnlocked = totalMinutes >= 2000; break;
-                case 'm35': isUnlocked = totalMinutes >= 3000; break;
-                case 'm36': isUnlocked = totalSessions >= 150; break;
-                case 'm37': isUnlocked = totalSessions >= 180; break; // 6개월 연속 기준 완화
-                case 'm38': isUnlocked = totalSessions >= 200; break;
-                case 'm39': isUnlocked = totalMinutes >= 5000; break;
-                case 'm40': isUnlocked = totalDist >= 500; break;
+                case 'm31':
+                    let accDist31 = 0;
+                    for (const r of chronologicalData) {
+                        accDist31 += r.distance;
+                        if (accDist31 >= 150) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm32':
+                    let accDist32 = 0;
+                    for (const r of chronologicalData) {
+                        accDist32 += r.distance;
+                        if (accDist32 >= 200) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm33':
+                    let accDist33 = 0;
+                    for (const r of chronologicalData) {
+                        accDist33 += r.distance;
+                        if (accDist33 >= 300) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm34':
+                    let accTime34 = 0;
+                    for (const r of chronologicalData) {
+                        accTime34 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime34 >= 2000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm35':
+                    let accTime35 = 0;
+                    for (const r of chronologicalData) {
+                        accTime35 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime35 >= 3000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm36':
+                    if (totalSessions >= 150) { isUnlocked = true; achievementDate = chronologicalData[149].date; }
+                    break;
+                case 'm37':
+                    if (totalSessions >= 180) { isUnlocked = true; achievementDate = chronologicalData[179].date; }
+                    break;
+                case 'm38':
+                    if (totalSessions >= 200) { isUnlocked = true; achievementDate = chronologicalData[199].date; }
+                    break;
+                case 'm39':
+                    let accTime39 = 0;
+                    for (const r of chronologicalData) {
+                        accTime39 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime39 >= 5000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm40':
+                    let accDist40 = 0;
+                    for (const r of chronologicalData) {
+                        accDist40 += r.distance;
+                        if (accDist40 >= 500) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
 
                 // Phase 7
-                case 'm41': isUnlocked = totalMinutes >= 7000; break;
-                case 'm42': isUnlocked = totalDist >= 777; break;
-                case 'm43': isUnlocked = totalSessions >= 250; break;
-                case 'm44': isUnlocked = totalSessions >= 40; break; // 사계절 체크 대신 누적 40회 보수적 적용
-                case 'm45': isUnlocked = totalMinutes >= 10000; break;
-                case 'm46': isUnlocked = totalDist >= 1000; break;
-                case 'm47': isUnlocked = totalSessions >= 300; break;
-                case 'm48': isUnlocked = totalSessions >= 100; break; // 가입 1주년 연동은 추후 프로필 날짜와 결합
-                case 'm49': isUnlocked = totalSessions >= 365; break;
-                case 'm50': isUnlocked = totalDist >= 1000 && totalMinutes >= 10000 && totalSessions >= 365; break;
+                case 'm41':
+                    let accTime41 = 0;
+                    for (const r of chronologicalData) {
+                        accTime41 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime41 >= 7000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm42':
+                    let accDist42 = 0;
+                    for (const r of chronologicalData) {
+                        accDist42 += r.distance;
+                        if (accDist42 >= 777) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm43':
+                    if (totalSessions >= 250) { isUnlocked = true; achievementDate = chronologicalData[249].date; }
+                    break;
+                case 'm44':
+                    if (totalSessions >= 40) { isUnlocked = true; achievementDate = chronologicalData[39].date; }
+                    break;
+                case 'm45':
+                    let accTime45 = 0;
+                    for (const r of chronologicalData) {
+                        accTime45 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime45 >= 10000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm46':
+                    let accDist46 = 0;
+                    for (const r of chronologicalData) {
+                        accDist46 += r.distance;
+                        if (accDist46 >= 1000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm47':
+                    if (totalSessions >= 300) { isUnlocked = true; achievementDate = chronologicalData[299].date; }
+                    break;
+                case 'm48':
+                    if (totalSessions >= 100) { isUnlocked = true; achievementDate = chronologicalData[99].date; }
+                    break;
+                case 'm49':
+                    if (totalSessions >= 365) { isUnlocked = true; achievementDate = chronologicalData[364].date; }
+                    break;
+                case 'm50':
+                    if (totalDist >= 1000 && totalMinutes >= 10000 && totalSessions >= 365) {
+                        isUnlocked = true;
+                        achievementDate = chronologicalData[chronologicalData.length - 1].date;
+                    }
+                    break;
             }
 
             if (isUnlocked) {
                 newMedals.push(medal.id);
+                newMedalAchievements[medal.id] = achievementDate.replace(/-/g, '.');
                 recalculatedPoints += medal.points;
             }
         });
@@ -341,6 +580,7 @@ export const useRecordManager = (
         const finalPoints = recalculatedPoints + activityPoints;
         setPoints(finalPoints);
         setUnlockedMedals(newMedals);
+        setMedalAchievements(newMedalAchievements); // v17.0
         setUnlockedBadges([]);
     };
 
@@ -493,6 +733,7 @@ export const useRecordManager = (
         updateTotalDays,
         totalDays,
         lastSyncStatus,
+        medalAchievements, // v17.0: 달성 날짜 데이터 노출
         calculateLevelInfo, // v16.0: 레벨 정보 계산기 노출
         refreshData: () => fetchInitialData(false)
     };

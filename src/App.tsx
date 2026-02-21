@@ -34,6 +34,7 @@ function App() {
     const [points, setPoints] = useState<number>(0);
     const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
     const [unlockedMedals, setUnlockedMedals] = useState<string[]>([]);
+    const [medalAchievements, setMedalAchievements] = useState<{ [id: string]: string }>({}); // v17.0
 
     // v11.0: Cloud Only - 로컬 데이터 로드 로직 제거
     React.useEffect(() => {
@@ -41,6 +42,7 @@ function App() {
             setPoints(0);
             setUnlockedBadges([]);
             setUnlockedMedals([]);
+            setMedalAchievements({}); // v17.0
         }
     }, [user?.id]);
     const [showManualForm, setShowManualForm] = useState(false);
@@ -59,6 +61,7 @@ function App() {
                 setPoints(0);
                 setUnlockedBadges([]);
                 setUnlockedMedals([]);
+                setMedalAchievements({}); // v17.0
                 await signOut();
                 console.log("👋 런너님, 안전하게 로그아웃되었습니다. 다음에 또 봬요!");
             } catch (error) {
@@ -93,8 +96,16 @@ function App() {
         totalDays,
         lastSyncStatus, // v13.2
         refreshData, // v13.3
-        calculateLevelInfo // v16.0
+        calculateLevelInfo, // v16.0
+        medalAchievements: currentMedalAchievements // v17.0
     } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id);
+
+    // v17.0: 메달 달성일 상태 동기화 (useRecordManager -> App State)
+    React.useEffect(() => {
+        if (currentMedalAchievements) {
+            setMedalAchievements(currentMedalAchievements);
+        }
+    }, [currentMedalAchievements]);
 
     // 4. AI Coach System Logic (Refactored)
     const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
@@ -296,6 +307,7 @@ function App() {
                 <BadgeHallOfFame
                     unlockedBadges={unlockedBadges}
                     unlockedMedals={unlockedMedals}
+                    medalAchievements={medalAchievements} // v17.0
                 />
             </div>
 

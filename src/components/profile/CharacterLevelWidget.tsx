@@ -54,11 +54,27 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints
                         position: 'absolute',
                         width: '100%',
                         height: '100%',
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        zIndex: 2
                     }} />
                 )}
 
-                <User size={60} color={theme.color} style={{ opacity: 0.8 }} />
+                {levelInfo.imageUrl ? (
+                    <img
+                        src={`file:///${levelInfo.imageUrl}`}
+                        alt={levelInfo.name}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            opacity: 0.9,
+                            // Lv.3의 경우 복합 이미지이므로 중앙 마법사 부분 위주로 보여주기 위해 정렬 조정 (간이)
+                            objectPosition: levelInfo.level === 3 ? 'center' : 'center'
+                        }}
+                    />
+                ) : (
+                    <User size={60} color={theme.color} style={{ opacity: 0.8 }} />
+                )}
 
                 {/* Level Badge */}
                 <div style={{
