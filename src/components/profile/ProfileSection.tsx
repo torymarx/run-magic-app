@@ -7,9 +7,7 @@ import { LEVEL_DATA } from '../../data/progression';
 interface ProfileSectionProps {
     profile: UserProfile;
     onUpdate: (updates: Partial<UserProfile>) => Promise<void> | void;
-    isLoading: boolean;
     syncStatus?: { status: string, time: string, message: string };
-    recordCount?: number;
     onRefreshData?: () => void;
     onClose: () => void;
     points: number;
@@ -17,7 +15,7 @@ interface ProfileSectionProps {
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
-    profile, onUpdate, syncStatus, recordCount, onRefreshData, onClose,
+    profile, onUpdate, syncStatus, onRefreshData, onClose,
     points, calculateLevelInfo
 }) => {
     const [isEditing, setIsEditing] = useState(false);
