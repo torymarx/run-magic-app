@@ -121,6 +121,15 @@ function App() {
         lastSavedRecord
     );
 
+    // v19.1: 레벨 기반 자동 캐릭터 진화 시스템 (수동 선택 제거 대응)
+    React.useEffect(() => {
+        const levelInfo = calculateLevelInfo(points);
+        if (user && profile && levelInfo.level !== profile.characterId) {
+            console.log(`🧬 레벨 업 탐지: [${profile.characterId} -> ${levelInfo.level}]. 캐릭터 자동 진화를 시작합니다.`);
+            updateProfile({ characterId: levelInfo.level });
+        }
+    }, [points, profile?.characterId, user]);
+
     const handleEditRecord = (record: any) => {
         setEditingRecord(record);
         setShowManualForm(true);
@@ -405,7 +414,7 @@ function App() {
                         >
                             이용약관 및 개인정보처리방침
                         </span>
-                        <span>고객지원: support@nakulab.com</span>
+                        <span>고객지원: naku.lab.studio@kakao.com</span>
                     </div>
                     <p style={{ opacity: 0.3, fontSize: '0.7rem' }}>
                         © 2026 Run-Magic AI. 런너님의 건강한 마법 같은 질주를 응원합니다! 💖
