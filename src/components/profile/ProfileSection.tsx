@@ -6,7 +6,6 @@ import { UserProfile } from '../../hooks/useProfileManager';
 interface ProfileSectionProps {
     profile: UserProfile;
     onUpdate: (updates: Partial<UserProfile>) => Promise<void> | void;
-    onForceSaveTest: () => Promise<void> | void;
     isLoading: boolean;
     syncStatus?: { status: string, time: string, message: string }; // v13.2
     recordCount?: number; // v13.2
@@ -31,7 +30,7 @@ const KODARI_CHARACTERS: Record<string, any[]> = {
     ]
 };
 
-const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onForceSaveTest, syncStatus, recordCount, onRefreshData, onClose }) => {
+const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, syncStatus, recordCount, onRefreshData, onClose }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
@@ -242,30 +241,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                     </p>
                 </div>
 
-                {/* 시스템 연동 테스트 버튼 (v12.0) */}
-                <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-                    <button
-                        onClick={onForceSaveTest}
-                        className="glass-button"
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            background: 'rgba(0, 209, 255, 0.1)',
-                            border: '1px dashed var(--electric-blue)',
-                            color: 'var(--electric-blue)',
-                            fontWeight: 'bold',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.8rem',
-                            transition: 'all 0.3s ease'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 209, 255, 0.2)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0, 209, 255, 0.1)'}
-                    >
-                        <ShieldCheck size={20} /> 시스템 연동 테스트 (정보 강제 입력 확인)
-                    </button>
-                </div>
 
                 {/* 계정 관리 섹션 (신규) */}
                 <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(0,209,255,0.03)', borderRadius: '12px', border: '1px solid rgba(0,209,255,0.1)' }}>
