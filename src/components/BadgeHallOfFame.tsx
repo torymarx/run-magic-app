@@ -273,131 +273,137 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                 </span>
             </h3>
 
-            {/* Scrollable Container with Edge Detection */}
-            <div
-                ref={scrollContainerRef}
-                className="custom-scrollbar"
-                onMouseEnter={() => { isHoveringContainer.current = true; }}
-                onMouseLeave={() => { isHoveringContainer.current = false; mouseXRef.current = null; }}
-                onMouseMove={(e) => { mouseXRef.current = e.clientX; }}
-                style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    overflowX: 'auto',
-                    paddingBottom: '0.5rem',
-                    paddingTop: '0.5rem',
-                    maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
-                    cursor: 'grab'
-                }}
-            >
-                <div style={{ minWidth: '10px' }} />
-
-                {sortedItems.map((item, idx) => (
-                    <InventorySlot
-                        key={idx}
-                        item={item}
-                    />
-                ))}
-
-                <div style={{ minWidth: '10px' }} />
-            </div>
-
-            {/* Info Panel */}
-            <div style={{
-                height: '70px',
-                background: 'rgba(0,0,0,0.4)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255,255,255,0.05)',
+            {/* Main Content Area (Side-by-Side) */}
+            <div className="inventory-content-wrapper" style={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0 2rem',
-                opacity: hoveredItem ? 1 : 0.7,
-                transition: 'all 0.3s',
                 gap: '1.5rem',
-                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6)',
-                position: 'relative'
+                alignItems: 'stretch',
+                minHeight: '120px'
             }}>
-                {hoveredItem ? (
-                    <>
-                        <div style={{
-                            width: '46px',
-                            height: '46px',
-                            minWidth: '46px',
-                            borderRadius: '50%',
-                            background: hoveredItem.isUnlocked ? `${RARITY[hoveredItem.rarity as keyof typeof RARITY]}22` : 'rgba(255,255,255,0.02)',
-                            border: `2px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.1)'}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
-                            boxShadow: hoveredItem.isUnlocked ? `0 0 15px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none',
-                            animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                        }}>
-                            {hoveredItem.icon}
-                        </div>
+                {/* Scrollable Container (Left Side) */}
+                <div
+                    ref={scrollContainerRef}
+                    className="custom-scrollbar"
+                    onMouseEnter={() => { isHoveringContainer.current = true; }}
+                    onMouseLeave={() => { isHoveringContainer.current = false; mouseXRef.current = null; }}
+                    onMouseMove={(e) => { mouseXRef.current = e.clientX; }}
+                    style={{
+                        flex: 1,
+                        display: 'flex',
+                        gap: '1rem',
+                        overflowX: 'auto',
+                        paddingBottom: '0.8rem',
+                        paddingTop: '0.5rem',
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
+                        cursor: 'grab'
+                    }}
+                >
+                    <div style={{ minWidth: '10px' }} />
+                    {sortedItems.map((item, idx) => (
+                        <InventorySlot
+                            key={idx}
+                            item={item}
+                        />
+                    ))}
+                    <div style={{ minWidth: '10px' }} />
+                </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'center', justifyContent: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                                <span style={{
-                                    fontSize: '1rem',
-                                    fontWeight: 'bold',
-                                    color: hoveredItem.isUnlocked ? '#fff' : 'rgba(255,255,255,0.3)',
-                                    textShadow: hoveredItem.isUnlocked ? `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none'
-                                }}>
-                                    {hoveredItem.phase && <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY], marginRight: '6px', fontSize: '0.8rem' }}>Phase {hoveredItem.phase}</span>}
-                                    {hoveredItem.name} {!hoveredItem.isUnlocked && <Lock size={12} style={{ verticalAlign: 'middle', marginLeft: '4px' }} />}
-                                </span>
-                                <span style={{
-                                    fontSize: '0.65rem',
-                                    padding: '2px 8px',
-                                    borderRadius: '12px',
-                                    background: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '33' : 'rgba(255,255,255,0.05)',
-                                    color: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
-                                    border: `1px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '44' : 'rgba(255,255,255,0.1)'}`,
-                                    fontWeight: 'bold'
-                                }}>
-                                    {hoveredItem.rarity} | {hoveredItem.points}P
-                                </span>
+                {/* Info Panel (Right Side) */}
+                <div style={{
+                    width: '400px',
+                    minWidth: '400px',
+                    background: 'rgba(0,0,0,0.4)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0.8rem 1.5rem',
+                    opacity: hoveredItem ? 1 : 0.7,
+                    transition: 'all 0.3s',
+                    gap: '1.2rem',
+                    boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    {hoveredItem ? (
+                        <>
+                            <div style={{
+                                width: '50px',
+                                height: '50px',
+                                minWidth: '50px',
+                                borderRadius: '15px',
+                                background: hoveredItem.isUnlocked ? `${RARITY[hoveredItem.rarity as keyof typeof RARITY]}22` : 'rgba(255,255,255,0.02)',
+                                border: `2px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.1)'}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
+                                boxShadow: hoveredItem.isUnlocked ? `0 0 15px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none',
+                                animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                            }}>
+                                {hoveredItem.icon}
                             </div>
-                            <span style={{ fontSize: '0.85rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', fontWeight: hoveredItem.isUnlocked ? 'normal' : 'bold' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                        <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY], fontWeight: 'bold' }}>[달성 미션]</span>
-                                        {hoveredItem.description}
-                                    </div>
-                                    {hoveredItem.date && (
-                                        <div style={{ fontSize: '0.75rem', opacity: 0.7, color: 'var(--electric-blue)' }}>
-                                            📅 달성일: {hoveredItem.date}
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                    <span style={{
+                                        fontSize: '1rem',
+                                        fontWeight: 'bold',
+                                        color: hoveredItem.isUnlocked ? '#fff' : 'rgba(255,255,255,0.3)',
+                                        textShadow: hoveredItem.isUnlocked ? `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none'
+                                    }}>
+                                        {hoveredItem.phase && <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY], marginRight: '6px', fontSize: '0.75rem' }}>P{hoveredItem.phase}</span>}
+                                        {hoveredItem.name}
+                                    </span>
+                                    <span style={{
+                                        fontSize: '0.6rem',
+                                        padding: '1px 6px',
+                                        borderRadius: '8px',
+                                        background: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '33' : 'rgba(255,255,255,0.05)',
+                                        color: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
+                                        border: `1px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '44' : 'rgba(255,255,255,0.1)'}`,
+                                        fontWeight: 'bold',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {hoveredItem.rarity}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', lineHeight: '1.4' }}>
+                                    {hoveredItem.isUnlocked ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span>{hoveredItem.description}</span>
+                                            {hoveredItem.date && (
+                                                <span style={{ fontSize: '0.7rem', marginTop: '2px', color: 'var(--electric-blue)', opacity: 0.8 }}>
+                                                    📅 달성일: {hoveredItem.date}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <Lock size={12} />
+                                            <span>{hoveredItem.description}</span>
                                         </div>
                                     )}
                                 </div>
-                            </span>
-                        </div>
-
-                        {hoveredItem.isUnlocked && (
-                            <div style={{ position: 'absolute', right: '1.5rem', textAlign: 'right', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
-                                Unlocked<br />
-                                <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>{hoveredItem.date || '-'}</span>
                             </div>
-                        )}
-                    </>
-                ) : (
-                    <div style={{
-                        width: '100%',
-                        textAlign: 'center',
-                        fontSize: '0.9rem',
-                        color: 'rgba(255,255,255,0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                    }}>
-                        <Info size={16} />
-                        <span>아이템에 마우스를 올려 상세 정보를 확인하세요</span>
-                    </div>
-                )}
+                        </>
+                    ) : (
+                        <div style={{
+                            width: '100%',
+                            textAlign: 'center',
+                            fontSize: '0.85rem',
+                            color: 'rgba(255,255,255,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px'
+                        }}>
+                            <Info size={14} />
+                            <span>메달을 탐색해 보세요</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <style>{`
@@ -418,6 +424,16 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: rgba(255, 255, 255, 0.3);
+                }
+
+                @media (max-width: 1100px) {
+                    .inventory-content-wrapper {
+                        flex-direction: column !important;
+                    }
+                    .inventory-content-wrapper > div:last-child {
+                        width: 100% !important;
+                        min-width: 100% !important;
+                    }
                 }
             `}</style>
         </div>
