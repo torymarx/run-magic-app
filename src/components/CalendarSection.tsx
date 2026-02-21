@@ -218,28 +218,47 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({ records, onDelete, on
                                 }}
                                 className="glass-card session-card"
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
                                     <span style={{ color: 'var(--electric-blue)', fontWeight: 'bold' }}>#{idx + 1} 세션 ({r.time})</span>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); onViewDetails?.(r); }}
-                                            style={{ border: 'none', color: 'var(--electric-blue)', cursor: 'pointer', opacity: 0.8, padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0, 209, 255, 0.1)', borderRadius: '6px' }}
-                                        >
-                                            <HistIcon size={12} /> 레이스 요약
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); onDelete?.(r.id); }} // Prevent card click when deleting
-                                            style={{ background: 'none', border: 'none', color: '#ff4b4b', cursor: 'pointer', opacity: 0.4, padding: '2px' }}
-                                            title="삭제"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onDelete?.(r.id); }}
+                                        style={{ background: 'none', border: 'none', color: '#ff4b4b', cursor: 'pointer', opacity: 0.4, padding: '4px', transition: 'all 0.2s' }}
+                                        onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                                        onMouseOut={(e) => e.currentTarget.style.opacity = '0.4'}
+                                        title="삭제"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', fontSize: '0.8rem', opacity: 0.8, marginBottom: '0.8rem' }}>
                                     <div>📏 {r.distance}km</div>
                                     <div>⚡ {r.pace}</div>
                                     <div>🔥 {r.calories}kcal</div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onViewDetails?.(r); }}
+                                        style={{
+                                            flex: 1,
+                                            background: 'rgba(0, 209, 255, 0.15)',
+                                            border: '1px solid var(--electric-blue)',
+                                            color: 'var(--electric-blue)',
+                                            cursor: 'pointer',
+                                            padding: '6px 0',
+                                            fontSize: '0.75rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            borderRadius: '8px',
+                                            fontWeight: 'bold',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 209, 255, 0.25)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0, 209, 255, 0.15)'}
+                                    >
+                                        <HistIcon size={14} /> 레이스 결과 분석 확인
+                                    </button>
                                 </div>
                             </div>
                         ))}

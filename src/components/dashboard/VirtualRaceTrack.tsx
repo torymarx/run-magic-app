@@ -150,65 +150,84 @@ const VirtualRaceTrack: React.FC<VirtualRaceTrackProps> = ({ currentRecord, allR
                         fontSize: '0.7rem',
                         whiteSpace: 'nowrap',
                         opacity: 0.6
-                    }}>FINISH ({currentRecord.distance}km)</span>
+                    }}>FINISH ({sortedRunners[0].distance}km)</span>
                 </div>
 
                 {/* Runners */}
                 {runners.map((runner, idx) => {
-                    const positionPercent = (runner.distance / currentRecord.distance) * 100;
                     const rankIndex = sortedRunners.findIndex(r => r.id === runner.id);
+                    const isWinner = rankIndex === 0;
+
+                    // v18.4: 우승자 기준 트랙 스케일링 (1등이 무조건 100% 지점)
+                    const winnerDist = sortedRunners[0].distance;
+                    const rawPositionPercent = winnerDist > 0 ? (runner.distance / winnerDist) * 100 : 0;
+
+                    // 격차 증폭: 1등(100%)과의 차이를 3.5배 강조
+                    const gapFromWinner = 100 - rawPositionPercent;
+                    const amplifiedPositionPercent = 100 - (gapFromWinner * 3.5);
+                    const finalPosition = Math.max(0, Math.min(amplifiedPositionPercent, 100));
 
                     return (
                         <div key={runner.id} style={{
                             position: 'absolute',
                             top: `${idx * 60 + 15}px`,
-                            left: `${Math.min(positionPercent, 105)}%`,
-                            transition: 'left 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            left: `${finalPosition}%`,
+                            transition: 'left 2.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            zIndex: 10,
-                            transform: 'translateX(-50%)'
+                            zIndex: runner.isUser ? 20 : 10,
+                            transform: 'translateX(-50%)',
+                            // v18.4 도착 후 3초간 제자리 질주 애니메이션 (2.5초 이동 후 시작)
+                            animation: `finish-running 0.3s ease-in-out 2s infinite alternate`
                         }}>
                             {/* Rank Badge */}
                             <div style={{
-                                background: rankIndex === 0 ? 'gold' : rankIndex === 1 ? '#C0C0C0' : '#CD7F32',
+                                background: rankIndex === 0 ? 'linear-gradient(135deg, #FFD700, #FFA500)' : rankIndex === 1 ? '#C0C0C0' : '#CD7F32',
                                 color: 'black',
                                 borderRadius: '50%',
-                                width: '18px',
-                                height: '18px',
-                                fontSize: '0.65rem',
-                                fontWeight: 'bold',
+                                width: '22px',
+                                height: '22px',
+                                fontSize: '0.75rem',
+                                fontWeight: '900',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginBottom: '4px',
-                                boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                                boxShadow: isWinner ? '0 0 15px rgba(255, 215, 0, 0.6)' : '0 4px 8px rgba(0,0,0,0.5)',
+                                border: '2px solid rgba(255,255,255,0.8)'
                             }}>
                                 {rankIndex + 1}
                             </div>
 
-                            {/* Character Avatar (Simple Circle for now, can be improved) */}
+                            {/* Character Avatar */}
                             <div style={{
-                                width: '32px',
-                                height: '32px',
+                                width: runner.isUser ? '42px' : '36px',
+                                height: runner.isUser ? '42px' : '36px',
                                 borderRadius: '50%',
                                 background: runner.color,
-                                border: '2px solid white',
-                                boxShadow: `0 0 15px ${runner.color}`,
+                                border: `2px solid ${runner.isUser ? 'var(--neon-green)' : 'white'}`,
+                                boxShadow: `0 0 ${runner.isUser ? '25px' : '15px'} ${runner.color}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '1.2rem'
+                                fontSize: runner.isUser ? '1.5rem' : '1.3rem',
+                                position: 'relative',
+                                animation: isWinner ? 'pulse-winner 2s infinite' : 'none'
                             }}>
                                 {runner.isUser ? '🧙' : '🏃'}
+                                {isWinner && (
+                                    <Trophy size={14} style={{ position: 'absolute', top: '-8px', right: '-8px', color: '#FFD700', filter: 'drop-shadow(0 0 5px gold)' }} />
+                                )}
                             </div>
 
                             {/* Name & Pace */}
-                            <div style={{ textAlign: 'center', marginTop: '4px' }}>
-                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{runner.name}</p>
-                                <p style={{ margin: 0, fontSize: '0.6rem', opacity: 0.6 }}>{runner.pace}</p>
-                                <p style={{ margin: 0, fontSize: '0.65rem', color: runner.color }}>
+                            <div style={{ textAlign: 'center', marginTop: '6px' }}>
+                                <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap', color: runner.isUser ? 'var(--neon-green)' : 'white' }}>
+                                    {runner.name} {runner.isUser && '✨'}
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.65rem', opacity: 0.8 }}>{runner.pace}</p>
+                                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 'bold', color: runner.color }}>
                                     {runner.distance >= currentRecord.distance
                                         ? `+${(runner.distance - currentRecord.distance).toFixed(2)}km`
                                         : `-${(currentRecord.distance - runner.distance).toFixed(2)}km`}
@@ -219,30 +238,85 @@ const VirtualRaceTrack: React.FC<VirtualRaceTrackProps> = ({ currentRecord, allR
                 })}
             </div>
 
-            {/* Race Summary Text */}
+            {/* Race Summary Text & Ranking Board */}
             <div style={{
                 marginTop: '1.5rem',
-                padding: '1rem',
-                background: 'rgba(0,0,0,0.3)',
-                borderRadius: '12px',
+                padding: '1.2rem',
+                background: 'rgba(0,0,0,0.4)',
+                borderRadius: '16px',
                 fontSize: '0.9rem',
-                borderLeft: '4px solid var(--electric-blue)'
+                border: '1px solid rgba(255,255,255,0.05)',
+                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)'
             }}>
-                <p style={{ margin: 0, lineHeight: 1.6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.8rem' }}>
+                    <Medal size={20} className="neon-text-blue" />
+                    <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>레이스 최종 순위</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    {sortedRunners.map((r, i) => {
+                        const isPlayer = r.id === 'current';
+                        const distDiff = r.distance - currentRecord.distance;
+                        return (
+                            <div key={r.id} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                background: isPlayer ? 'rgba(0, 209, 255, 0.1)' : 'transparent',
+                                padding: '6px 12px',
+                                borderRadius: '8px',
+                                border: isPlayer ? '1px solid rgba(0, 209, 255, 0.3)' : '1px solid transparent'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{
+                                        width: '24px',
+                                        fontWeight: '900',
+                                        color: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : '#CD7F32',
+                                        fontSize: '1.1rem'
+                                    }}>{i + 1}위</span>
+                                    <span style={{ fontWeight: isPlayer ? 'bold' : 'normal', color: isPlayer ? 'var(--neon-green)' : 'white' }}>
+                                        {r.name} {isPlayer && '(나)'}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.85rem', opacity: 0.8, textAlign: 'right' }}>
+                                    <span style={{ marginRight: '10px' }}>{r.pace}</span>
+                                    <span style={{ color: r.color, fontWeight: 'bold' }}>
+                                        {distDiff === 0 ? '기준' : (distDiff > 0 ? `+${distDiff.toFixed(2)}km` : `${distDiff.toFixed(2)}km`)}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <p style={{ marginTop: '1.2rem', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', borderLeft: '4px solid var(--electric-blue)', lineHeight: 1.5 }}>
                     {sortedRunners[0].id === 'current' ? (
-                        <span className="neon-text-green">축하합니다! 어제의 나를 제치고 오늘 최고의 레이스를 펼쳤습니다. 🏆</span>
+                        <span className="neon-text-green" style={{ fontWeight: 'bold' }}>
+                            오늘의 챔피언! 압도적인 페이스로 어제의 기록들을 모두 따돌렸습니다. 🏆 축하드려요!
+                        </span>
                     ) : (
-                        <span>아쉽게도 {sortedRunners[0].name}에게 1위를 내주었습니다. 다음 레이스에선 더 힘을 내보세요! 🔥</span>
+                        <span>
+                            아쉽게도 <strong style={{ color: sortedRunners[0].color }}>{sortedRunners[0].name}</strong>에게 선두를 내주었습니다.
+                            페이스 조절을 통해 다음에는 1위를 탈환해 보세요! 🔥
+                        </span>
                     )}
                 </p>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', opacity: 0.8, fontSize: '0.8rem' }}>
-                    {sortedRunners.map((r, i) => (
-                        <span key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Medal size={12} color={i === 0 ? 'gold' : i === 1 ? '#C0C0C0' : '#CD7F32'} /> {r.name}
-                        </span>
-                    ))}
-                </div>
             </div>
+
+            <style>{`
+                @keyframes pulse-winner {
+                    0% { transform: scale(1); filter: brightness(1); }
+                    50% { transform: scale(1.05); filter: brightness(1.2); }
+                    100% { transform: scale(1); filter: brightness(1); }
+                }
+                @keyframes finish-running {
+                    0% { transform: translateX(-50%) translateY(0) rotate(-1deg); }
+                    25% { transform: translateX(-48%) translateY(-2px) rotate(1deg); }
+                    50% { transform: translateX(-52%) translateY(0) rotate(-1deg); }
+                    75% { transform: translateX(-50%) translateY(-2px) rotate(1deg); }
+                    100% { transform: translateX(-50%) translateY(0) rotate(-1deg); }
+                }
+            `}</style>
         </div>
     );
 };
