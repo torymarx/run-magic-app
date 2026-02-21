@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
-import { Scale, Zap, Activity, ArrowUpRight, ArrowDownRight, Ruler, ChevronLeft, ChevronRight, Trophy, Clock, Minus } from 'lucide-react';
+import { Scale, Zap, Activity, ArrowUpRight, ArrowDownRight, Ruler, ChevronLeft, ChevronRight, Trophy, Clock, Minus, Plus } from 'lucide-react';
 import { parseTimeToSeconds, formatPace, formatSecondsToTime } from '../utils/calculations';
 
 interface BioPerformanceChartProps {
@@ -421,9 +421,56 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                     <p style={{ fontSize: '0.9rem', color: '#00FF85', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Clock size={16} /> 런닝 타임 목표 달성
                     </p>
-                    <span style={{ fontSize: '0.8rem', color: '#FFD700' }}>
-                        목표: {formatSecondsToTime(goalSeconds)} (드래그하여 조정)
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: '#FFD700', opacity: 0.8 }}>
+                            목표: {formatSecondsToTime(goalSeconds)}
+                        </span>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                            <button
+                                onClick={() => setGoalSeconds(prev => Math.max(600, prev - 1))}
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,215,0,0.3)',
+                                    borderRadius: '4px',
+                                    color: '#FFD700',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '2px',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,215,0,0.1)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                title="1초 감소"
+                            >
+                                <Minus size={12} />
+                            </button>
+                            <button
+                                onClick={() => setGoalSeconds(prev => prev + 1)}
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,215,0,0.3)',
+                                    borderRadius: '4px',
+                                    color: '#FFD700',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '2px',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,215,0,0.1)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                title="1초 증가"
+                            >
+                                <Plus size={12} />
+                            </button>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.4, marginLeft: '4px' }}>
+                            (드래그 또는 버튼으로 조정)
+                        </span>
+                    </div>
                 </div>
 
                 <div ref={chartContainerRef} style={{ height: 200, width: '100%', position: 'relative', cursor: isDragging ? 'grabbing' : 'default' }}>

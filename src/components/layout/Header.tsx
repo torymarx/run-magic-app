@@ -37,10 +37,10 @@ const Header: React.FC<HeaderProps> = ({
     return (
         <header className="global-nav">
             {/* Left Box: Logo & Persona Message */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <h1 className="neon-text-blue" style={{ fontSize: '1.8rem', margin: 0, cursor: 'pointer' }}>Run-Magic</h1>
-                <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.1)' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <h1 className="neon-text-blue logo-text" style={{ fontSize: '1.8rem', margin: 0, cursor: 'pointer' }}>Run-Magic</h1>
+                <div className="hide-mobile" style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                     <span style={{ fontSize: '1.4rem' }}>{characterEmoji}</span>
                     <p style={{ fontSize: '0.9rem', opacity: 0.8, maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {isRecording ? `🏃‍♂️ ${profile?.name}님, 페이스 조절에 집중하세요!` : `반가워요 ${profile?.name}님, 오늘도 힘차게!`}
@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Center Box: Integrated Status Cluster */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="nav-status-group" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                 <div className="nav-chip" title="누적 마법 포인트">
                     <Zap size={14} className="neon-text-green" />
                     <span style={{ fontWeight: 'bold' }}>{points.toLocaleString()} MP</span>
@@ -75,9 +75,9 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Right Box: Integrated Action Cluster */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <div className="nav-action-group" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 {/* Data Tools */}
-                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '2px' }}>
+                <div className="hide-mobile" style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '2px' }}>
                     <button onClick={() => document.getElementById('import-input')?.click()} title="복구" style={{ background: 'none', border: 'none', padding: '0.5rem', color: 'white', cursor: 'pointer', display: 'flex' }}><ArrowDownRight size={16} style={{ transform: 'rotate(180deg)', opacity: 0.6 }} /></button>
                     <button onClick={onExport} title="백업" style={{ background: 'none', border: 'none', padding: '0.5rem', color: 'white', cursor: 'pointer', display: 'flex' }}><Download size={16} style={{ opacity: 0.6 }} /></button>
                 </div>
@@ -111,6 +111,7 @@ const Header: React.FC<HeaderProps> = ({
                 <button
                     onClick={onSignOut}
                     title="로그아웃"
+                    className="hide-mobile"
                     style={{
                         background: 'rgba(255, 75, 75, 0.05)',
                         border: '1px solid rgba(255, 75, 75, 0.2)',
