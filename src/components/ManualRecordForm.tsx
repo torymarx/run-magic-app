@@ -292,7 +292,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
         return null;
     };
 
-    // 커스텀 스텝퍼 컴포넌트
+    // 커스텀 스텝퍼 컴포넌트 (v14.7: 하이브리드 입력 방식 적용)
     const Stepper = ({ label, value, onChange, step, unit, icon }: any) => (
         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.6rem' }}>
@@ -301,18 +301,39 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                 <button
                     type="button"
-                    onClick={() => onChange(Number((value - step).toFixed(1)))}
+                    onClick={() => onChange(Number((parseFloat(value.toString()) - step).toFixed(1)))}
                     style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: 'white', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                     -
                 </button>
-                <div style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--electric-blue)' }}>{value}</span>
-                    <span style={{ fontSize: '0.7rem', opacity: 0.5, marginLeft: '2px' }}>{unit}</span>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                    <input
+                        type="number"
+                        step={step}
+                        value={value}
+                        onChange={(e) => {
+                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                            onChange(val);
+                        }}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--electric-blue)',
+                            fontSize: '1.2rem',
+                            fontWeight: 'bold',
+                            width: '50px',
+                            textAlign: 'center',
+                            outline: 'none',
+                            padding: 0,
+                            fontFamily: 'inherit'
+                        }}
+                        onFocus={(e) => e.target.select()}
+                    />
+                    <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>{unit}</span>
                 </div>
                 <button
                     type="button"
-                    onClick={() => onChange(Number((value + step).toFixed(1)))}
+                    onClick={() => onChange(Number((parseFloat(value.toString()) + step).toFixed(1)))}
                     style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: 'white', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                     +
