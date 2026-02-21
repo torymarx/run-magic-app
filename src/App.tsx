@@ -113,15 +113,13 @@ function App() {
     }, [currentMedalAchievements]);
 
     // 4. AI Coach System Logic (Refactored)
-    const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
+    const { message: coachMessage, recommendation, periodStats, recentStats } = useAICoachSystem(
         selectedCoach.id,
         isRecording,
         distance,
         timer,
         records,
-        baselines,
-        lastSavedRecord,
-        viewingDate // 신규: 조회 날짜 기반 분석 기능
+        lastSavedRecord
     );
 
     const handleEditRecord = (record: any) => {

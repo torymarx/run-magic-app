@@ -15,22 +15,7 @@ interface ProfileSectionProps {
     calculateLevelInfo: (points: number) => any; // v16.0
 }
 
-const KODARI_CHARACTERS: Record<string, any[]> = {
-    male: [
-        { id: 1, name: '신참 질주자', emoji: '🐣', description: '질주 꿈나무' },
-        { id: 2, name: '열혈 러너', emoji: '🔥', description: '열정의 러너' },
-        { id: 3, name: '강철 근육', emoji: '💪', description: '무한 체력' },
-        { id: 4, name: '광속 스프린터', emoji: '⚡', description: '속도의 지배자' },
-        { id: 5, name: '질주 마스터', emoji: '👑', description: '질주의 신' }
-    ],
-    female: [
-        { id: 1, name: '꿈나무 러너', emoji: '🐣', description: '질주 꿈나무' },
-        { id: 2, name: '빛나는 질주자', emoji: '✨', description: '빛나는 질주자' },
-        { id: 3, name: '웰니스 퀸', emoji: '🌿', description: '웰니스 퀸' },
-        { id: 4, name: '표범의 속도', emoji: '🐆', description: '표범의 속도' },
-        { id: 5, name: '질주의 여왕', emoji: '👑', description: '질주의 여왕' }
-    ]
-};
+import { LEVEL_DATA } from '../../data/progression';
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
     profile, onUpdate, syncStatus, recordCount, onRefreshData, onClose,
@@ -173,19 +158,19 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
                     }}>
                         <div style={{ minWidth: '5px' }} />
-                        {KODARI_CHARACTERS[editData.gender === 'female' ? 'female' : 'male'].map(char => {
-                            const isCurrent = profile.characterId === char.id;
-                            const isAchieved = levelInfo.level >= char.id;
-                            const isSelected = editData.characterId === char.id;
+                        {LEVEL_DATA.map(char => {
+                            const isCurrent = profile.characterId === char.level;
+                            const isAchieved = levelInfo.level >= char.level;
+                            const isSelected = editData.characterId === char.level;
 
                             return (
                                 <div
-                                    key={char.id}
-                                    onClick={() => isEditing && setEditData({ ...editData, characterId: char.id })}
+                                    key={char.level}
+                                    onClick={() => isEditing && setEditData({ ...editData, characterId: char.level })}
                                     style={{
                                         minWidth: '160px',
                                         width: '160px',
-                                        padding: '1.5rem 1rem',
+                                        padding: '1rem',
                                         borderRadius: '20px',
                                         textAlign: 'center',
                                         background: isSelected ? 'rgba(0,209,255,0.1)' : 'rgba(255,255,255,0.03)',
@@ -195,15 +180,39 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                         opacity: isAchieved || isEditing ? 1 : 0.4,
                                         cursor: isEditing ? 'pointer' : 'default',
                                         position: 'relative',
-                                        transform: isSelected ? 'translateY(-5px)' : 'none'
+                                        transform: isSelected ? 'translateY(-5px)' : 'none',
+                                        overflow: 'hidden'
                                     }}
                                 >
                                     {isCurrent && (
-                                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'var(--electric-blue)', color: 'black', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold' }}>ACTIVE</div>
+                                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'var(--electric-blue)', color: 'black', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '6px', fontWeight: 'bold', zIndex: 10 }}>ACTIVE</div>
                                     )}
-                                    <div style={{ fontSize: '3rem', marginBottom: '1rem', filter: isAchieved || isEditing ? 'none' : 'grayscale(100%)' }}>{char.emoji}</div>
-                                    <div style={{ fontSize: '1rem', fontWeight: 'bold', color: isAchieved || isEditing ? 'white' : 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>Lv.{char.id} {char.name}</div>
-                                    <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>{char.description}</div>
+
+                                    {/* 프리미엄 캐릭터 이미지 이미지 적용 */}
+                                    <div style={{
+                                        width: '80px',
+                                        height: '80px',
+                                        margin: '0 auto 1rem',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: `2px solid ${isSelected ? 'var(--electric-blue)' : 'rgba(255,255,255,0.1)'}`,
+                                        filter: isAchieved || isEditing ? 'none' : 'grayscale(100%) brightness(0.5)'
+                                    }}>
+                                        {char.imageUrl ? (
+                                            <img
+                                                src={`file:///${char.imageUrl}`}
+                                                alt={char.name}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)' }}>
+                                                <User opacity={0.3} />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: isAchieved || isEditing ? 'white' : 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>Lv.{char.level} {char.name}</div>
+                                    <div style={{ fontSize: '0.7rem', opacity: 0.5, lineHeight: '1.2', height: '2.4rem', overflow: 'hidden' }}>{char.description}</div>
                                 </div>
                             );
                         })}

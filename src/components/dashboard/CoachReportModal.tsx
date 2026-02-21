@@ -206,7 +206,7 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                                     {recommendation.mental}
                                 </p>
                                 <div style={{ marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.8rem', opacity: 0.6 }}>
-                                    * 이 리포트는 런너님의 최근 {periodStats?.count || 0}개 세션 데이터를 전수 조사하여 작성되었습니다.
+                                    * 이 리포트는 런너님의 전체 {periodStats?.count || 0}개 세션과 최근 일주일 데이터를 정밀 분석하여 작성되었습니다.
                                 </div>
                             </div>
                         </div>
