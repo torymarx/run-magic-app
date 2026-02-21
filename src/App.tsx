@@ -20,6 +20,7 @@ import BadgeHallOfFame from './components/BadgeHallOfFame';
 import BioPerformanceChart from './components/BioPerformanceChart';
 import ProfileSection from './components/profile/ProfileSection';
 import AuthSection from './components/AuthSection';
+import LegalNoticeModal from './components/dashboard/LegalNoticeModal';
 
 import { coaches } from './data/coaches';
 
@@ -74,6 +75,7 @@ function App() {
     const [viewingDate, setViewingDate] = useState(new Date()); // 전역 조회 날짜 (코칭 연동용)
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showCoachReport, setShowCoachReport] = useState(false);
+    const [showLegalModal, setShowLegalModal] = useState(false);
 
     // 2.5 Profile Management
     const { profile, updateProfile, isLoading: isProfileLoading } = useProfileManager(user?.id);
@@ -207,7 +209,7 @@ function App() {
 
     // 5. Scroll Lock for Modals
     React.useEffect(() => {
-        const isAnyModalOpen = showManualForm || showProfileModal || showCoachReport || !!lastSavedRecord;
+        const isAnyModalOpen = showManualForm || showProfileModal || showCoachReport || showLegalModal || !!lastSavedRecord;
         if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
@@ -383,8 +385,35 @@ function App() {
                 </div>
             </div>
 
-            <footer style={{ marginTop: '3rem', textAlign: 'center', opacity: 0.4, fontSize: '0.8rem' }}>
-                <p>© 2026 Run-Magic AI Team. 런너님의 건강한 러닝을 응원합니다! 💖</p>
+            {showLegalModal && (
+                <LegalNoticeModal onClose={() => setShowLegalModal(false)} />
+            )}
+
+            <footer style={{
+                marginTop: '5rem',
+                padding: '2rem 0',
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                textAlign: 'center'
+            }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                    <p style={{ opacity: 0.6, fontSize: '0.9rem', fontWeight: 'bold', letterSpacing: '1px' }}>
+                        🚀 DEVELOPED BY <span style={{ color: 'var(--electric-blue)' }}>NAKU LAB STUDIO</span>
+                    </p>
+                    <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.75rem', opacity: 0.4 }}>
+                        <span
+                            onClick={() => setShowLegalModal(true)}
+                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                            onMouseOver={(e) => e.currentTarget.style.opacity = '1'}
+                            onMouseOut={(e) => e.currentTarget.style.opacity = '0.4'}
+                        >
+                            이용약관 및 개인정보처리방침
+                        </span>
+                        <span>고객지원: support@nakulab.com</span>
+                    </div>
+                    <p style={{ opacity: 0.3, fontSize: '0.7rem' }}>
+                        © 2026 Run-Magic AI. 런너님의 건강한 마법 같은 질주를 응원합니다! 💖
+                    </p>
+                </div>
             </footer>
         </div>
     );
