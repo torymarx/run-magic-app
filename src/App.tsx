@@ -34,22 +34,9 @@ function App() {
     const [unlockedBadges, setUnlockedBadges] = useState<string[]>([]);
     const [unlockedMedals, setUnlockedMedals] = useState<string[]>([]);
 
-    // v10.5: 사용자 변경 시 해당 계정의 고유 로컬 데이터 로드
+    // v11.0: Cloud Only - 로컬 데이터 로드 로직 제거
     React.useEffect(() => {
-        if (user?.id) {
-            try {
-                const savedPoints = localStorage.getItem(`run-magic-points-${user.id}`);
-                setPoints(savedPoints ? parseInt(savedPoints) : 0);
-
-                const savedBadges = localStorage.getItem(`run-magic-badges-${user.id}`);
-                setUnlockedBadges(savedBadges ? JSON.parse(savedBadges) : []);
-
-                const savedMedals = localStorage.getItem(`run-magic-medals-${user.id}`);
-                setUnlockedMedals(savedMedals ? JSON.parse(savedMedals) : []);
-            } catch (e) {
-                console.error("Failed to load user-specific data", e);
-            }
-        } else {
+        if (!user?.id) {
             setPoints(0);
             setUnlockedBadges([]);
             setUnlockedMedals([]);

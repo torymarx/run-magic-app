@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { initialRecords } from '../data/initialRecords';
 import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTime, parseTimeToSeconds } from '../utils/calculations';
 
 // 이 훅은 레코드 관리에 필요한 모든 복잡한 상태 관리를 캡슐화합니다.
@@ -28,44 +27,21 @@ export const useRecordManager = (
 
             console.log(`🔄 [Online Service] 코다리 부장의 동기화 엔진 가동! (Key: ${userId.substring(0, 8)}...)`);
 
-            // 1. 클라우드에서 데이터 가져오기 (해당 유저의 것만!)
+            // 1. 클라우드에서 데이터 가져오기 (해당 유저의 것만!) - v11.0: Cloud Only
             const { data: cloudRecords, error } = await supabase
                 .from('records')
                 .select('*')
-                .eq('user_id', userId) // 데이터 격리 핵심!
+                .eq('user_id', userId)
                 .order('date', { ascending: false });
-
-            // 2. 로컬에서 데이터 가져오기
-            const localRecordsRaw = localStorage.getItem(`run-magic-records-${userId}`);
-            const localRecords = localRecordsRaw ? JSON.parse(localRecordsRaw) : [];
 
             if (!error) {
                 setIsCloudConnected(true);
-                console.log(`✅ Supabase 요새에 성공적으로 연결되었습니다! (${cloudRecords?.length || 0}개의 기록 확인)`);
+                console.log(`✅ [Cloud Only] Supabase 요새 동기화 성공! (${cloudRecords?.length || 0}개의 기록)`);
 
-                // 3. 지능형 통합 (Merge Logic)
-                const cloudIds = new Set(cloudRecords?.map(r => r.id) || []);
-                const onlyInLocal = localRecords.filter((r: any) => !cloudIds.has(r.id));
-
-                if (onlyInLocal.length > 0) {
-                    console.log(`📡 로컬에만 있는 데이터 ${onlyInLocal.length}개를 클라우드 요새로 백업합니다!`);
-                    // 업로드 시 user_id 강제 할당
-                    const toUpload = onlyInLocal.map((r: any) => ({ ...r, user_id: userId }));
-                    await supabase.from('records').upsert(toUpload);
-                }
-
-                // 통합된 최종 데이터셋 구성 (클라우드 데이터 우선)
-                const mergedRecords = [...(cloudRecords || [])];
-                onlyInLocal.forEach((r: any) => {
-                    if (!mergedRecords.find(mr => mr.id === r.id)) {
-                        mergedRecords.push(r);
-                    }
-                });
-                mergedRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                const mergedRecords = cloudRecords || [];
 
                 // 상태 업데이트
                 setRecords(mergedRecords);
-                localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(mergedRecords));
 
                 calculateBaselineData(mergedRecords);
                 updateStreak(mergedRecords);
@@ -74,21 +50,7 @@ export const useRecordManager = (
             } else {
                 console.error("❌ Supabase Connection Failed:", error);
                 setIsCloudConnected(false);
-
-                // 연결 실패 시 로컬 데이터라도 보여주기
-                if (localRecords.length > 0) {
-                    console.warn("⚠️ 서버 연결 실패. 로컬 방어선의 데이터를 불러옵니다.");
-                    setRecords(localRecords);
-                    calculateBaselineData(localRecords);
-                    updateStreak(localRecords);
-                    updateTotalDays(localRecords);
-                    recalculateAllAchievements(localRecords);
-                } else {
-                    // 로컬도 없으면 초기 데이터
-                    console.warn("⚠️ 데이터가 없습니다. 초기 훈련 데이터를 로드합니다.");
-                    setRecords(initialRecords);
-                    calculateBaselineData(initialRecords);
-                }
+                setRecords([]); // 보안을 위해 로컬 데이터 사용 안 함
             }
         };
 
@@ -243,8 +205,6 @@ export const useRecordManager = (
         const { error } = await supabase.from('records').upsert([newRecord]);
         if (error) console.error("Supabase Save Failed:", error);
 
-        localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(updatedRecords));
-
         calculateBaselineData(updatedRecords);
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
@@ -333,10 +293,6 @@ export const useRecordManager = (
         setPoints(recalculatedPoints);
         setUnlockedBadges(finalBadges);
         setUnlockedMedals(finalMedals);
-
-        localStorage.setItem(`run-magic-points-${userId}`, recalculatedPoints.toString());
-        localStorage.setItem(`run-magic-badges-${userId}`, JSON.stringify(finalBadges));
-        localStorage.setItem(`run-magic-medals-${userId}`, JSON.stringify(finalMedals));
     };
 
     const handleDeleteRecord = async (id: number) => {
@@ -348,7 +304,6 @@ export const useRecordManager = (
         const { error } = await supabase.from('records').delete().eq('id', id).eq('user_id', userId);
         if (error) console.error("Supabase Delete Failed:", error);
 
-        localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(updatedRecords));
         calculateBaselineData(updatedRecords);
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
@@ -375,7 +330,6 @@ export const useRecordManager = (
         );
 
         setRecords(updatedRecords);
-        localStorage.setItem(`run-magic-records-${userId}`, JSON.stringify(updatedRecords));
 
         const { error } = await supabase.from('records').upsert(newRecords);
         if (error) console.error("Supabase Import Failed:", error);

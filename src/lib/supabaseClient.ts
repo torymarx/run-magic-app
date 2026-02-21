@@ -16,5 +16,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(
     supabaseUrl || 'https://placeholder-url.supabase.co',
-    supabaseAnonKey || 'placeholder-key'
+    supabaseAnonKey || 'placeholder-key',
+    {
+        auth: {
+            persistSession: false, // 자동 로그인 비활성화 (보안 강화)
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    }
 );

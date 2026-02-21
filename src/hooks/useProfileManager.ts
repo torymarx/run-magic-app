@@ -39,12 +39,6 @@ export const useProfileManager = (userId?: string) => {
         if (!userId) return;
         setIsLoading(true);
         try {
-            // 1. 로컬 캐시 먼저 확인하여 즉각적인 UI 응답 (v9.2)
-            const cached = localStorage.getItem(`run-magic-profile-${userId}`);
-            if (cached) {
-                setProfile(JSON.parse(cached));
-            }
-
             // 2. 클라우드에서 최신 정보 가져오기
             const { data, error } = await supabase
                 .from('profiles')
@@ -54,7 +48,6 @@ export const useProfileManager = (userId?: string) => {
 
             if (data && !error) {
                 setProfile(data);
-                localStorage.setItem(`run-magic-profile-${userId}`, JSON.stringify(data));
                 console.log("✅ Profile Synced from Cloud 🛡️");
             } else if (error && (error.code === 'PGRST116' || error.message?.includes('No object found'))) {
                 // 3. 프로필이 없는 신규 유저라면 서버에도 기본 프로필 생성 시도 (Proactive Sync)
@@ -67,7 +60,6 @@ export const useProfileManager = (userId?: string) => {
 
                 if (!upsertError) {
                     setProfile(newProfile);
-                    localStorage.setItem(`run-magic-profile-${userId}`, JSON.stringify(newProfile));
                     console.log("✅ New Cloud Profile Established! 🏁");
                 } else {
                     console.error("❌ Profile Auto-Creation Failed:", upsertError);
@@ -86,7 +78,6 @@ export const useProfileManager = (userId?: string) => {
         if (!userId) return;
         const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
         setProfile(newProfile);
-        localStorage.setItem(`run-magic-profile-${userId}`, JSON.stringify(newProfile));
 
         try {
             const { error } = await supabase
