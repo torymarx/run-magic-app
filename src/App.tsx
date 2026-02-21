@@ -254,7 +254,6 @@ function App() {
 
             <Header
                 isRecording={isRecording}
-                distance={distance}
                 points={points}
                 totalDays={totalDays}
                 isCloudConnected={isCloudConnected}
