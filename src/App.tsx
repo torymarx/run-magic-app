@@ -278,7 +278,8 @@ function App() {
                                     if (data.weight) {
                                         await updateProfile({ weight: data.weight });
                                     }
-                                    setShowManualForm(false);
+                                    // v13.5: 연속 입력을 위해 자동으로 닫지 않음 (사용자가 직접 'X' 버튼으로 닫기)
+                                    // setShowManualForm(false); 
                                     setEditingRecord(null);
                                 } catch (err) {
                                     console.error("Manual Save Error:", err);

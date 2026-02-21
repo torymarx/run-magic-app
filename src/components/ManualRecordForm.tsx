@@ -191,15 +191,15 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
                 memo
             });
 
-            // 저장이 완료되면 수정 모드 초기화 (부모에서 닫히지 않을 경우를 대비)
-            setEditingId(null);
+            // v13.5: 연속 입력을 위해 ID를 강제로 비우지 않음 (필요 시 달력에서 타 날짜 선택)
+            // setEditingId(null); 
 
             // v8.2: 원본 데이터를 현재 상태로 동기화하여 Dirty 해제
             setOriginalData(getCurrentFormData());
 
             // v8.1: 저장 완료 피드백 표시
             setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 2000);
+            setTimeout(() => setSaveSuccess(false), 3000); // 피드백 시간 연장 (2s -> 3s)
         } catch (error) {
             console.error("저장 중 오류 발생:", error);
         } finally {
