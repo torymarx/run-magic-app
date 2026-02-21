@@ -187,7 +187,7 @@ function App() {
             distance: 0.01, // 테스트용 최소 거리
             weight: profile.weight, // 현재 체중 유지
             splits: ["00:01"],
-            note: "🚀 코다리 부장의 시스템 연동 테스트 완료!",
+            note: "🚀 시스템 통합 최적화 완료!",
             coachId: "wellness"
         };
 
