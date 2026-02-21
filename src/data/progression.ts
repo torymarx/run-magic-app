@@ -17,7 +17,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         maxPoints: 500,
         description: '앱 적응기. 무채색의 평범한 트레이닝복 상반신.',
         visual: 'beginner',
-        imageUrl: 'C:/Users/Nakus/.gemini/antigravity/brain/95ca533c-207a-42df-97b2-32d403112790/magician_lv1_beginner_1771677294985.png'
+        imageUrl: '/assets/characters/magician_lv1_beginner_1771677294985.png'
     },
     {
         level: 2,
@@ -26,7 +26,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         maxPoints: 1500,
         description: '초기 습관 형성기. 깔끔한 스포츠 브랜드 러닝복과 미세하게 점멸하는 이어폰.',
         visual: 'apprentice',
-        imageUrl: 'C:/Users/Nakus/.gemini/antigravity/brain/95ca533c-207a-42df-97b2-32d403112790/magician_lv2_apprentice_1771677316785.png'
+        imageUrl: '/assets/characters/magician_lv2_apprentice_1771677316785.png'
     },
     {
         level: 3,
@@ -35,7 +35,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         maxPoints: 3500,
         description: '꾸준한 러닝 정착. 테크웨어와 홀로그램 데이터 입자 효과.',
         visual: 'magic_runner',
-        imageUrl: 'C:/Users/Nakus/.gemini/antigravity/brain/95ca533c-207a-42df-97b2-32d403112790/magician_progression_all_stages_1771678241395.png'
+        imageUrl: '/assets/characters/magician_progression_all_stages_1771678241395.png'
     },
     {
         level: 4,
@@ -44,7 +44,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         maxPoints: 7000,
         description: '중고급 러너. 사이버네틱 슈트와 네온 눈동자, 렌즈 플레어 이펙트.',
         visual: 'elite_knight',
-        imageUrl: 'C:/Users/Nakus/.gemini/antigravity/brain/95ca533c-207a-42df-97b2-32d403112790/magician_lv4_elite_knight_cybernetic_1771677344184.png'
+        imageUrl: '/assets/characters/magician_lv4_elite_knight_cybernetic_1771677344184.png'
     },
     {
         level: 5,
@@ -53,7 +53,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         maxPoints: 999999,
         description: '앱 마스터. 마법과 과학이 결합된 슈트와 압도적인 오로라 아우라.',
         visual: 'archmage',
-        imageUrl: 'C:/Users/Nakus/.gemini/antigravity/brain/95ca533c-207a-42df-97b2-32d403112790/magician_lv5_archmage_aurora_1771677374648.png'
+        imageUrl: '/assets/characters/magician_lv5_archmage_aurora_1771677374648.png'
     }
 ];
 
