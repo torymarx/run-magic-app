@@ -2,13 +2,15 @@
 import React from 'react';
 import { History, Calendar as CalIcon, Scale, Wind, Flame, ArrowUpRight, ArrowDownRight, X, Sun, Cloud, CloudRain, Snowflake, Smile, Meh, Frown } from 'lucide-react';
 import { getCoachAdvice, getRandomCoach } from '../../utils/coachUtils';
+import VirtualRaceTrack from './VirtualRaceTrack';
 
 interface RecordResultModalProps {
     record: any;
+    allRecords?: any[];
     onClose: () => void;
 }
 
-const RecordResultModal: React.FC<RecordResultModalProps> = ({ record, onClose }) => {
+const RecordResultModal: React.FC<RecordResultModalProps> = ({ record, allRecords = [], onClose }) => {
     // v13.6: 보고서 담당 코치 랜덤 배정 및 조언 생성
     const selectedCoach = React.useMemo(() => getRandomCoach(), []);
     const advice = getCoachAdvice(record, selectedCoach);
@@ -160,6 +162,9 @@ const RecordResultModal: React.FC<RecordResultModalProps> = ({ record, onClose }
                                 </div>
                             )}
                         </div>
+
+                        {/* v18.0: 버추얼 레이스 트랙 통합 */}
+                        <VirtualRaceTrack currentRecord={record} allRecords={allRecords} />
                     </div>
                 </div>
             </div>

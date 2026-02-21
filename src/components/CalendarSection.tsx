@@ -1,7 +1,7 @@
 import React from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Trash2, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Trash2, Plus, History as HistIcon } from 'lucide-react';
 import { parseTimeToSeconds, formatSecondsToTime } from '../utils/calculations';
 
 interface Record {
@@ -25,12 +25,13 @@ interface CalendarSectionProps {
     records: Record[];
     onDelete?: (id: number) => void;
     onEdit?: (record: Record) => void;
+    onViewDetails?: (record: Record) => void;
     onAddNew?: (date: Date) => void;
     viewingDate: Date;
     onDateChange: (date: Date) => void;
 }
 
-const CalendarSection: React.FC<CalendarSectionProps> = ({ records, onDelete, onEdit, onAddNew, viewingDate, onDateChange }) => {
+const CalendarSection: React.FC<CalendarSectionProps> = ({ records, onDelete, onEdit, onViewDetails, onAddNew, viewingDate, onDateChange }) => {
 
     // 특정 날짜에 기록이 있는지 확인하는 함수 (배열 반환)
     const getRecordsForDate = (date: Date) => {
@@ -220,7 +221,12 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({ records, onDelete, on
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
                                     <span style={{ color: 'var(--electric-blue)', fontWeight: 'bold' }}>#{idx + 1} 세션 ({r.time})</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span className="neon-text-green" style={{ fontSize: '0.75rem' }}>완료 ✨</span>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onViewDetails?.(r); }}
+                                            style={{ border: 'none', color: 'var(--electric-blue)', cursor: 'pointer', opacity: 0.8, padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0, 209, 255, 0.1)', borderRadius: '6px' }}
+                                        >
+                                            <HistIcon size={12} /> 레이스 요약
+                                        </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onDelete?.(r.id); }} // Prevent card click when deleting
                                             style={{ background: 'none', border: 'none', color: '#ff4b4b', cursor: 'pointer', opacity: 0.4, padding: '2px' }}

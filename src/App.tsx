@@ -79,6 +79,7 @@ function App() {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showCoachReport, setShowCoachReport] = useState(false);
     const [showLegalModal, setShowLegalModal] = useState(false);
+    const [showRecordResult, setShowRecordResult] = useState<any>(null); // v18.0
 
     // 2.5 Profile Management
     const { profile, updateProfile, isLoading: isProfileLoading } = useProfileManager(user?.id);
@@ -192,7 +193,7 @@ function App() {
 
     // 5. Scroll Lock for Modals
     React.useEffect(() => {
-        const isAnyModalOpen = showManualForm || showProfileModal || showCoachReport || showLegalModal || !!lastSavedRecord;
+        const isAnyModalOpen = showManualForm || showProfileModal || showCoachReport || showLegalModal || !!lastSavedRecord || !!showRecordResult;
         if (isAnyModalOpen) {
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
@@ -204,7 +205,7 @@ function App() {
             document.body.style.overflow = 'unset';
             document.documentElement.style.overflow = 'unset';
         };
-    }, [showManualForm, showProfileModal, showCoachReport, lastSavedRecord]);
+    }, [showManualForm, showProfileModal, showCoachReport, lastSavedRecord, showRecordResult]);
 
     if (authLoading) {
         return (
@@ -285,7 +286,16 @@ function App() {
             {lastSavedRecord && (
                 <RecordResultModal
                     record={lastSavedRecord}
+                    allRecords={records}
                     onClose={() => setLastSavedRecord(null)}
+                />
+            )}
+
+            {showRecordResult && (
+                <RecordResultModal
+                    record={showRecordResult}
+                    allRecords={records}
+                    onClose={() => setShowRecordResult(null)}
                 />
             )}
 
@@ -353,6 +363,7 @@ function App() {
                         records={records}
                         onDelete={handleDeleteRecord}
                         onEdit={handleEditRecord}
+                        onViewDetails={(r) => setShowRecordResult(r)} // v18.0: 결과 조회 연결
                         onAddNew={handleAddNewFromCalendar}
                         viewingDate={viewingDate}
                         onDateChange={setViewingDate}

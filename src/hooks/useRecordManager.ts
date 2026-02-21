@@ -162,6 +162,36 @@ export const useRecordManager = (
             return;
         }
 
+        // v18.0: 버추얼 레이스 비교 데이터 산출 (어제의 나, 10일 평균)
+        const getComparisonData = () => {
+            const sortedByDate = [...records].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            // 1. 어제의 기록 (현재 기록 날짜 - 1일 기준 검색)
+            const d = new Date(data.date);
+            const yDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1).toISOString().split('T')[0];
+            const yesterdayRun = records.find(r => r.date === yDate);
+
+            // 2. 10일 평균 기록 (현재 기록 날짜 이전의 최신 10개 기록)
+            const previousRuns = sortedByDate
+                .filter(r => new Date(r.date) < new Date(data.date))
+                .slice(0, 10);
+
+            let avg10Run = null;
+            if (previousRuns.length > 0) {
+                const avgDist = previousRuns.reduce((acc, r) => acc + r.distance, 0) / previousRuns.length;
+                const avgTotalSeconds = previousRuns.reduce((acc, r) => acc + parseTimeToSeconds(r.totalTime), 0) / previousRuns.length;
+                avg10Run = {
+                    distance: Number(avgDist.toFixed(2)),
+                    totalTime: formatSecondsToTime(Math.round(avgTotalSeconds)),
+                    pace: formatPace(avgTotalSeconds / avgDist)
+                };
+            }
+
+            return { yesterdayRun, avg10Run };
+        };
+
+        const { yesterdayRun, avg10Run } = getComparisonData();
+
         const newRecord = {
             ...data,
             id: recordId,
@@ -170,7 +200,12 @@ export const useRecordManager = (
             pace: formatPace(avgPaceSeconds),
             calories,
             paceDiff: formatPace(Math.abs(paceDiff)),
-            isImproved: paceDiff > 0
+            isImproved: paceDiff > 0,
+            // v18.0: 레이스용 비교 데이터 스냅샷 저장
+            raceComparisons: {
+                yesterday: yesterdayRun ? { distance: yesterdayRun.distance, totalTime: yesterdayRun.totalTime, pace: yesterdayRun.pace } : null,
+                avg10: avg10Run
+            }
         };
 
         const updatedRecords = isEditing
@@ -236,9 +271,6 @@ export const useRecordManager = (
         let recalculatedPoints = 0;
 
         // 기초 통계 산출
-        const totalDist = data.reduce((acc, r) => acc + r.distance, 0);
-        const totalSeconds = data.reduce((acc, r) => acc + parseTimeToSeconds(r.totalTime), 0);
-        const totalMinutes = totalSeconds / 60;
         const totalSessions = data.length;
 
         // 메달별 조건 체크 (50개)
@@ -372,9 +404,16 @@ export const useRecordManager = (
                     }
                     break;
                 case 'm19':
-                    if (data.length >= 10) {
-                        isUnlocked = true;
-                        achievementDate = chronologicalData[9].date;
+                    // 한 달 내 10회 이상 러닝
+                    const monthCounts19: { [key: string]: number } = {};
+                    for (const r of chronologicalData) {
+                        const m = r.date.substring(0, 7);
+                        monthCounts19[m] = (monthCounts19[m] || 0) + 1;
+                        if (monthCounts19[m] >= 10) {
+                            isUnlocked = true;
+                            achievementDate = r.date;
+                            break;
+                        }
                     }
                     break;
                 case 'm20':
@@ -478,7 +517,41 @@ export const useRecordManager = (
                     if (totalSessions >= 150) { isUnlocked = true; achievementDate = chronologicalData[149].date; }
                     break;
                 case 'm37':
-                    if (totalSessions >= 180) { isUnlocked = true; achievementDate = chronologicalData[179].date; }
+                    // 6개월 연속 매월 5회 이상 러닝
+                    const monthCounts37: { [key: string]: number } = {};
+                    chronologicalData.forEach(r => {
+                        const m = r.date.substring(0, 7);
+                        monthCounts37[m] = (monthCounts37[m] || 0) + 1;
+                    });
+                    const months = Object.keys(monthCounts37).sort();
+                    let consecutiveCount = 0;
+                    let lastMonth = "";
+                    for (const m of months) {
+                        if (monthCounts37[m] >= 5) {
+                            if (lastMonth === "") {
+                                consecutiveCount = 1;
+                            } else {
+                                const [y1, mm1] = lastMonth.split('-').map(Number);
+                                const [y2, mm2] = m.split('-').map(Number);
+                                if ((y2 * 12 + mm2) - (y1 * 12 + mm1) === 1) {
+                                    consecutiveCount++;
+                                } else {
+                                    consecutiveCount = 1;
+                                }
+                            }
+                            lastMonth = m;
+                            if (consecutiveCount >= 6) {
+                                isUnlocked = true;
+                                // 해당 월의 마지막 기록 날짜 찾기
+                                const lastRunInMonth = chronologicalData.filter(r => r.date.startsWith(m)).pop();
+                                achievementDate = lastRunInMonth ? lastRunInMonth.date : m + "-28";
+                                break;
+                            }
+                        } else {
+                            consecutiveCount = 0;
+                            lastMonth = m;
+                        }
+                    }
                     break;
                 case 'm38':
                     if (totalSessions >= 200) { isUnlocked = true; achievementDate = chronologicalData[199].date; }
@@ -517,7 +590,22 @@ export const useRecordManager = (
                     if (totalSessions >= 250) { isUnlocked = true; achievementDate = chronologicalData[249].date; }
                     break;
                 case 'm44':
-                    if (totalSessions >= 40) { isUnlocked = true; achievementDate = chronologicalData[39].date; }
+                    // 사계절 각 10회 이상 러닝
+                    const seasonCounts = { spring: 0, summer: 0, autumn: 0, winter: 0 };
+                    for (const r of chronologicalData) {
+                        const m = parseInt(r.date.split('-')[1]);
+                        if (m >= 3 && m <= 5) seasonCounts.spring++;
+                        else if (m >= 6 && m <= 8) seasonCounts.summer++;
+                        else if (m >= 9 && m <= 11) seasonCounts.autumn++;
+                        else seasonCounts.winter++; // 12, 1, 2
+
+                        if (seasonCounts.spring >= 10 && seasonCounts.summer >= 10 &&
+                            seasonCounts.autumn >= 10 && seasonCounts.winter >= 10) {
+                            isUnlocked = true;
+                            achievementDate = r.date;
+                            break;
+                        }
+                    }
                     break;
                 case 'm45':
                     let accTime45 = 0;
@@ -537,15 +625,35 @@ export const useRecordManager = (
                     if (totalSessions >= 300) { isUnlocked = true; achievementDate = chronologicalData[299].date; }
                     break;
                 case 'm48':
-                    if (totalSessions >= 100) { isUnlocked = true; achievementDate = chronologicalData[99].date; }
+                    // 가입 1주년(최초 기록일부터 365일) 및 누적 100회
+                    if (chronologicalData.length >= 100) {
+                        const firstDate = new Date(chronologicalData[0].date);
+                        for (let i = 99; i < chronologicalData.length; i++) {
+                            const currentDate = new Date(chronologicalData[i].date);
+                            const diffDays = Math.floor((currentDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+                            if (diffDays >= 365) {
+                                isUnlocked = true;
+                                achievementDate = chronologicalData[i].date;
+                                break;
+                            }
+                        }
+                    }
                     break;
                 case 'm49':
                     if (totalSessions >= 365) { isUnlocked = true; achievementDate = chronologicalData[364].date; }
                     break;
                 case 'm50':
-                    if (totalDist >= 1000 && totalMinutes >= 10000 && totalSessions >= 365) {
-                        isUnlocked = true;
-                        achievementDate = chronologicalData[chronologicalData.length - 1].date;
+                    // 아크메이지: 1,000km & 10,000분 & 365회 달성 시점 추적
+                    let accDist50 = 0;
+                    let accTime50 = 0;
+                    for (let i = 0; i < chronologicalData.length; i++) {
+                        accDist50 += chronologicalData[i].distance;
+                        accTime50 += parseTimeToSeconds(chronologicalData[i].totalTime) / 60;
+                        if (accDist50 >= 1000 && accTime50 >= 10000 && (i + 1) >= 365) {
+                            isUnlocked = true;
+                            achievementDate = chronologicalData[i].date;
+                            break;
+                        }
                     }
                     break;
             }
