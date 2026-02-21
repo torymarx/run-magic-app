@@ -5,7 +5,8 @@ import { UserProfile } from '../../hooks/useProfileManager';
 
 interface ProfileSectionProps {
     profile: UserProfile;
-    onUpdate: (updates: Partial<UserProfile>) => void;
+    onUpdate: (updates: Partial<UserProfile>) => Promise<void> | void;
+    onForceSaveTest: () => Promise<void> | void;
     isLoading: boolean;
     onClose: () => void;
 }
@@ -27,7 +28,7 @@ const KODARI_CHARACTERS: Record<string, any[]> = {
     ]
 };
 
-const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onClose }) => {
+const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onForceSaveTest, onClose }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
@@ -236,6 +237,31 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onCl
                             `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다. 런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
                             "런너님의 상세 정보를 입력해 주시면 더욱 정밀한 영자 분석 리포트를 제공해 드릴 수 있습니다."}
                     </p>
+                </div>
+
+                {/* 시스템 연동 테스트 버튼 (v12.0) */}
+                <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                        onClick={onForceSaveTest}
+                        className="glass-button"
+                        style={{
+                            width: '100%',
+                            padding: '1rem',
+                            background: 'rgba(0, 209, 255, 0.1)',
+                            border: '1px dashed var(--electric-blue)',
+                            color: 'var(--electric-blue)',
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.8rem',
+                            transition: 'all 0.3s ease'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0, 209, 255, 0.2)'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(0, 209, 255, 0.1)'}
+                    >
+                        <ShieldCheck size={20} /> 시스템 연동 테스트 (정보 강제 입력 확인)
+                    </button>
                 </div>
 
                 {/* 계정 관리 섹션 (신규) */}

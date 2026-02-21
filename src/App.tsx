@@ -93,7 +93,7 @@ function App() {
         setShowManualForm(true);
     };
 
-    // UI Import Handler
+    // UI Import Handler (v12.0: Unified Backup Support)
     const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -101,9 +101,18 @@ function App() {
         reader.onload = async (e) => {
             try {
                 const importedData = JSON.parse(e.target?.result as string);
-                if (Array.isArray(importedData)) {
-                    if (window.confirm(`총 ${importedData.length}개의 기록을 복구하시겠습니까? \n(기본 기록과 중복되지 않은 항목만 추가됩니다)`)) {
-                        await handleImportRecords(importedData);
+
+                // v12.0: 통합 데이터 형식({ profile, records }) 검사
+                const recordsToImport = Array.isArray(importedData) ? importedData : importedData.records;
+                const profileToImport = !Array.isArray(importedData) ? importedData.profile : null;
+
+                if (Array.isArray(recordsToImport)) {
+                    if (window.confirm(`총 ${recordsToImport.length}개의 기록${profileToImport ? " 및 프로필 정보" : ""}를 복구하시겠습니까? \n(기본 기록과 중복되지 않은 항목만 추가됩니다)`)) {
+                        await handleImportRecords(recordsToImport);
+                        if (profileToImport) {
+                            console.log("👤 프로필 정보 복구 중...");
+                            await updateProfile(profileToImport);
+                        }
                     }
                 } else {
                     alert("올바르지 않은 백업 파일 형식입니다.");
@@ -116,13 +125,51 @@ function App() {
     };
 
     const handleExport = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records, null, 2));
+        // v12.0: 운동 기록과 프로필을 하나로 묶어 '완벽한 백업' 달성!
+        const exportPackage = {
+            records,
+            profile,
+            exportedAt: new Date().toISOString(),
+            version: "12.0"
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPackage, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", `run_magic_data_${new Date().toISOString().split('T')[0]}.json`);
+        downloadAnchorNode.setAttribute("download", `run_magic_backup_${user?.email?.split('@')[0]}_${new Date().toISOString().split('T')[0]}.json`);
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
+    };
+
+    // v12.0: 시스템 연동 테스트 (강제 저장 및 확인)
+    const handleForceSaveTest = async () => {
+        if (!user?.id) return;
+
+        console.log("🧪 시스템 연동 정밀 테스트 시작...");
+
+        const testDate = new Date().toISOString().split('T')[0];
+        const testRecord = {
+            date: testDate,
+            time: "00:00:01",
+            distance: 0.01, // 테스트용 최소 거리
+            weight: profile.weight, // 현재 체중 유지
+            splits: ["00:01"],
+            note: "🚀 코다리 부장의 시스템 연동 테스트 완료!",
+            coachId: "wellness"
+        };
+
+        try {
+            // 1. 기록 강제 저장
+            await handleManualSave(testRecord);
+
+            // 2. 프로필 강제 업데이트 (수정 시각 갱신)
+            await updateProfile({ updated_at: new Date().toISOString() });
+
+            alert("✅ 시스템 연동 테스트 성공!\n클라우드에 테스트 기록이 저장되었으며 프로필 시각이 동기화되었습니다. 🫡🛡️");
+        } catch (error) {
+            console.error("❌ 연동 테스트 실패:", error);
+            alert("❌ 연동 테스트 중 오류가 발생했습니다. 콘솔을 확인해 주세요.");
+        }
     };
 
     // 5. Scroll Lock for Modals
@@ -229,6 +276,7 @@ function App() {
                 <ProfileSection
                     profile={profile}
                     onUpdate={updateProfile}
+                    onForceSaveTest={handleForceSaveTest}
                     isLoading={isProfileLoading}
                     onClose={() => setShowProfileModal(false)}
                 />
