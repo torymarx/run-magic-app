@@ -92,7 +92,8 @@ function App() {
         handleImportRecords,
         totalDays,
         lastSyncStatus, // v13.2
-        refreshData // v13.3
+        refreshData, // v13.3
+        calculateLevelInfo // v16.0
     } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id);
 
     // 4. AI Coach System Logic (Refactored)
@@ -307,6 +308,8 @@ function App() {
                     recordCount={records.length} // v13.2
                     onRefreshData={refreshData} // v13.3
                     onClose={() => setShowProfileModal(false)}
+                    points={points}
+                    calculateLevelInfo={calculateLevelInfo}
                 />
             )}
 

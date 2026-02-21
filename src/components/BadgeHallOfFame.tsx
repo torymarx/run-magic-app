@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Flame, Zap, Mountain, Trophy, Target, Star, Heart, Cloud, Sun, Moon, Layers, Activity, Calendar, Coffee, Ghost, Smile, Palette, Lock, Info, Award, Crown, Medal, Wind, Umbrella, Timer } from 'lucide-react';
+import {
+    Flame, Zap, Mountain, Star, Sun, Moon, Layers, Activity,
+    Crown, Medal, Wind, Timer, Trophy, Lock, Info,
+    Sprout, Shield, BookOpen, Compass, FlaskConical, Bird, Hourglass, FastForward, Map, MapPin,
+    Beaker, Dices, Gem, Globe, Settings, Aperture, Flower, Dog, CloudLightning, Train, Box,
+    Clock, Hammer, Castle, SunMedium, Waves, Footprints, Watch, BatteryCharging, Infinity,
+    Gift, Sword, Wand2, Library, Rocket
+} from 'lucide-react';
+import { MEDAL_DATA } from '../data/medals';
 
 interface BadgeHallOfFameProps {
     unlockedBadges: string[];
@@ -16,47 +24,67 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         LEGENDARY: '#FFD700' // Gold
     };
 
-    const allItems = [
-        // Trophies - Achievements based on milestones
-        { id: 'streak3', name: '열정의 불꽃', icon: <Flame size={18} />, description: '3일 연속 질주 성공', rarity: 'UNCOMMON', type: 'trophy', date: '2026.02.14' },
-        { id: 'streak7', name: '시냅스 루틴', icon: <Heart size={18} />, description: '7일 연속 러닝 달성', rarity: 'RARE', type: 'trophy', date: '2026.02.10' },
-        { id: 'streak14', name: '습관의 완성', icon: <Calendar size={18} />, description: '14일 연속 질주 성공', rarity: 'RARE', type: 'trophy', date: '-' },
-        { id: 'streak30', name: '강철의 의지', icon: <Layers size={18} />, description: '30일 연속 질주 성공', rarity: 'EPIC', type: 'trophy', date: '-' },
+    // v15.0: 아이콘 타입 매핑 테이블
+    const ICON_MAP: { [key: string]: React.ReactNode } = {
+        Shield: <Shield size={20} />,
+        Sprout: <Sprout size={20} />,
+        Zap: <Zap size={20} />,
+        Sun: <Sun size={20} />,
+        Moon: <Moon size={20} />,
+        Flame: <Flame size={20} />,
+        Activity: <Activity size={20} />,
+        BookOpen: <BookOpen size={20} />,
+        Compass: <Compass size={20} />,
+        FlaskConical: <FlaskConical size={20} />,
+        Bird: <Bird size={20} />,
+        Timer: <Timer size={20} />,
+        Wind: <Wind size={20} />,
+        Star: <Star size={20} />,
+        Hourglass: <Hourglass size={20} />,
+        FastForward: <FastForward size={20} />,
+        Map: <Map size={20} />,
+        Crown: <Crown size={20} />,
+        Layers: <Layers size={20} />,
+        MapPin: <MapPin size={20} />,
+        Mountain: <Mountain size={20} />,
+        Beaker: <Beaker size={20} />,
+        Dices: <Dices size={20} />,
+        Gem: <Gem size={20} />,
+        Globe: <Globe size={20} />,
+        Settings: <Settings size={20} />,
+        Aperture: <Aperture size={20} />,
+        Flower: <Flower size={20} />,
+        Dog: <Dog size={20} />,
+        CloudLightning: <CloudLightning size={20} />,
+        Train: <Train size={20} />,
+        Box: <Box size={20} />,
+        Clock: <Clock size={20} />,
+        Hammer: <Hammer size={20} />,
+        Tower: <Castle size={20} />,
+        SunInside: <SunMedium size={20} />,
+        Waves: <Waves size={20} />,
+        Footprints: <Footprints size={20} />,
+        Watch: <Watch size={20} />,
+        BatteryCharging: <BatteryCharging size={20} />,
+        Gift: <Gift size={20} />,
+        Sword: <Sword size={20} />,
+        Wand2: <Wand2 size={20} />,
+        Library: <Library size={20} />,
+        Rocket: <Rocket size={20} />,
+        Infinity: <Infinity size={20} />
+    };
 
-        { id: 'everest', name: '퀀텀 하이커', icon: <Mountain size={18} />, description: '누적 8.8km 돌파', rarity: 'RARE', type: 'trophy', date: '2026.01.25' },
-        { id: 'dist100', name: '실버 오디세이', icon: <Award size={18} />, description: '누적 100km 돌파', rarity: 'RARE', type: 'trophy', date: '-' },
-        { id: 'dist500', name: '골든 트레일', icon: <Trophy size={18} />, description: '누적 500km 돌파', rarity: 'EPIC', type: 'trophy', date: '-' },
-        { id: 'dist1000', name: '플래티넘 로드', icon: <Crown size={18} />, description: '누적 1,000km 돌파', rarity: 'LEGENDARY', type: 'trophy', date: '-' },
-        { id: 'dist3000', name: '신화의 영역', icon: <Star size={18} />, description: '누적 3,000km 돌파', rarity: 'LEGENDARY', type: 'trophy', date: '-' },
-
-        { id: 'improved', name: '리미트 브레이커', icon: <Zap size={18} />, description: '최고 기록 경신', rarity: 'RARE', type: 'trophy', date: '2026.02.15' },
-        { id: 'cloud_runner', name: '클라우드 러너', icon: <Cloud size={18} />, description: '데이터 백업 완료', rarity: 'COMMON', type: 'trophy', date: '2026.02.16' },
-
-        // Medals - Skills and specific challenges
-        { id: 'morning_aura', name: '모닝 아우라', icon: <Sun size={20} />, description: '오전 8시 이전 5회', rarity: 'UNCOMMON', type: 'medal', date: '2026.02.11' },
-        { id: 'dawn_eye', name: '새벽의 눈동자', icon: <Timer size={20} />, description: '오전 5시 이전 1회 성공', rarity: 'RARE', type: 'medal', date: '-' },
-        { id: 'midnight_neon', name: '미드나잇 네온', icon: <Moon size={20} />, description: '밤 10시 이후 5회', rarity: 'RARE', type: 'medal', date: '-' },
-
-        { id: 'sub5', name: '실버 불렛', icon: <Activity size={20} />, description: '페이스 4분대 진입', rarity: 'RARE', type: 'medal', date: '-' },
-        { id: 'sub4', name: '골든 소닉', icon: <Zap size={20} />, description: '페이스 3분대 진입', rarity: 'EPIC', type: 'medal', date: '-' },
-
-        { id: '10k', name: '10K 챔피언', icon: <Trophy size={20} />, description: '10km 완주 성공', rarity: 'UNCOMMON', type: 'medal', date: '2026.02.12' },
-        { id: 'half_marathon', name: '하프 마스터', icon: <Medal size={20} />, description: '하프 코스(21.1km) 완주', rarity: 'EPIC', type: 'medal', date: '-' },
-        { id: 'marathoner', name: '티타늄 엔듀런스', icon: <Target size={20} />, description: '풀 코스(42.195km) 완주', rarity: 'LEGENDARY', type: 'medal', date: '2026.02.01' },
-        { id: 'marathon_3', name: '트리플 크라운', icon: <Crown size={20} />, description: '풀 코스 3회 완주', rarity: 'LEGENDARY', type: 'medal', date: '-' },
-        { id: 'iron_will', name: '철인 런너', icon: <Trophy size={20} />, description: '풀 코스 10회 완주', rarity: 'LEGENDARY', type: 'medal', date: '-' },
-
-        { id: 'steady_stream', name: '스테디 스트림', icon: <Wind size={20} />, description: '페이스 편차 10초↓', rarity: 'RARE', type: 'medal', date: '2026.02.08' },
-        { id: 'triple_target', name: '정밀 저격수', icon: <Target size={20} />, description: '목표 페이스 3회 연속 일치', rarity: 'EPIC', type: 'medal', date: '-' },
-
-        { id: 'rain_master', name: '수중전의 대가', icon: <Umbrella size={20} />, description: '우중 질주 기록 등록', rarity: 'UNCOMMON', type: 'medal', date: '-' },
-        { id: 'total100', name: '백전노장', icon: <Activity size={20} />, description: '누적 100회 질주 달성', rarity: 'EPIC', type: 'medal', date: '-' },
-
-        { id: 'calorie_architect', name: '칼로리 아키텍트', icon: <Coffee size={20} />, description: '단일 세션 500kcal 소모', rarity: 'UNCOMMON', type: 'medal', date: '2026.02.05' },
-        { id: 'shadow_runner', name: '섀도우 러너', icon: <Ghost size={20} />, description: '복귀 러닝 성공', rarity: 'EPIC', type: 'medal', date: '2026.01.15' },
-        { id: 'generous_heart', name: '제너러스 하트', icon: <Smile size={20} />, description: 'Wellness 코치 5회', rarity: 'UNCOMMON', type: 'medal', date: '2026.02.14' },
-        { id: 'rainbow_collector', name: '레인보우 컬렉터', icon: <Palette size={20} />, description: '모든 코치와 러닝', rarity: 'LEGENDARY', type: 'medal', date: '-' },
-    ];
+    const allItems = MEDAL_DATA.map(m => ({
+        id: m.id,
+        name: m.name,
+        icon: ICON_MAP[m.iconType] || <Medal size={20} />,
+        description: m.criteria,
+        detail: m.description,
+        points: m.points,
+        rarity: m.rarity,
+        phase: m.phase,
+        type: 'medal'
+    }));
 
     // Rarity Rank for Sorting
     const RARITY_RANK = {
@@ -67,11 +95,12 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         COMMON: 1
     };
 
-    // Sort items by Rarity (High -> Low), then by ID
+    // v15.0: Phase 우선 정렬 로직
     const sortedItems = [...allItems].sort((a, b) => {
+        if (a.phase !== b.phase) return a.phase - b.phase;
         const rankA = RARITY_RANK[a.rarity as keyof typeof RARITY_RANK];
         const rankB = RARITY_RANK[b.rarity as keyof typeof RARITY_RANK];
-        if (rankA !== rankB) return rankB - rankA; // Descending
+        if (rankA !== rankB) return rankB - rankA;
         return a.id.localeCompare(b.id);
     });
 
@@ -95,16 +124,13 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
             const { left, width } = container.getBoundingClientRect();
             const relativeX = mouseXRef.current - left;
 
-            // Edge Threshold: 80px (approx 1 medal size + padding) - Wide enough for easy detection
             const edgeThreshold = 80;
-            const maxScrollSpeed = 12; // Speed for fluid movement
+            const maxScrollSpeed = 12;
 
             if (relativeX < edgeThreshold) {
-                // Scroll Left (closer to edge = faster)
                 const intensity = (edgeThreshold - relativeX) / edgeThreshold;
                 container.scrollLeft -= maxScrollSpeed * intensity;
             } else if (relativeX > width - edgeThreshold) {
-                // Scroll Right
                 const intensity = (relativeX - (width - edgeThreshold)) / edgeThreshold;
                 container.scrollLeft += maxScrollSpeed * intensity;
             }
@@ -120,7 +146,6 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
 
     const InventorySlot = ({ item, isUnlocked }: any) => {
         const color = RARITY[item.rarity as keyof typeof RARITY];
-        // Highlight if this item is currently displayed in Info Panel
         const isSelected = hoveredItem?.id === item.id;
 
         return (
@@ -136,7 +161,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                         ? `radial-gradient(circle at center, ${color}22 0%, rgba(20,20,25,0.8) 100%)`
                         : 'rgba(255,255,255,0.03)',
                     border: isUnlocked
-                        ? `1px solid ${isSelected ? color : `${color}66`}` // Brighter border if selected
+                        ? `1px solid ${isSelected ? color : `${color}66`}`
                         : '1px solid rgba(255,255,255,0.05)',
                     borderRadius: '12px',
                     display: 'flex',
@@ -159,7 +184,6 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     {item.icon}
                 </div>
 
-                {/* Micro Rarity Indicator */}
                 {isUnlocked && (
                     <div style={{
                         position: 'absolute',
@@ -235,12 +259,11 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     overflowX: 'auto',
                     paddingBottom: '0.5rem',
                     paddingTop: '0.5rem',
-                    maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)', // Fade both sides
+                    maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
                     WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
-                    cursor: 'grab' // Indicate draggable/scrollable
+                    cursor: 'grab'
                 }}
             >
-                {/* Spacer at start for fade effect */}
                 <div style={{ minWidth: '10px' }} />
 
                 {sortedItems.map((item, idx) => (
@@ -251,11 +274,10 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     />
                 ))}
 
-                {/* Spacer at end for fade effect */}
                 <div style={{ minWidth: '10px' }} />
             </div>
 
-            {/* Info Panel (Fixed Bottom Section) - Solves tooltip clipping & disappearance */}
+            {/* Info Panel */}
             <div style={{
                 height: '70px',
                 background: 'rgba(0,0,0,0.4)',
@@ -273,7 +295,6 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
             }}>
                 {hoveredItem ? (
                     <>
-                        {/* Selected Item Icon (Large) */}
                         <div style={{
                             width: '46px',
                             height: '46px',
@@ -291,7 +312,6 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                             {hoveredItem.icon}
                         </div>
 
-                        {/* Info Text */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'center', justifyContent: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                                 <span style={{
@@ -300,6 +320,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                     color: hoveredItem.isUnlocked ? '#fff' : 'rgba(255,255,255,0.3)',
                                     textShadow: hoveredItem.isUnlocked ? `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none'
                                 }}>
+                                    {hoveredItem.phase && <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY], marginRight: '6px', fontSize: '0.8rem' }}>Phase {hoveredItem.phase}</span>}
                                     {hoveredItem.name} {!hoveredItem.isUnlocked && <Lock size={12} style={{ verticalAlign: 'middle', marginLeft: '4px' }} />}
                                 </span>
                                 <span style={{
@@ -311,19 +332,18 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                     border: `1px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '44' : 'rgba(255,255,255,0.1)'}`,
                                     fontWeight: 'bold'
                                 }}>
-                                    {hoveredItem.rarity}
+                                    {hoveredItem.rarity} | {hoveredItem.points}P
                                 </span>
                             </div>
-                            <span style={{ fontSize: '0.85rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0, 209, 255, 0.5)', fontWeight: hoveredItem.isUnlocked ? 'normal' : 'bold' }}>
-                                {hoveredItem.isUnlocked ? hoveredItem.description : `🛑 미션: ${hoveredItem.description}`}
+                            <span style={{ fontSize: '0.85rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', fontWeight: hoveredItem.isUnlocked ? 'normal' : 'bold' }}>
+                                {hoveredItem.isUnlocked ? (hoveredItem.detail || hoveredItem.description) : `🛑 미션: ${hoveredItem.description}`}
                             </span>
                         </div>
 
-                        {/* Date (Absolute to keep center balance) */}
                         {hoveredItem.isUnlocked && (
                             <div style={{ position: 'absolute', right: '1.5rem', textAlign: 'right', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
                                 Unlocked<br />
-                                <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>{hoveredItem.date}</span>
+                                <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 'bold' }}>{hoveredItem.date || '-'}</span>
                             </div>
                         )}
                     </>
@@ -350,9 +370,8 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     to { transform: scale(1); opacity: 1; }
                 }
                 
-                /* Custom Thin Scrollbar */
                 .custom-scrollbar::-webkit-scrollbar {
-                    height: 4px; /* Thinner */
+                    height: 4px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
                     background: transparent; 

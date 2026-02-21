@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTime, parseTimeToSeconds } from '../utils/calculations';
+import { MEDAL_DATA } from '../data/medals';
+import { LEVEL_DATA, POINT_RULES } from '../data/progression';
 
 // 이 훅은 레코드 관리에 필요한 모든 복잡한 상태 관리를 캡슐화합니다.
 export const useRecordManager = (
@@ -218,84 +220,153 @@ export const useRecordManager = (
         setLastSavedRecord(newRecord);
     };
 
-    // 시스템 정밀 재계산: 모든 기록을 분석하여 누락된 업적과 포인트를 전수 동기화!
+    // v15.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
     const recalculateAllAchievements = (data: any[]) => {
         if (!data) return;
 
-        let newBadges: string[] = [];
         let newMedals: string[] = [];
         let recalculatedPoints = 0;
 
-        // 1. 포인트 전수 재계산 (동기화의 핵심)
-        data.forEach(r => {
-            let earned = Math.floor(r.distance * 100);
-            if (r.isImproved) earned += 300;
-            recalculatedPoints += earned;
-        });
-
-        // 2. 배지/트로피 체크
+        // 기초 통계 산출
         const totalDist = data.reduce((acc, r) => acc + r.distance, 0);
-        if (data.some(r => r.isImproved)) newBadges.push('improved');
-        if (data.some(r => r.distance >= 10)) newBadges.push('10k');
-        if (totalDist >= 8.8) newBadges.push('everest');
-        if (streak >= 3) newBadges.push('streak3');
-        if (totalDist >= 42.195) newBadges.push('marathoner');
+        const totalSeconds = data.reduce((acc, r) => acc + parseTimeToSeconds(r.totalTime), 0);
+        const totalMinutes = totalSeconds / 60;
+        const totalSessions = data.length;
 
-        // 3. 10대 전략 미션 체크
-        // 1. 모닝 아우라
-        const morningRuns = data.filter(r => {
-            const hour = r.time ? parseInt(r.time.split(':')[0]) : 0;
-            return hour < 8;
-        }).length;
-        if (morningRuns >= 5) newMedals.push('morning_aura');
+        // 메달별 조건 체크 (50개)
+        MEDAL_DATA.forEach(medal => {
+            let isUnlocked = false;
 
-        // 2. 미드나잇 네온
-        const nightRuns = data.filter(r => {
-            const hour = r.time ? parseInt(r.time.split(':')[0]) : 0;
-            return hour >= 22;
-        }).length;
-        if (nightRuns >= 5) newMedals.push('midnight_neon');
+            switch (medal.id) {
+                // Phase 1
+                case 'm1': isUnlocked = true; break; // 프로필 활성화 (현 시점 기본)
+                case 'm2': isUnlocked = data.some(r => r.distance >= 1); break;
+                case 'm3': isUnlocked = data.some(r => parseTimeToSeconds(r.totalTime) >= 600); break;
+                case 'm4': isUnlocked = data.some(r => {
+                    const h = parseInt(r.time.split(':')[0]);
+                    return h >= 5 && h < 9;
+                }); break;
+                case 'm5': isUnlocked = data.some(r => {
+                    const h = parseInt(r.time.split(':')[0]);
+                    return h >= 19 || h < 24;
+                }); break;
 
-        // 3. 퍼펙트 시메트리
-        const distCounts: { [key: number]: number } = {};
-        data.forEach(r => {
-            const d = parseFloat(r.distance.toFixed(1));
-            distCounts[d] = (distCounts[d] || 0) + 1;
+                // Phase 2
+                case 'm6': isUnlocked = streak >= 3; break;
+                case 'm7': isUnlocked = data.length >= 3; break; // 실제론 1주일 조건이나 누적 3회로 일단 체크
+                case 'm8': isUnlocked = data.some(r => {
+                    const day = new Date(r.date).getDay();
+                    return day === 0 || day === 6;
+                }); break;
+                case 'm9': isUnlocked = totalDist >= 10; break;
+                case 'm10': isUnlocked = data.some(r => r.distance >= 3); break;
+
+                // Phase 3
+                case 'm11': isUnlocked = data.some(r => new Date(r.date).getDay() === 1); break;
+                case 'm12': isUnlocked = totalMinutes >= 100; break;
+                case 'm13': isUnlocked = data.filter(r => r.distance <= 2).length >= 5; break;
+                case 'm14': isUnlocked = data.some(r => r.distance >= 7); break;
+
+                // Phase 4
+                case 'm15': isUnlocked = data.some(r => parseTimeToSeconds(r.totalTime) >= 1800); break;
+                case 'm16': isUnlocked = data.some(r => r.isImproved); break;
+                case 'm17': isUnlocked = data.some(r => r.distance >= 5); break;
+                case 'm18': isUnlocked = totalDist >= 30; break;
+                case 'm19': isUnlocked = data.length >= 10; break; // 한달 내 조건은 단순 누적 10회로 처리
+                case 'm20': isUnlocked = data.some(r => r.distance >= 10); break;
+
+                // Phase 5 (누적 기록)
+                case 'm21': isUnlocked = totalDist >= 20; break;
+                case 'm22': isUnlocked = totalDist >= 50; break;
+                case 'm23': isUnlocked = totalMinutes >= 300; break;
+                case 'm24': isUnlocked = totalSessions >= 15; break;
+                case 'm25': isUnlocked = totalSessions >= 30; break;
+                case 'm26': isUnlocked = totalDist >= 100; break;
+                case 'm27': isUnlocked = totalMinutes >= 500; break;
+                case 'm28': isUnlocked = totalSessions >= 50; break;
+                case 'm29': isUnlocked = totalMinutes >= 1000; break;
+                case 'm30': isUnlocked = totalSessions >= 100; break;
+
+                // Phase 6
+                case 'm31': isUnlocked = totalDist >= 150; break;
+                case 'm32': isUnlocked = totalDist >= 200; break;
+                case 'm33': isUnlocked = totalDist >= 300; break;
+                case 'm34': isUnlocked = totalMinutes >= 2000; break;
+                case 'm35': isUnlocked = totalMinutes >= 3000; break;
+                case 'm36': isUnlocked = totalSessions >= 150; break;
+                case 'm37': isUnlocked = totalSessions >= 180; break; // 6개월 연속 기준 완화
+                case 'm38': isUnlocked = totalSessions >= 200; break;
+                case 'm39': isUnlocked = totalMinutes >= 5000; break;
+                case 'm40': isUnlocked = totalDist >= 500; break;
+
+                // Phase 7
+                case 'm41': isUnlocked = totalMinutes >= 7000; break;
+                case 'm42': isUnlocked = totalDist >= 777; break;
+                case 'm43': isUnlocked = totalSessions >= 250; break;
+                case 'm44': isUnlocked = totalSessions >= 40; break; // 사계절 체크 대신 누적 40회 보수적 적용
+                case 'm45': isUnlocked = totalMinutes >= 10000; break;
+                case 'm46': isUnlocked = totalDist >= 1000; break;
+                case 'm47': isUnlocked = totalSessions >= 300; break;
+                case 'm48': isUnlocked = totalSessions >= 100; break; // 가입 1주년 연동은 추후 프로필 날짜와 결합
+                case 'm49': isUnlocked = totalSessions >= 365; break;
+                case 'm50': isUnlocked = totalDist >= 1000 && totalMinutes >= 10000 && totalSessions >= 365; break;
+            }
+
+            if (isUnlocked) {
+                newMedals.push(medal.id);
+                recalculatedPoints += medal.points;
+            }
         });
-        if (Object.values(distCounts).some(count => count >= 3)) newMedals.push('perfect_symmetry');
 
-        // 4. 스테디 스트림
-        if (data.length >= 10) {
-            const allPaces = data.map(r => parseTimeToSeconds(r.pace));
-            const avgPace = allPaces.reduce((a, b) => a + b, 0) / allPaces.length;
-            const steadyRuns = allPaces.filter(p => Math.abs(p - avgPace) <= 10).length;
-            if (steadyRuns >= 10) newMedals.push('steady_stream');
+        // v16.0: 활동 포인트 정밀 산출
+        let activityPoints = 0;
+
+        // 1. 러닝 기록 등록 (30P): 일자별 1회
+        const uniqueDays = new Set(data.map(r => r.date)).size;
+        activityPoints += uniqueDays * POINT_RULES.RUNNING_SESSION;
+
+        // 2. 연속 러닝 보너스 (50P): 3, 7, 14, 30일 등 주요 마일스톤 시점
+        if (streak >= 3) activityPoints += POINT_RULES.STREAK_BONUS;
+        if (streak >= 7) activityPoints += POINT_RULES.STREAK_BONUS;
+        if (streak >= 14) activityPoints += POINT_RULES.STREAK_BONUS;
+
+        // 3. 특정 시간대 보너스 (20P)
+        const specialRuns = data.filter(r => {
+            const h = parseInt(r.time.split(':')[0]);
+            return h < 6 || h >= 21; // 얼리버드 or 나이트런
+        }).length;
+        activityPoints += specialRuns * POINT_RULES.SPECIAL_TIME;
+
+        // 결과 업데이트
+        const finalPoints = recalculatedPoints + activityPoints;
+        setPoints(finalPoints);
+        setUnlockedMedals(newMedals);
+        setUnlockedBadges([]);
+    };
+
+    // v16.0: 포인트 기반 레벨 계산기
+    const calculateLevelInfo = (totalPoints: number) => {
+        const currentLevel = LEVEL_DATA.find(l => totalPoints >= l.minPoints && totalPoints <= l.maxPoints)
+            || LEVEL_DATA[LEVEL_DATA.length - 1];
+
+        const nextLevel = LEVEL_DATA.find(l => l.level === currentLevel.level + 1);
+
+        let progress = 100;
+        let xpToNext = 0;
+
+        if (nextLevel) {
+            const range = nextLevel.minPoints - currentLevel.minPoints;
+            const currentXP = totalPoints - currentLevel.minPoints;
+            progress = Math.min(Math.floor((currentXP / range) * 100), 100);
+            xpToNext = nextLevel.minPoints - totalPoints;
         }
 
-        // 5. 아이언 윌
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const last30DaysDist = data.filter(r => new Date(r.date) >= thirtyDaysAgo).reduce((acc, r) => acc + r.distance, 0);
-        if (last30DaysDist >= 100) newMedals.push('iron_will');
-
-        // 6. 위켄드 아키텍트
-        const weekendRuns = data.filter(r => {
-            const day = new Date(r.date).getDay();
-            return day === 0 || day === 6;
-        }).length;
-        if (weekendRuns >= 8) newMedals.push('weekend_architect');
-
-        // 10. 레인보우 컬렉터
-        const usedCoaches = new Set(data.map(r => r.coachId).filter(Boolean));
-        if (usedCoaches.size >= 7) newMedals.push('rainbow_collector');
-
-        // 상태 업데이트 및 저장 (userId별 격리 저장소 사용)
-        const finalBadges = Array.from(new Set(newBadges));
-        const finalMedals = Array.from(new Set(newMedals));
-
-        setPoints(recalculatedPoints);
-        setUnlockedBadges(finalBadges);
-        setUnlockedMedals(finalMedals);
+        return {
+            ...currentLevel,
+            progress,
+            xpToNext,
+            nextLevelName: nextLevel?.name || 'MAX'
+        };
     };
 
     const handleDeleteRecord = async (id: number) => {
@@ -422,6 +493,7 @@ export const useRecordManager = (
         updateTotalDays,
         totalDays,
         lastSyncStatus,
-        refreshData: () => fetchInitialData(false) // v13.3: 수동 새로고침 노출
+        calculateLevelInfo, // v16.0: 레벨 정보 계산기 노출
+        refreshData: () => fetchInitialData(false)
     };
 };

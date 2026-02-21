@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { User, Scale, Ruler, Target, Edit3, Save, X, ShieldCheck, RefreshCw } from 'lucide-react';
 import { UserProfile } from '../../hooks/useProfileManager';
+import CharacterLevelWidget from './CharacterLevelWidget';
 
 interface ProfileSectionProps {
     profile: UserProfile;
@@ -11,6 +11,8 @@ interface ProfileSectionProps {
     recordCount?: number; // v13.2
     onRefreshData?: () => void; // v13.3
     onClose: () => void;
+    points: number; // v16.0
+    calculateLevelInfo: (points: number) => any; // v16.0
 }
 
 const KODARI_CHARACTERS: Record<string, any[]> = {
@@ -30,7 +32,10 @@ const KODARI_CHARACTERS: Record<string, any[]> = {
     ]
 };
 
-const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, syncStatus, recordCount, onRefreshData, onClose }) => {
+const ProfileSection: React.FC<ProfileSectionProps> = ({
+    profile, onUpdate, syncStatus, recordCount, onRefreshData, onClose,
+    points, calculateLevelInfo
+}) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
@@ -39,9 +44,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, sync
         setIsEditing(false);
     };
 
-    const currentGender = (profile.gender === 'female' ? 'female' : 'male');
-    const currentCharacterList = KODARI_CHARACTERS[currentGender];
-    const currentCharacter = currentCharacterList.find(c => c.id === (profile.characterId || 1)) || currentCharacterList[0];
+
+    const levelInfo = calculateLevelInfo(points);
 
     return (
         <div style={{
@@ -74,10 +78,13 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, sync
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div className="neon-border-blue" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,209,255,0.1)', fontSize: '2rem' }}>
-                            {currentCharacter.emoji}
-                        </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                        {/* v16.0: 진화하는 캐릭터 위젯 배치 */}
+                        <CharacterLevelWidget
+                            totalPoints={points}
+                            calculateLevelInfo={calculateLevelInfo}
+                        />
+
                         <div>
                             {isEditing ? (
                                 <input
@@ -89,9 +96,22 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, sync
                                     placeholder="성함을 입력하세요"
                                 />
                             ) : (
-                                <h2 className="neon-text-blue" style={{ fontSize: '1.6rem', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>{profile.name} {profile.name === '런너님' ? '' : '런너님'}</h2>
+                                <h2 className="neon-text-blue" style={{ fontSize: '2rem', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif', margin: 0 }}>
+                                    {profile.name} <span style={{ fontSize: '1rem', opacity: 0.5, fontWeight: 'normal' }}>런너님</span>
+                                </h2>
                             )}
-                            <p style={{ opacity: 0.6, fontSize: '0.9rem' }}>{currentCharacter.name} ({currentCharacter.description}) 모드로 질주 중</p>
+                            <p style={{
+                                marginTop: '8px',
+                                padding: '4px 12px',
+                                background: 'rgba(0, 209, 255, 0.1)',
+                                borderRadius: '20px',
+                                color: 'var(--electric-blue)',
+                                fontSize: '0.85rem',
+                                display: 'inline-block',
+                                border: '1px solid rgba(0, 209, 255, 0.2)'
+                            }}>
+                                {levelInfo.name} 모드로 질주 중 | {levelInfo.level}단계 달성
+                            </p>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
@@ -236,7 +256,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, sync
                     <p style={{ fontSize: '0.95rem', color: 'var(--vibrant-purple)', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif' }}>✨ 영자 실장의 분석 :</p>
                     <p style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.3rem' }}>
                         {profile.weight && profile.height ?
-                            `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다. 런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
+                            `체질량 지수(BMI) 기반으로 볼 때, 현재 매우 건강한 질주 베이스를 갖추고 계십니다.런너님의 ${profile.weight}kg 무게는 질주 시 지면 반발력을 극대화하기에 최적입니다.` :
                             "런너님의 상세 정보를 입력해 주시면 더욱 정밀한 영자 분석 리포트를 제공해 드릴 수 있습니다."}
                     </p>
                 </div>
