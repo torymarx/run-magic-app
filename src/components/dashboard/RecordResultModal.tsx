@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { History, Calendar as CalIcon, Scale, Wind, Flame, ArrowUpRight, ArrowDownRight, X, Sun, Cloud, CloudRain, Snowflake, Smile, Meh, Frown } from 'lucide-react';
+import { getCoachAdvice, getRandomCoach } from '../../utils/coachUtils';
 
 interface RecordResultModalProps {
     record: any;
@@ -8,6 +9,10 @@ interface RecordResultModalProps {
 }
 
 const RecordResultModal: React.FC<RecordResultModalProps> = ({ record, onClose }) => {
+    // v13.6: 보고서 담당 코치 랜덤 배정 및 조언 생성
+    const selectedCoach = React.useMemo(() => getRandomCoach(), []);
+    const advice = getCoachAdvice(record, selectedCoach);
+
     const getWeatherIcon = (type: string) => {
         switch (type) {
             case 'sun': return <Sun size={14} />;
@@ -124,22 +129,33 @@ const RecordResultModal: React.FC<RecordResultModalProps> = ({ record, onClose }
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '1.2rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                            <p style={{ color: record.isImproved ? 'var(--neon-green)' : 'var(--electric-blue)', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                                {record.isImproved ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
-                                <span>
-                                    <strong>[코다리 부장의 한마디]: </strong>
-                                    {record.temp >= 30
-                                        ? `폭염(${record.temp}°C) 속에서 ${record.distance}km를 완주하신 런너님의 열정은 그 누구도 못 말립니다! 하지만 수분 섭취는 필수예요! 🐟💧`
-                                        : record.temp !== undefined && record.temp < 0
-                                            ? `영하의 날씨에도 러닝을 멈추지 않는 런너님! 체온 유지에 신경 써주세요. 기록보다 건강이 우선입니다! ❄️🫡`
-                                            : record.condition === 'bad'
-                                                ? "컨디션이 안 좋으셨음에도 기록을 단축하시다니... 런너님의 정신력에 감탄했습니다! 🐟"
-                                                : `${record.weight}kg의 신체 데이터를 바탕으로 산출된 칼로리 소모량은 매우 정밀합니다. 효율적인 러닝이었어요! ✨`}
-                                </span>
+                        <div style={{
+                            marginTop: '1.2rem',
+                            padding: '1.2rem',
+                            background: selectedCoach.themeColor || 'rgba(255,255,255,0.02)',
+                            borderRadius: '16px',
+                            border: `1px solid ${selectedCoach.color}33`,
+                            fontSize: '0.95rem',
+                            lineHeight: 1.7
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.8rem' }}>
+                                <span style={{ fontSize: '1.3rem' }}>{selectedCoach.emoji}</span>
+                                <strong style={{ color: selectedCoach.color, fontSize: '1rem' }}>{selectedCoach.name} 코치의 정밀 조언</strong>
+                            </div>
+                            <p style={{ color: 'rgba(255,255,255,0.95)', margin: 0, display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                {record.isImproved ? <ArrowUpRight size={18} style={{ color: 'var(--neon-green)', marginTop: '2px' }} /> : <ArrowDownRight size={18} style={{ color: 'var(--electric-blue)', marginTop: '2px' }} />}
+                                <span style={{ flex: 1 }}>{advice}</span>
                             </p>
                             {record.memo && (
-                                <div style={{ marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem', opacity: 0.8, fontStyle: 'italic' }}>
+                                <div style={{
+                                    marginTop: '1rem',
+                                    paddingTop: '1rem',
+                                    borderTop: `1px solid ${selectedCoach.color}22`,
+                                    fontSize: '0.85rem',
+                                    opacity: 0.7,
+                                    fontStyle: 'italic',
+                                    color: 'white'
+                                }}>
                                     " {record.memo} "
                                 </div>
                             )}
