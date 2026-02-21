@@ -38,5 +38,7 @@ create policy "Users can insert their own profile" on profiles
 create policy "Users can update their own profile" on profiles
   for update using (auth.uid() = id);
 
--- 4. Auth 연동을 위한 트리거 (회원가입 시 프로필 자동 생성 - 선택 사항이지만 권장)
--- 이 부분은 필요 시 추가 가능하나, 현재는 useProfileManager에서 수동 upsert로 관리 중입니다.
+
+-- 4. 부족한 컬럼 추가 (v12.0 유기적 연동용)
+-- profiles 테이블에 characterId가 없는 경우 아래 명령을 실행해 주세요!
+-- alter table profiles add column if not exists "characterId" integer default 1;

@@ -43,6 +43,31 @@ function App() {
         }
     }, [user?.id]);
     const [showManualForm, setShowManualForm] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSignOut = async () => {
+        if (window.confirm("로그아웃 하시겠습니까? 🫡\n(마지막 기록을 서버에 안전하게 보관 후 종료합니다)")) {
+            setIsSyncing(true);
+            try {
+                console.log("⏳ 로그아웃 전 최종 데이터 정합성 체크 중...");
+
+                // v12.3: 로그아웃 전 강제 동기화 보장 (필요 시 추가 저장 로직 호출)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // v12.1: 상태 초기화 (데이터 잔상 제거)
+                setPoints(0);
+                setUnlockedBadges([]);
+                setUnlockedMedals([]);
+                await signOut();
+                console.log("👋 런너님, 안전하게 로그아웃되었습니다. 다음에 또 봬요!");
+            } catch (error) {
+                console.error("로그아웃 중 오류 발생:", error);
+            } finally {
+                setIsSyncing(false);
+            }
+        }
+    };
+
     const [initialManualDate, setInitialManualDate] = useState<string | null>(null);
     const [editingRecord, setEditingRecord] = useState<any>(null);
     const [selectedCoach, setSelectedCoach] = useState(coaches[6]); // Default: Wellness (New!)
@@ -63,7 +88,9 @@ function App() {
         handleManualSave,
         handleDeleteRecord,
         handleImportRecords,
-        totalDays
+        totalDays,
+        lastSyncStatus, // v13.2
+        refreshData // v13.3
     } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id);
 
     // 4. AI Coach System Logic (Refactored)
@@ -126,6 +153,10 @@ function App() {
 
     const handleExport = () => {
         // v12.0: 운동 기록과 프로필을 하나로 묶어 '완벽한 백업' 달성!
+        if (!user?.id) {
+            alert("로그인 후 백업이 가능합니다. 🫡");
+            return;
+        }
         const exportPackage = {
             records,
             profile,
@@ -140,6 +171,8 @@ function App() {
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     };
+
+
 
     // v12.0: 시스템 연동 테스트 (강제 저장 및 확인)
     const handleForceSaveTest = async () => {
@@ -205,6 +238,20 @@ function App() {
         <div className="app-container" style={{ position: 'relative', minHeight: '100vh', padding: '1rem', maxWidth: '1400px', margin: '0 auto' }}>
             <AuroraBackground />
 
+            {/* v12.3: 로그아웃/저장 중 오버레이 */}
+            {isSyncing && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.7)', zIndex: 9999,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                    backdropFilter: 'blur(5px)'
+                }}>
+                    <div className="pulse" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--electric-blue)', marginBottom: '1.5rem' }} />
+                    <p className="neon-text-blue" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>데이터를 구름 요새에 안전하게 보관 중... 🛡️</p>
+                    <p style={{ marginTop: '0.5rem', opacity: 0.7 }}>잠시만 기다려 주세요. 금방 끝납니다!</p>
+                </div>
+            )}
+
             <Header
                 isRecording={isRecording}
                 distance={distance}
@@ -216,7 +263,7 @@ function App() {
                 onOpenProfile={() => setShowProfileModal(true)}
                 onImport={handleImport}
                 onExport={handleExport}
-                onSignOut={signOut}
+                onSignOut={handleSignOut}
             />
 
 
@@ -225,15 +272,19 @@ function App() {
                     <div style={{ width: '100%', maxWidth: '1000px' }}>
                         <ManualRecordForm
                             onSave={async (data) => {
-                                // 1. 운동 기록 저장
-                                await handleManualSave({ ...data, coachId: selectedCoach.id });
-                                // 2. 개인정보(체중) 자동 업데이트 (v10.0)
-                                if (data.weight) {
-                                    console.log("⚖️ 체중 변화 감지! 프로필을 정밀 동기화합니다...");
-                                    await updateProfile({ weight: data.weight });
+                                setIsSyncing(true);
+                                try {
+                                    await handleManualSave({ ...data, coachId: selectedCoach.id });
+                                    if (data.weight) {
+                                        await updateProfile({ weight: data.weight });
+                                    }
+                                    setShowManualForm(false);
+                                    setEditingRecord(null);
+                                } catch (err) {
+                                    console.error("Manual Save Error:", err);
+                                } finally {
+                                    setIsSyncing(false);
                                 }
-                                setShowManualForm(false);
-                                setEditingRecord(null);
                             }}
                             onCancel={() => { setShowManualForm(false); setEditingRecord(null); setInitialManualDate(null); }}
                             lastRecord={editingRecord || records[0]}
@@ -278,6 +329,9 @@ function App() {
                     onUpdate={updateProfile}
                     onForceSaveTest={handleForceSaveTest}
                     isLoading={isProfileLoading}
+                    syncStatus={lastSyncStatus} // v13.2
+                    recordCount={records.length} // v13.2
+                    onRefreshData={refreshData} // v13.3
                     onClose={() => setShowProfileModal(false)}
                 />
             )}

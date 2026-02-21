@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User, Scale, Ruler, Target, Edit3, Save, X, ShieldCheck } from 'lucide-react';
+import { User, Scale, Ruler, Target, Edit3, Save, X, ShieldCheck, RefreshCw } from 'lucide-react';
 import { UserProfile } from '../../hooks/useProfileManager';
 
 interface ProfileSectionProps {
@@ -8,6 +8,9 @@ interface ProfileSectionProps {
     onUpdate: (updates: Partial<UserProfile>) => Promise<void> | void;
     onForceSaveTest: () => Promise<void> | void;
     isLoading: boolean;
+    syncStatus?: { status: string, time: string, message: string }; // v13.2
+    recordCount?: number; // v13.2
+    onRefreshData?: () => void; // v13.3
     onClose: () => void;
 }
 
@@ -28,7 +31,7 @@ const KODARI_CHARACTERS: Record<string, any[]> = {
     ]
 };
 
-const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onForceSaveTest, onClose }) => {
+const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onForceSaveTest, syncStatus, recordCount, onRefreshData, onClose }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
@@ -277,8 +280,117 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                             <p style={{ fontSize: '1rem', color: 'var(--electric-blue)', fontWeight: 'bold' }}>{profile.id.includes('@') ? profile.id : "정식 로그인 상태 🫡"}</p>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                            <p style={{ fontSize: '0.8rem', opacity: 0.6, marginBottom: '2px' }}>서버 동기화 상태</p>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--neon-green)' }}>● 실시간 가동 중</p>
+                            <p style={{ fontSize: '0.8rem', opacity: 0.6, marginBottom: '2px' }}>데이터베이스 상태</p>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--neon-green)' }}>● 구름 요새 연결됨</p>
+                        </div>
+                    </div>
+
+                    {/* v13.4: Cloud Diagnostic HUD (영자실장 정밀 진단기 - Premium) */}
+                    <div style={{
+                        marginTop: '1.5rem',
+                        padding: '1.5rem',
+                        background: 'rgba(0, 10, 20, 0.6)',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(0, 209, 255, 0.3)',
+                        boxShadow: '0 0 20px rgba(0, 209, 255, 0.1)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        {/* Decorative Gradient Glow */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '-20%',
+                            left: '-20%',
+                            width: '60%',
+                            height: '60%',
+                            background: 'radial-gradient(circle, rgba(0, 209, 255, 0.15) 0%, transparent 70%)',
+                            pointerEvents: 'none'
+                        }} />
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                            <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--electric-blue)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold' }}>
+                                <ShieldCheck size={18} /> 클라우드 연동 정밀 진단
+                            </h4>
+                            {onRefreshData && (
+                                <button
+                                    onClick={() => {
+                                        const btn = document.getElementById('refresh-icon');
+                                        if (btn) btn.classList.add('spin-animation');
+                                        onRefreshData();
+                                        setTimeout(() => {
+                                            if (btn) btn.classList.remove('spin-animation');
+                                        }, 1000);
+                                    }}
+                                    className="glass-button"
+                                    style={{
+                                        padding: '6px 12px',
+                                        fontSize: '0.75rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        background: 'rgba(0, 209, 255, 0.1)',
+                                        border: '1px solid rgba(0, 209, 255, 0.3)',
+                                        borderRadius: '10px'
+                                    }}
+                                >
+                                    <RefreshCw id="refresh-icon" size={14} /> 강제 새로고침
+                                </button>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'grid', gap: '1rem', fontSize: '0.85rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ opacity: 0.5 }}>기기 식별 UUID</span>
+                                <span style={{ fontFamily: 'monospace', color: 'var(--neon-green)', letterSpacing: '1px' }}>
+                                    {profile.id.substring(0, 8)}...{profile.id.substring(profile.id.length - 4)}
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ opacity: 0.5 }}>보관된 기록</span>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--electric-blue)' }}>
+                                    {recordCount || 0} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>sessions</span>
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', marginTop: '0.4rem' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ fontSize: '0.7rem', opacity: 0.4, marginBottom: '4px' }}>통신 상태</p>
+                                    <p style={{
+                                        color: syncStatus?.status?.includes('SUCCESS') ? 'var(--neon-green)' : (syncStatus?.status === 'IDLE' ? 'white' : '#FF4B4B'),
+                                        fontWeight: 'bold',
+                                        fontSize: '0.9rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '5px'
+                                    }}>
+                                        <div style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            borderRadius: '50%',
+                                            background: syncStatus?.status?.includes('SUCCESS') ? 'var(--neon-green)' : (syncStatus?.status === 'IDLE' ? '#ccc' : '#FF4B4B'),
+                                            boxShadow: syncStatus?.status?.includes('SUCCESS') ? '0 0 8px var(--neon-green)' : 'none'
+                                        }} />
+                                        {syncStatus?.status || 'STANDBY'}
+                                    </p>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ fontSize: '0.7rem', opacity: 0.4, marginBottom: '4px' }}>마지막 동기화</p>
+                                    <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{syncStatus?.time || '-'}</p>
+                                </div>
+                            </div>
+
+                            <div style={{
+                                fontSize: '0.75rem',
+                                opacity: 0.5,
+                                padding: '0.8rem',
+                                background: 'rgba(0,0,0,0.3)',
+                                borderRadius: '10px',
+                                border: '1px solid rgba(255,255,255,0.03)',
+                                lineHeight: '1.4'
+                            }}>
+                                <span style={{ color: 'var(--electric-blue)', fontWeight: 'bold' }}>📡 시스템 메시지:</span> {syncStatus?.message || '대기 중...'}
+                            </div>
                         </div>
                     </div>
                 </div>

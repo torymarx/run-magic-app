@@ -19,7 +19,7 @@ export const supabase = createClient(
     supabaseAnonKey || 'placeholder-key',
     {
         auth: {
-            persistSession: false, // 자동 로그인 비활성화 (보안 강화)
+            persistSession: true, // v12.2: 자동 로그인 재활성화 (페이지 방문 시 데이터 즉시 표시)
             autoRefreshToken: true,
             detectSessionInUrl: true
         }

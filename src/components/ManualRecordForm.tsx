@@ -37,6 +37,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
     const [memo, setMemo] = useState<string>('');
     const [editingId, setEditingId] = useState<number | null>(null);
     const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+    const [isSaving, setIsSaving] = useState<boolean>(false); // v13.1: 중복 클릭 방지
 
     // v8.2: 더티 체킹을 위한 원본 데이터 저장
     const [originalData, setOriginalData] = useState<any>(null);
@@ -170,31 +171,40 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({
-            id: editingId, // 수정 시 id 포함, 신규 시 null
-            distance,
-            splits,
-            date,
-            time,
-            weather,
-            condition,
-            temp,
-            weight: parseFloat(weight.toString()), // 080.6 방지 및 숫자 보장
-            dust,
-            memo
-        });
+        if (isSaving) return;
 
-        // 저장이 완료되면 수정 모드 초기화 (부모에서 닫히지 않을 경우를 대비)
-        setEditingId(null);
+        setIsSaving(true);
+        try {
+            await onSave({
+                id: editingId, // 수정 시 id 포함, 신규 시 null
+                distance,
+                splits,
+                date,
+                time,
+                weather,
+                condition,
+                temp,
+                weight: parseFloat(weight.toString()), // 080.6 방지 및 숫자 보장
+                dust,
+                memo
+            });
 
-        // v8.2: 원본 데이터를 현재 상태로 동기화하여 Dirty 해제
-        setOriginalData(getCurrentFormData());
+            // 저장이 완료되면 수정 모드 초기화 (부모에서 닫히지 않을 경우를 대비)
+            setEditingId(null);
 
-        // v8.1: 저장 완료 피드백 표시
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 2000);
+            // v8.2: 원본 데이터를 현재 상태로 동기화하여 Dirty 해제
+            setOriginalData(getCurrentFormData());
+
+            // v8.1: 저장 완료 피드백 표시
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+        } catch (error) {
+            console.error("저장 중 오류 발생:", error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSelectForEdit = (r: any) => {
@@ -697,7 +707,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
                             {saveSuccess ? (
                                 <><Plus size={20} style={{ transform: 'rotate(45deg)' }} /> 기록 저장 완료!</>
                             ) : (
-                                <><Save size={20} /> {editingId ? '기록 수정 완료' : '스마트 기록 저장'}</>
+                                <><Save size={20} /> {isSaving ? '서버에 보관 중...' : (editingId ? '기록 수정 완료' : '스마트 기록 저장')}</>
                             )}
                         </button>
 

@@ -75,17 +75,24 @@ export const useProfileManager = (userId?: string) => {
     };
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
-        if (!userId) return;
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            alert("로그인이 필요합니다. 🫡");
+            return;
+        }
+
         const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
-        setProfile(newProfile);
 
         try {
             const { error } = await supabase
                 .from('profiles')
                 .upsert(newProfile);
 
-            if (error) {
-                console.error("Profile Update Sync Error:", error);
+            if (!error) {
+                setProfile(newProfile);
+                console.log("✅ 프로필이 구름 요새에 저장되었습니다.");
+            } else {
+                console.error("❌ 프로필 저장 에러:", error);
+                alert(`저장 실패: ${error.message} (데이터베이스 상태를 확인해 주세요)`);
             }
         } catch (err) {
             console.error("Profile Update Error:", err);

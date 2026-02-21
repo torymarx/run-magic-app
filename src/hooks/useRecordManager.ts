@@ -12,67 +12,33 @@ export const useRecordManager = (
 ) => {
     const [records, setRecords] = useState<any[]>([]);
     const [lastSavedRecord, setLastSavedRecord] = useState<any>(null);
+    const [lastSyncStatus, setLastSyncStatus] = useState<{ status: string, time: string, message: string }>({
+        status: 'IDLE',
+        time: '-',
+        message: '대기 중...'
+    });
     const [streak, setStreak] = useState<number>(0);
     const [totalDays, setTotalDays] = useState<number>(0);
     const [baselines, setBaselines] = useState<any>({});
     const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
 
-    // 초기 데이터 로딩 및 스마트 클라우드-로컬 동기화
+    // v13.4: 통합된 데이터 로딩 프로세스
     useEffect(() => {
-        const syncData = async () => {
-            if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
-                console.log("🛡️ 익명 모드 또는 로그인 대기 중... 클라우드 동기화가 제한됩니다.");
-                return;
-            }
-
-            console.log(`🔄 [Online Service] 코다리 부장의 동기화 엔진 가동! (Key: ${userId.substring(0, 8)}...)`);
-
-            // 1. 클라우드에서 데이터 가져오기 (해당 유저의 것만!) - v11.0: Cloud Only
-            const { data: cloudRecords, error } = await supabase
-                .from('records')
-                .select('*')
-                .eq('user_id', userId)
-                .order('date', { ascending: false });
-
-            if (!error) {
-                setIsCloudConnected(true);
-                console.log(`✅ [Cloud Only] Supabase 요새 동기화 성공! (${cloudRecords?.length || 0}개의 기록)`);
-
-                const mergedRecords = cloudRecords || [];
-
-                // 상태 업데이트
-                setRecords(mergedRecords);
-
-                calculateBaselineData(mergedRecords);
-                updateStreak(mergedRecords);
-                updateTotalDays(mergedRecords);
-                recalculateAllAchievements(mergedRecords);
-            } else {
-                console.error("❌ Supabase Connection Failed:", error);
-                setIsCloudConnected(false);
-                setRecords([]); // 보안을 위해 로컬 데이터 사용 안 함
-            }
-        };
-
-        syncData();
-
-        // --- 코다리 부장의 실시간 동기화 엔진 감시 모드! ---
-        const channel = supabase
-            .channel(`realtime-records-${userId}`)
-            .on('postgres_changes', {
-                event: '*',
-                table: 'records',
-                schema: 'public',
-                filter: `user_id=eq.${userId}`
-            }, (payload) => {
-                console.log('📡 실시간 DB 변경 감지! 동기화 리로드:', payload);
-                syncData();
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
+            fetchInitialData(false);
+        } else {
+            // v13.3+: 로그아웃 시 즉시 모든 로컬 상태 소거 (보안 및 잔상 제거)
+            setRecords([]);
+            setIsCloudConnected(false);
+            setPoints(0);
+            setUnlockedBadges([]);
+            setUnlockedMedals([]);
+            setLastSyncStatus({
+                status: 'IDLE',
+                time: '-',
+                message: '런너님의 접속을 기다리고 있습니다... 🛡️'
+            });
+        }
     }, [userId]);
 
     const updateStreak = (data: any[]) => {
@@ -183,7 +149,15 @@ export const useRecordManager = (
         const paceDiff = prevPaceSeconds - avgPaceSeconds;
 
         const isEditing = !!data.id;
+        // v12.2: DB 타입 호환성을 위해 다시 숫자(BigInt 호환)로 복구
         const recordId = data.id || Date.now();
+
+        // v12.1: 유저 정보가 없는 상태에서의 저장을 원천 봉쇄 (휘발 방지)
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            console.error("🛑 [Auth Guard] 인증되지 않은 사용자의 기록 저장이 차단되었습니다.");
+            alert("로그인 세션이 만료되었거나 정보가 없습니다. 다시 로그인해 주세요. ⛔");
+            return;
+        }
 
         const newRecord = {
             ...data,
@@ -200,10 +174,39 @@ export const useRecordManager = (
             ? records.map(r => r.id === recordId ? newRecord : r)
             : [newRecord, ...records];
 
-        setRecords(updatedRecords);
+        // v13.3: 로컬 상태 선제 업데이트 제거 (서버 성공 확인 후 업데이트)
+        // setRecords(updatedRecords); 
 
-        const { error } = await supabase.from('records').upsert([newRecord]);
-        if (error) console.error("Supabase Save Failed:", error);
+        console.group(`💾 [Diagnostics] 기록 저장 시도: ${recordId}`);
+        console.log("User UUID:", userId);
+        console.log("Payload Sample:", { distance: data.distance, date: data.date });
+
+        const { error, status, statusText } = await supabase.from('records').upsert([newRecord]);
+
+        console.log(`Supabase Status: ${status} (${statusText})`);
+
+        if (error) {
+            console.error("❌ Save Error Details:", error);
+            setLastSyncStatus({
+                status: 'SAVE_ERROR',
+                time: new Date().toLocaleTimeString(),
+                message: error.message
+            });
+            alert(`클라우드 저장 실패! ⛔\n이유: ${error.message}\n(SQL 명령어를 실행하셨는지 다시 한번 확인해 주세요)`);
+            console.groupEnd();
+            throw error;
+        }
+
+        console.log("✅ [Cloud Sync] 저장 성공!");
+
+        // v13.3: 서버 저장 성공 확인 후 로컬 상태 업데이트
+        setRecords(updatedRecords);
+        setLastSyncStatus({
+            status: 'SAVE_SUCCESS',
+            time: new Date().toLocaleTimeString(),
+            message: '기록 저장 완료'
+        });
+        console.groupEnd();
 
         calculateBaselineData(updatedRecords);
         updateStreak(updatedRecords);
@@ -314,6 +317,12 @@ export const useRecordManager = (
     const handleImportRecords = async (importedData: any[]) => {
         if (!Array.isArray(importedData)) return;
 
+        // v13.3: 가져오기 시에도 인증 상태 체크 강화
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요. ⛔");
+            return;
+        }
+
         console.log("📥 데이터 가져오기 시작...");
         const existingIds = new Set(records.map(r => r.id));
         const newRecords = importedData
@@ -325,20 +334,76 @@ export const useRecordManager = (
             return;
         }
 
+        const { error } = await supabase.from('records').upsert(newRecords);
+        if (error) {
+            console.error("Supabase Import Failed:", error);
+            alert(`가져오기 실패: ${error.message}`);
+            return;
+        }
+
+        // v13.3: 서버 성공 확인 후 로컬 상태 업데이트
         const updatedRecords = [...newRecords, ...records].sort((a, b) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
         setRecords(updatedRecords);
 
-        const { error } = await supabase.from('records').upsert(newRecords);
-        if (error) console.error("Supabase Import Failed:", error);
-
         calculateBaselineData(updatedRecords);
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
 
         alert(`${newRecords.length}개의 기록을 성공적으로 가져오고 서버와 동기화했습니다! 🫡✨`);
+    };
+
+    const fetchInitialData = async (silent: boolean = false) => {
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            if (!silent) {
+                setIsCloudConnected(false);
+                setRecords([]);
+            }
+            return;
+        }
+
+        if (!silent) console.group(`📡 [Diagnostics] 클라우드 동기화 시작: ${userId}`);
+
+        try {
+            const { data: cloudRecords, error } = await supabase
+                .from('records')
+                .select('*')
+                .eq('user_id', userId)
+                .order('date', { ascending: false });
+
+            if (error) throw error;
+
+            setIsCloudConnected(true);
+            const loadedRecords = cloudRecords || [];
+            setRecords(loadedRecords);
+
+            // 데이터 기반 통계 및 업적 전수 재계산
+            calculateBaselineData(loadedRecords);
+            updateStreak(loadedRecords);
+            updateTotalDays(loadedRecords);
+            recalculateAllAchievements(loadedRecords);
+
+            if (!silent) {
+                console.log(`✅ 동기화 완료: ${loadedRecords.length}개의 기록이 최신화되었습니다.`);
+                setLastSyncStatus({
+                    status: 'FETCH_SUCCESS',
+                    time: new Date().toLocaleTimeString(),
+                    message: `${loadedRecords.length}개의 기록이 안전하게 연결되었습니다.`
+                });
+            }
+        } catch (error: any) {
+            console.error("❌ 데이터 동기화 실패:", error);
+            setIsCloudConnected(false);
+            setLastSyncStatus({
+                status: 'FETCH_ERROR',
+                time: new Date().toLocaleTimeString(),
+                message: error.message || '데이터를 불러오는 중 오류가 발생했습니다.'
+            });
+        } finally {
+            if (!silent) console.groupEnd();
+        }
     };
 
     return {
@@ -355,6 +420,8 @@ export const useRecordManager = (
         calculateBaselineData,
         updateStreak,
         updateTotalDays,
-        totalDays
+        totalDays,
+        lastSyncStatus,
+        refreshData: () => fetchInitialData(false) // v13.3: 수동 새로고침 노출
     };
 };

@@ -91,8 +91,18 @@ const Header: React.FC<HeaderProps> = ({
                     <Zap size={16} className="neon-text-green" />
                     <span className="neon-text-green" style={{ fontWeight: 'bold', fontSize: '1rem' }}> {points.toLocaleString()} MP</span>
                 </div>
-                <div title={isCloudConnected ? "클라우드 백업 중" : "로컬 저장소 사용 중"} className="glass-card" style={{ padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: isCloudConnected ? '1px solid #00FF85' : '1px solid #FF4B4B' }}>
-                    {isCloudConnected ? <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#00FF85', boxShadow: '0 0 10px #00FF85' }} /> : <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF4B4B' }} />}
+                <div title={isCloudConnected ? "클라우드 요새 동기화 완료" : "데이터 동기화 중..." + (isRecording ? " (런닝 중)" : "")} className="glass-card" style={{ padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem', border: isCloudConnected ? '1px solid #00FF85' : '1px solid #FFCC00' }}>
+                    {isCloudConnected ? (
+                        <>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00FF85', boxShadow: '0 0 10px #00FF85' }} />
+                            <span style={{ fontSize: '0.75rem', color: '#00FF85', fontWeight: 'bold' }}>SYNCED</span>
+                        </>
+                    ) : (
+                        <>
+                            <div className="pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFCC00', boxShadow: '0 0 10px #FFCC00' }} />
+                            <span style={{ fontSize: '0.75rem', color: '#FFCC00', fontWeight: 'bold' }}>CONNECTING...</span>
+                        </>
+                    )}
                 </div>
                 {totalDays > 0 && (
                     <div className="glass-card" style={{ padding: '0.6rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #FF4B4B' }}>
