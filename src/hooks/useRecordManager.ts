@@ -218,7 +218,7 @@ export const useRecordManager = (
         setLastSavedRecord(newRecord);
     };
 
-    // 코다리 부장의 특약 처방: 모든 기록을 훑어서 누락된 업적과 포인트를 싹 찾아내기!
+    // 시스템 정밀 재계산: 모든 기록을 분석하여 누락된 업적과 포인트를 전수 동기화!
     const recalculateAllAchievements = (data: any[]) => {
         if (!data) return;
 

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * 코다리 부장의 보안 팁 🐟✨
+ * 시스템 보안 및 데이터 무결성 가이드 🛡️✨
  * Vite 환경에서는 import.meta.env를 통해 변수를 로드합니다.
  * Vercel 배포 시에는 대시보드에서 해당 변수들을 반드시 설정해 주셔야 합니다!
  */

@@ -119,7 +119,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ profile, onUpdate, onFo
                 {isEditing && (
                     <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.8, margin: 0 }}>나에게 맞는 코다리 캐릭터 선택:</p>
+                            <p style={{ fontSize: '0.9rem', opacity: 0.8, margin: 0 }}>나에게 맞는 고유 캐릭터(DNA) 선택:</p>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <button
                                     onClick={() => setEditData({ ...editData, gender: 'male' })}

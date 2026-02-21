@@ -40,13 +40,13 @@ class ErrorBoundary extends Component<Props, State> {
                 }}>
                     <img
                         src="https://raw.githubusercontent.com/wonseokjung/solopreneur-ai-agents/main/agents/kodari/assets/kodari_panic.png"
-                        alt="당황한 코다리"
+                        alt="당황한 AI 코칭 엔진"
                         style={{ width: '150px', marginBottom: '1.5rem' }}
                     />
-                    <h1 style={{ color: '#00D1FF' }}>충성! 긴급 상황 발생!</h1>
+                    <h1 style={{ color: '#00D1FF' }}>시스템 긴급 점검 중</h1>
                     <p style={{ opacity: 0.8, marginBottom: '2rem' }}>
                         런너님, 죄송합니다! 앱 엔진에 일시적인 정지 오류가 발생했습니다.<br />
-                        이 코다리 부장이 즉시 보고서를 작성하고 복구를 시도하고 있습니다.
+                        AI 코칭 엔진이 즉시 보고서를 작성하고 복구를 시도하고 있습니다.
                     </p>
                     <div style={{
                         background: 'rgba(255, 75, 75, 0.1)',
