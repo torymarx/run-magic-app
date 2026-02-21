@@ -61,7 +61,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints
 
                 {levelInfo.imageUrl ? (
                     <img
-                        src={`file:///${levelInfo.imageUrl}`}
+                        src={levelInfo.imageUrl}
                         alt={levelInfo.name}
                         style={{
                             width: '100%',

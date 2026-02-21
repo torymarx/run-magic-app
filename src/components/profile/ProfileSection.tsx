@@ -264,7 +264,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     }}>
                                         {char.imageUrl ? (
                                             <img
-                                                src={`file:///${char.imageUrl}`}
+                                                src={char.imageUrl.replace('file:///', '')}
                                                 alt={char.name}
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                             />
