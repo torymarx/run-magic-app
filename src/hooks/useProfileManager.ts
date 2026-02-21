@@ -80,6 +80,7 @@ export const useProfileManager = (userId?: string) => {
             return;
         }
 
+        // characterId는 레벨 시스템에 의해 자동 결정되므로 수동 업데이트에서 필터링하거나 보호
         const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
 
         try {

@@ -59,9 +59,10 @@ export const LEVEL_DATA: LevelDetail[] = [
 
 export const POINT_RULES = {
     ATTENDANCE: 20,
-    RUNNING_SESSION: 30, // 1일 1회 제한
-    STREAK_BONUS: 50,
+    RUNNING_SESSION: 50, // 30 -> 50P로 강화
+    STREAK_BONUS: 100, // 50 -> 100P로 강화
     AI_FEEDBACK: 10,
-    SHARING: 15,
-    SPECIAL_TIME: 20 // 얼리버드 & 나이트런
+    SHARING: 20,
+    SPECIAL_TIME: 30, // 20 -> 30P로 강화
+    MEDAL_COLLECTION: 100 // 메달당 기본 보상 점수
 };
