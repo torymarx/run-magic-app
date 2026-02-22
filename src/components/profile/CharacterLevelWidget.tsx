@@ -107,12 +107,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             margin: '0 auto',
             backdropFilter: 'blur(20px)'
         }}>
-            {/* Background Decorative Layer */}
-            <div style={{
-                position: 'absolute', top: '-10%', right: '-10%', width: '300px', height: '300px',
-                background: `radial-gradient(circle, ${theme.color}11 0%, transparent 70%)`,
-                filter: 'blur(50px)', pointerEvents: 'none'
-            }} />
+            {/* Header: Name & Identity */}
 
             {/* Header: Name & Identity */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 }}>
@@ -171,12 +166,6 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
                 {/* Character Area */}
                 <div style={{ position: 'relative', width: '240px', height: '320px', flexShrink: 0 }}>
-                    <div className="aura-effect" style={{
-                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                        width: '280px', height: '280px', borderRadius: '50%',
-                        background: `radial-gradient(circle, ${theme.color}44 0%, transparent 70%)`,
-                        animation: 'pulse-animation 3s infinite', opacity: 0.6, zIndex: 0
-                    }} />
                     <img
                         src={characterUrl}
                         alt={levelInfo.name}
