@@ -29,27 +29,40 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '1rem',
-            padding: '1.5rem',
-            background: 'rgba(255,255,255,0.02)',
-            borderRadius: '20px',
-            border: `1px solid ${theme.color}33`,
-            boxShadow: `0 0 20px ${theme.color}11`,
-            width: '200px'
+            gap: '1.2rem',
+            padding: '2rem 1.5rem',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 100%)',
+            borderRadius: '24px',
+            border: `1px solid ${theme.color}44`,
+            boxShadow: `0 10px 40px rgba(0,0,0,0.3), 0 0 20px ${theme.color}11`,
+            width: '240px',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
-            {/* Character Avatar Box */}
+            {/* Background Aura Layer */}
             <div style={{
-                width: '100px',
-                height: '100px',
-                borderRadius: '50%',
-                background: theme.bg,
-                border: `2px solid ${theme.color}`,
+                position: 'absolute',
+                top: '10%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '180px',
+                height: '180px',
+                background: `radial-gradient(circle, ${theme.color}33 0%, transparent 70%)`,
+                filter: 'blur(30px)',
+                zIndex: 0,
+                animation: 'aura-breathe 4s infinite ease-in-out'
+            }} />
+
+            {/* Character Display Area (No Circle) */}
+            <div style={{
+                width: '180px',
+                height: '240px',
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-end',
                 justifyContent: 'center',
                 position: 'relative',
-                overflow: 'hidden',
-                boxShadow: `0 0 20px ${theme.color}22`
+                zIndex: 1,
+                marginBottom: '0.5rem'
             }}>
                 {/* Visual Effects Layer */}
                 {levelInfo.level >= 2 && (
@@ -58,7 +71,8 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                         width: '100%',
                         height: '100%',
                         pointerEvents: 'none',
-                        zIndex: 2
+                        zIndex: 2,
+                        filter: 'brightness(1.5)'
                     }} />
                 )}
 
@@ -66,85 +80,120 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                     src={characterUrl}
                     alt={levelInfo.name}
                     style={{
-                        width: '100%',
+                        width: 'auto',
                         height: '100%',
-                        objectFit: 'cover',
-                        opacity: 0.9,
-                        objectPosition: 'center'
+                        maxWidth: '140%',
+                        objectFit: 'contain',
+                        opacity: 1,
+                        filter: `drop-shadow(0 0 15px ${theme.color}44)`,
+                        transition: 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        transform: 'scale(1.1) translateY(-10px)'
                     }}
+                    className="character-img-hover"
                     onError={(e) => {
-                        // 이미지 로드 실패 시 가이드 이미지나 기본 아이콘으로 폴백 (필요 시)
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).style.opacity = '0';
                     }}
                 />
 
-                {/* Level Badge */}
+                {/* Level Badge - Floating */}
                 <div style={{
                     position: 'absolute',
-                    bottom: '5px',
-                    right: '5px',
-                    background: theme.color,
+                    top: '-10px',
+                    right: '-10px',
+                    background: `linear-gradient(135deg, ${theme.color}, #fff)`,
                     color: '#000',
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '0.9rem',
+                    fontWeight: '900',
+                    boxShadow: `0 4px 15px ${theme.color}66`,
+                    zIndex: 10,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
                 }}>
-                    Lv.{levelInfo.level}
+                    {levelInfo.level === 5 ? 'GRAND MASTER' : `LV.${levelInfo.level}`}
                 </div>
             </div>
 
             {/* Level Info Text */}
-            <div style={{ textAlign: 'center' }}>
-                <h4 style={{ margin: 0, fontSize: '1.2rem', color: theme.color, fontWeight: 'bold' }}>{levelInfo.name}</h4>
-                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.6 }}>{levelInfo.description.split('.')[0]}</p>
+            <div style={{ textAlign: 'center', zIndex: 1 }}>
+                <h4 style={{
+                    margin: 0,
+                    fontSize: '1.4rem',
+                    color: theme.color,
+                    fontWeight: 'bold',
+                    textShadow: `0 0 10px ${theme.color}66`,
+                    letterSpacing: '-0.5px'
+                }}>
+                    {levelInfo.name}
+                </h4>
+                <p style={{
+                    margin: '6px 0 0',
+                    fontSize: '0.85rem',
+                    opacity: 0.7,
+                    lineHeight: '1.4',
+                    color: '#fff'
+                }}>
+                    {levelInfo.description.split('.')[0]}
+                </p>
             </div>
 
             {/* Experience Gauge */}
-            <div style={{ width: '100%', position: 'relative' }}>
+            <div style={{ width: '100%', position: 'relative', zIndex: 1, marginTop: '0.5rem' }}>
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    fontSize: '0.7rem',
-                    marginBottom: '4px',
-                    opacity: 0.8
+                    fontSize: '0.75rem',
+                    marginBottom: '6px',
+                    fontWeight: 'bold',
+                    color: theme.color
                 }}>
-                    <span>EXP {totalPoints}P</span>
-                    <span>{levelInfo.nextLevelName === 'MAX' ? 'MAX' : `${levelInfo.xpToNext}P 남음`}</span>
+                    <span style={{ opacity: 0.9 }}>XP {totalPoints.toLocaleString()}P</span>
+                    <span style={{ opacity: 0.7 }}>
+                        {levelInfo.isBlockedByMarathon ? '마라톤 완주 필요' : (levelInfo.nextLevelName === 'MAX' ? 'MAX' : `${levelInfo.xpToNext.toLocaleString()}P Left`)}
+                    </span>
                 </div>
                 <div style={{
-                    height: '8px',
-                    background: 'rgba(0,0,0,0.5)',
-                    borderRadius: '4px',
+                    height: '10px',
+                    background: 'rgba(0,0,0,0.6)',
+                    borderRadius: '5px',
                     overflow: 'hidden',
-                    border: '1px solid rgba(255,255,255,0.1)'
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    padding: '1px'
                 }}>
                     <div style={{
                         width: `${levelInfo.progress}%`,
                         height: '100%',
                         background: `linear-gradient(90deg, ${theme.color}, #fff)`,
-                        boxShadow: `0 0 10px ${theme.color}`,
-                        transition: 'width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                        borderRadius: '4px',
+                        boxShadow: `0 0 15px ${theme.color}aa`,
+                        transition: 'width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                     }} />
                 </div>
             </div>
 
             <style>{`
+                .character-img-hover:hover {
+                    transform: scale(1.2) translateY(-20px) !important;
+                }
+                @keyframes aura-breathe {
+                    0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+                    50% { opacity: 0.8; transform: translateX(-50%) scale(1.2); }
+                }
                 .effect-pulse {
                     animation: pulse-glow 2s infinite;
                     border: 2px solid #00D1FF;
-                    border-radius: 50%;
+                    border-radius: 12px;
                 }
                 .effect-sparkle {
-                    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+                    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
                     animation: sparkle-move 3s infinite alternate;
                 }
                 .effect-aurora {
                     background: linear-gradient(135deg, #FFD700 0%, #00D1FF 50%, #BD00FF 100%);
-                    opacity: 0.3;
-                    filter: blur(10px);
-                    animation: aurora-sweep 5s infinite linear;
+                    opacity: 0.2;
+                    filter: blur(15px);
+                    animation: aurora-sweep 8s infinite linear;
                 }
                 
                 @keyframes pulse-glow {

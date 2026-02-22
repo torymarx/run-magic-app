@@ -675,9 +675,9 @@ export const useRecordManager = (
         // v16.0: 활동 포인트 정밀 산출
         let activityPoints = 0;
 
-        // 1. 러닝 기록 등록 (30P): 일자별 1회
+        // 1. 방문 및 러닝 기록 등록 (각 10P)
         const uniqueDays = new Set(data.map(r => r.date)).size;
-        activityPoints += uniqueDays * POINT_RULES.RUNNING_SESSION;
+        activityPoints += uniqueDays * (POINT_RULES.ATTENDANCE + POINT_RULES.RUNNING_SESSION);
 
         // 2. 연속 러닝 보너스 (50P): 3, 7, 14, 30일 등 주요 마일스톤 시점
         if (streak >= 3) activityPoints += POINT_RULES.STREAK_BONUS;
@@ -699,10 +699,19 @@ export const useRecordManager = (
         setUnlockedBadges([]);
     };
 
-    // v16.0: 포인트 기반 레벨 계산기
+    // v21.0: 포인트 기반 레벨 계산기 (마라톤 완주 조건 추가)
     const calculateLevelInfo = (totalPoints: number) => {
-        const currentLevel = LEVEL_DATA.find(l => totalPoints >= l.minPoints && totalPoints <= l.maxPoints)
+        let currentLevel = LEVEL_DATA.find(l => totalPoints >= l.minPoints && totalPoints <= l.maxPoints)
             || LEVEL_DATA[LEVEL_DATA.length - 1];
+
+        // v21.0: Lv.5 도달 특수 조건 체크 (마라톤 완주 여부)
+        if (currentLevel.level === 5) {
+            const hasMarathonRecord = records.some(r => r.distance >= 42.195);
+            if (!hasMarathonRecord) {
+                // 마라톤 기록이 없으면 Lv.4의 정점에 머물게 함
+                currentLevel = LEVEL_DATA.find(l => l.level === 4)!;
+            }
+        }
 
         const nextLevel = LEVEL_DATA.find(l => l.level === currentLevel.level + 1);
 
@@ -716,11 +725,15 @@ export const useRecordManager = (
             xpToNext = nextLevel.minPoints - totalPoints;
         }
 
+        // v21.0: Lv.4 정점에서 마라톤 기록이 없는 경우에 대한 안내 추가 가능
+        const isStuckAtLevel4 = currentLevel.level === 4 && totalPoints >= 15001;
+
         return {
             ...currentLevel,
-            progress,
-            xpToNext,
-            nextLevelName: nextLevel?.name || 'MAX'
+            progress: isStuckAtLevel4 ? 99 : progress, // 99%에서 멈춤
+            xpToNext: isStuckAtLevel4 ? 0 : xpToNext,
+            nextLevelName: isStuckAtLevel4 ? '마라톤 완주 필요' : (nextLevel?.name || 'MAX'),
+            isBlockedByMarathon: isStuckAtLevel4
         };
     };
 

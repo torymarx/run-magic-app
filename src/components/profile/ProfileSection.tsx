@@ -256,19 +256,26 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     )}
 
                                     <div style={{
-                                        width: '90px',
-                                        height: '90px',
+                                        width: '120px',
+                                        height: '150px',
                                         margin: '0 auto 1.2rem',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: `2px solid ${isCurrent ? 'var(--electric-blue)' : 'rgba(255,255,255,0.1)'}`,
-                                        background: 'rgba(0,0,0,0.3)',
-                                        filter: isAchieved ? 'none' : 'grayscale(100%) brightness(0.6)'
+                                        display: 'flex',
+                                        alignItems: 'flex-end',
+                                        justifyContent: 'center',
+                                        position: 'relative',
+                                        background: isAchieved ? 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)' : 'none',
+                                        filter: isAchieved ? 'none' : 'grayscale(100%) brightness(0.4)',
+                                        transition: 'all 0.4s ease'
                                     }}>
                                         <img
                                             src={getCharacterImageUrl(char.level, profile.gender)}
                                             alt={char.name}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            style={{
+                                                width: 'auto',
+                                                height: '100%',
+                                                objectFit: 'contain',
+                                                filter: isCurrent ? 'drop-shadow(0 0 10px var(--electric-blue))' : 'none'
+                                            }}
                                         />
                                     </div>
 
