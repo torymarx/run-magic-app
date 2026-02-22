@@ -133,15 +133,18 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 </div>
 
                 {/* Integrated Identity Card (개인정보 통합 입력창) */}
-                <div style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    padding: '1.5rem',
+                <div className="glass-card" style={{
+                    background: isEditing ? 'rgba(0, 209, 255, 0.08)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${isEditing ? 'var(--electric-blue)' : 'rgba(255,255,255,0.05)'}`,
+                    boxShadow: isEditing ? '0 0 20px rgba(0, 209, 255, 0.15)' : 'none',
+                    padding: '1.5rem 2rem',
                     borderRadius: '24px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '1.5rem',
-                    flexWrap: 'wrap'
+                    gap: '2rem',
+                    flexWrap: 'wrap',
+                    transition: 'all 0.3s ease'
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '120px', flex: 1 }}>
                         <span style={{ fontSize: '0.75rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '4px' }}><User size={12} /> 성함</span>
