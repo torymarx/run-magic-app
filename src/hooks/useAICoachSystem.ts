@@ -20,10 +20,17 @@ export const useAICoachSystem = (
 ) => {
     // 1. 전체 성과 (Overall): 연초부터 현재까지의 누적 성장 궤적
     const overallStats = useMemo(() => {
-        if (!Array.isArray(records) || records.length === 0) return { count: 0, totalDist: 0, avgPaceStr: "0'00\"" };
+        if (!Array.isArray(records) || records.length === 0) return { count: 0, totalDist: 0, avgPaceStr: "0'00\"", totalHours: "0.0" };
         const totalDist = records.reduce((sum, r) => sum + (r.distance || 0), 0);
+        const totalSeconds = records.reduce((sum, r) => sum + parseTimeToSeconds(r.totalTime || "0:00"), 0);
         const avgPaceSec = records.reduce((sum, r) => sum + parseTimeToSeconds(r.pace || "0:00"), 0) / records.length;
-        return { count: records.length, totalDist, avgPaceStr: formatPace(avgPaceSec) };
+
+        return {
+            count: records.length,
+            totalDist,
+            avgPaceStr: formatPace(avgPaceSec),
+            totalHours: (totalSeconds / 3600).toFixed(1)
+        };
     }, [records]);
 
     // 2. 최근 추세 (Recent - 7Days): 컨디션 및 리듬 변동성
