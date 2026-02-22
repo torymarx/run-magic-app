@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Zap, Activity, Info, TrendingUp, ShieldCheck, X } from 'lucide-react';
+import { Award, Activity, Info, TrendingUp, ShieldCheck, X } from 'lucide-react';
 
 interface CoachReportModalProps {
     coach: any;
@@ -12,11 +12,10 @@ interface CoachReportModalProps {
     };
     periodStats: any;
     onClose: () => void;
-    onStartRun: () => void;
 }
 
 const CoachReportModal: React.FC<CoachReportModalProps> = ({
-    coach, coachMessage, recommendation, periodStats, onClose, onStartRun
+    coach, coachMessage, recommendation, periodStats, onClose
 }) => {
     return (
         <div style={{
@@ -213,31 +212,11 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                     </div>
                 </div>
 
-                {/* Footer / Action Area */}
-                <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
-                    <button
-                        onClick={onStartRun}
-                        style={{
-                            width: '100%',
-                            background: `linear-gradient(90deg, ${coach.color}, #BD00FF)`,
-                            border: 'none',
-                            padding: '1.5rem',
-                            borderRadius: '20px',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: '1.2rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '1rem',
-                            boxShadow: `0 10px 30px ${coach.color}44`,
-                            transition: 'all 0.3s'
-                        }}
-                    >
-                        <Zap size={24} fill="#fff" />
-                        {coach.name} 코치님과 함께 실전 질주 시작하기
-                    </button>
+                {/* Footer / Action Area - Simplified */}
+                <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)', textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.85rem', opacity: 0.5, margin: 0 }}>
+                        전용 코칭 데이터는 런너님의 실제 질주 기록과 신체 스펙을 기반으로 매 세션마다 정밀하게 갱신됩니다.
+                    </p>
                 </div>
             </div>
 

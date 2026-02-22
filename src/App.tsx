@@ -115,23 +115,25 @@ function App() {
     }, [currentMedalAchievements]);
 
     // 4. AI Coach System Logic (Refactored)
+    const levelInfo = calculateLevelInfo(points);
     const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
         selectedCoach.id,
         isRecording,
         distance,
         timer,
         records,
-        lastSavedRecord
+        lastSavedRecord,
+        profile,
+        levelInfo
     );
 
     // v19.1: 레벨 기반 자동 캐릭터 진화 시스템 (수동 선택 제거 대응)
     React.useEffect(() => {
-        const levelInfo = calculateLevelInfo(points);
         if (user && profile && levelInfo.level !== profile.characterId) {
             console.log(`🧬 레벨 업 탐지: [${profile.characterId} -> ${levelInfo.level}]. 캐릭터 자동 진화를 시작합니다.`);
             updateProfile({ characterId: levelInfo.level });
         }
-    }, [points, profile?.characterId, user]);
+    }, [points, profile?.characterId, user, levelInfo.level]);
 
     const handleEditRecord = (record: any) => {
         setEditingRecord(record);
@@ -319,10 +321,6 @@ function App() {
                     recommendation={recommendation}
                     periodStats={periodStats}
                     onClose={() => setShowCoachReport(false)}
-                    onStartRun={() => {
-                        setShowCoachReport(false);
-                        handleStartRun();
-                    }}
                 />
             )}
 
