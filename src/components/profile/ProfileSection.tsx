@@ -133,45 +133,46 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 </div>
 
                 {/* Integrated Identity Card (개인정보 통합 입력창) */}
-                <div className="glass-card" style={{
-                    padding: '2rem',
-                    background: isEditing ? 'rgba(0, 209, 255, 0.05)' : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${isEditing ? 'rgba(0, 209, 255, 0.2)' : 'rgba(255,255,255,0.05)'}`,
+                <div style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    padding: '1.5rem',
                     borderRadius: '24px',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                    gap: '2rem'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1.5rem',
+                    flexWrap: 'wrap'
                 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                        <span style={{ fontSize: '0.8rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '6px' }}><User size={14} /> 런너 성함</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '120px', flex: 1 }}>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '4px' }}><User size={12} /> 성함</span>
                         {isEditing ? (
                             <input
                                 type="text"
                                 value={editData.name}
                                 onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                                 className="neon-input"
-                                style={{ width: '100%', fontSize: '1.1rem' }}
-                                placeholder="이름 입력"
+                                style={{ width: '100%', fontSize: '0.95rem', padding: '8px' }}
+                                placeholder="이름"
                             />
                         ) : (
-                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{profile.name}</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{profile.name}</div>
                         )}
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                        <span style={{ fontSize: '0.8rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '6px' }}><ShieldCheck size={14} /> 성별</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '100px', flex: 1 }}>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '4px' }}><ShieldCheck size={12} /> 성별</span>
                         {isEditing ? (
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={() => setEditData({ ...editData, gender: 'male' })} style={{ flex: 1, padding: '8px', borderRadius: '10px', fontSize: '0.85rem', cursor: 'pointer', background: editData.gender === 'male' ? 'rgba(0,209,255,0.2)' : 'rgba(255,255,255,0.05)', border: editData.gender === 'male' ? '1px solid var(--electric-blue)' : '1px solid transparent', color: editData.gender === 'male' ? 'var(--electric-blue)' : 'white' }}>남성</button>
-                                <button onClick={() => setEditData({ ...editData, gender: 'female' })} style={{ flex: 1, padding: '8px', borderRadius: '10px', fontSize: '0.85rem', cursor: 'pointer', background: editData.gender === 'female' ? 'rgba(189,0,255,0.2)' : 'rgba(255,255,255,0.05)', border: editData.gender === 'female' ? '1px solid var(--vibrant-purple)' : '1px solid transparent', color: editData.gender === 'female' ? 'var(--vibrant-purple)' : 'white' }}>여성</button>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <button onClick={() => setEditData({ ...editData, gender: 'male' })} style={{ flex: 1, padding: '6px', borderRadius: '8px', fontSize: '0.75rem', cursor: 'pointer', background: editData.gender === 'male' ? 'rgba(0,209,255,0.2)' : 'rgba(255,255,255,0.05)', border: editData.gender === 'male' ? '1px solid var(--electric-blue)' : '1px solid transparent', color: editData.gender === 'male' ? 'var(--electric-blue)' : 'white' }}>남</button>
+                                <button onClick={() => setEditData({ ...editData, gender: 'female' })} style={{ flex: 1, padding: '6px', borderRadius: '8px', fontSize: '0.75rem', cursor: 'pointer', background: editData.gender === 'female' ? 'rgba(189,0,255,0.2)' : 'rgba(255,255,255,0.05)', border: editData.gender === 'female' ? '1px solid var(--vibrant-purple)' : '1px solid transparent', color: editData.gender === 'female' ? 'var(--vibrant-purple)' : 'white' }}>여</button>
                             </div>
                         ) : (
-                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{profile.gender === 'male' ? '남성' : '여성'}</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{profile.gender === 'male' ? '남성' : '여성'}</div>
                         )}
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                        <span style={{ fontSize: '0.8rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '6px' }}><Scale size={14} /> 현재 체중</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '90px', flex: 1 }}>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '4px' }}><Scale size={12} /> 체중</span>
                         {isEditing ? (
                             <div style={{ position: 'relative' }}>
                                 <input
@@ -180,17 +181,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     value={editData.weight}
                                     onChange={(e) => setEditData({ ...editData, weight: parseFloat(e.target.value) })}
                                     className="neon-input"
-                                    style={{ width: '100%', fontSize: '1.1rem' }}
+                                    style={{ width: '100%', fontSize: '0.95rem', padding: '8px 25px 8px 8px' }}
                                 />
-                                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>kg</span>
+                                <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.7rem' }}>kg</span>
                             </div>
                         ) : (
-                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{profile.weight}<span style={{ fontSize: '0.9rem', opacity: 0.5, marginLeft: '4px' }}>kg</span></div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{profile.weight}<span style={{ fontSize: '0.8rem', opacity: 0.5, marginLeft: '2px' }}>kg</span></div>
                         )}
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                        <span style={{ fontSize: '0.8rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '6px' }}><Ruler size={14} /> 신장</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '90px', flex: 1 }}>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.5, display: 'flex', alignItems: 'center', gap: '4px' }}><Ruler size={12} /> 신장</span>
                         {isEditing ? (
                             <div style={{ position: 'relative' }}>
                                 <input
@@ -198,12 +199,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     value={editData.height}
                                     onChange={(e) => setEditData({ ...editData, height: parseFloat(e.target.value) })}
                                     className="neon-input"
-                                    style={{ width: '100%', fontSize: '1.1rem' }}
+                                    style={{ width: '100%', fontSize: '0.95rem', padding: '8px 25px 8px 8px' }}
                                 />
-                                <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>cm</span>
+                                <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.7rem' }}>cm</span>
                             </div>
                         ) : (
-                            <div style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{profile.height}<span style={{ fontSize: '0.9rem', opacity: 0.5, marginLeft: '4px' }}>cm</span></div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{profile.height}<span style={{ fontSize: '0.8rem', opacity: 0.5, marginLeft: '2px' }}>cm</span></div>
                         )}
                     </div>
                 </div>
