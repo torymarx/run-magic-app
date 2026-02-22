@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { User, Scale, Ruler, Target, Edit3, X, ShieldCheck, RefreshCw, ChevronRight } from 'lucide-react';
 import { UserProfile } from '../../hooks/useProfileManager';
 import CharacterLevelWidget from './CharacterLevelWidget';
-import { LEVEL_DATA } from '../../data/progression';
+import { LEVEL_DATA, getCharacterImageUrl } from '../../data/progression';
 
 interface ProfileSectionProps {
     profile: UserProfile;
@@ -58,6 +58,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         <CharacterLevelWidget
                             totalPoints={points}
                             calculateLevelInfo={calculateLevelInfo}
+                            gender={profile.gender}
                         />
                         <div>
                             <h2 style={{ fontSize: '2rem', fontWeight: 'bold', fontFamily: 'Outfit, sans-serif', margin: 0, color: 'white' }}>
@@ -264,17 +265,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                         background: 'rgba(0,0,0,0.3)',
                                         filter: isAchieved ? 'none' : 'grayscale(100%) brightness(0.6)'
                                     }}>
-                                        {char.imageUrl ? (
-                                            <img
-                                                src={char.imageUrl.replace('file:///', '')}
-                                                alt={char.name}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <User opacity={0.3} />
-                                            </div>
-                                        )}
+                                        <img
+                                            src={getCharacterImageUrl(char.level, profile.gender)}
+                                            alt={char.name}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
                                     </div>
 
                                     <div style={{ fontSize: '1rem', fontWeight: 'bold', color: isAchieved ? 'white' : 'rgba(255,255,255,0.3)', marginBottom: '6px' }}>

@@ -1,13 +1,15 @@
 
-import React from 'react';
-import { User } from 'lucide-react';
+import { getCharacterImageUrl } from '../../data/progression';
 
 interface CharacterLevelWidgetProps {
     totalPoints: number;
     calculateLevelInfo: (points: number) => any;
+    gender?: string;
 }
 
-const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints, calculateLevelInfo }) => {
+const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
+    totalPoints, calculateLevelInfo, gender = 'male'
+}) => {
     const levelInfo = calculateLevelInfo(totalPoints);
 
     // 레벨별 테마 색상 및 효과 매핑
@@ -20,6 +22,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints
     ];
 
     const theme = themes[levelInfo.level - 1] || themes[0];
+    const characterUrl = getCharacterImageUrl(levelInfo.level, gender);
 
     return (
         <div style={{
@@ -59,22 +62,21 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({ totalPoints
                     }} />
                 )}
 
-                {levelInfo.imageUrl ? (
-                    <img
-                        src={levelInfo.imageUrl}
-                        alt={levelInfo.name}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            opacity: 0.9,
-                            // Lv.3의 경우 복합 이미지이므로 중앙 마법사 부분 위주로 보여주기 위해 정렬 조정 (간이)
-                            objectPosition: levelInfo.level === 3 ? 'center' : 'center'
-                        }}
-                    />
-                ) : (
-                    <User size={60} color={theme.color} style={{ opacity: 0.8 }} />
-                )}
+                <img
+                    src={characterUrl}
+                    alt={levelInfo.name}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        opacity: 0.9,
+                        objectPosition: 'center'
+                    }}
+                    onError={(e) => {
+                        // 이미지 로드 실패 시 가이드 이미지나 기본 아이콘으로 폴백 (필요 시)
+                        (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                />
 
                 {/* Level Badge */}
                 <div style={{
