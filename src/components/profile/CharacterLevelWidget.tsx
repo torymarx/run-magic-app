@@ -27,7 +27,8 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
         willpower: 85 // 나중에 연속 일수 등으로 연동 가능
     };
 
-    const characterUrl = `/characters/char_${profile.characterId}_lv${levelInfo.level}.png`;
+    const safeGender = profile.gender === 'female' ? 'female' : 'male';
+    const characterUrl = `/assets/characters/${safeGender}_lv${levelInfo.level}.png`;
 
     // Internal Components for cleaner structure
     const StatBar = ({ label, value, icon: Icon, color }: any) => (
@@ -174,7 +175,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                         width: '280px', height: '280px', borderRadius: '50%',
                         background: `radial-gradient(circle, ${theme.color}44 0%, transparent 70%)`,
-                        animation: 'pulse 3s infinite', opacity: 0.6, zIndex: 0
+                        animation: 'pulse-animation 3s infinite', opacity: 0.6, zIndex: 0
                     }} />
                     <img
                         src={characterUrl}
