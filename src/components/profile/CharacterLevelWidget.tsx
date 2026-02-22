@@ -140,7 +140,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                             borderRadius: '20px', fontSize: '0.75rem', fontWeight: '900', letterSpacing: '1px',
                             border: `1px solid ${theme.color}44`
                         }}>
-                            {levelInfo.title || 'ELITE RUNNER'}
+                            {levelInfo.title}
                         </span>
                         <div className="mobile-hide" style={{ height: '4px', width: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
                         <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>Lv.{levelInfo.level} {levelInfo.name}</span>
