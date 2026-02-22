@@ -704,33 +704,28 @@ export const useRecordManager = (
         let currentLevel = LEVEL_DATA.find(l => totalPoints >= l.minPoints && totalPoints <= l.maxPoints)
             || LEVEL_DATA[LEVEL_DATA.length - 1];
 
-        // v21.0: Lv.5 도달 특수 조건 체크 (마라톤 완주 여부)
         if (currentLevel.level === 5) {
             const hasMarathonRecord = records.some(r => r.distance >= 42.195);
             if (!hasMarathonRecord) {
-                // 마라톤 기록이 없으면 Lv.4의 정점에 머물게 함
                 currentLevel = LEVEL_DATA.find(l => l.level === 4)!;
             }
         }
 
         const nextLevel = LEVEL_DATA.find(l => l.level === currentLevel.level + 1);
+        const range = nextLevel
+            ? (nextLevel.minPoints - currentLevel.minPoints)
+            : (currentLevel.maxPoints - currentLevel.minPoints);
+        const currentXP = totalPoints - currentLevel.minPoints;
 
-        let progress = 100;
-        let xpToNext = 0;
-
-        if (nextLevel) {
-            const range = nextLevel.minPoints - currentLevel.minPoints;
-            const currentXP = totalPoints - currentLevel.minPoints;
-            progress = Math.min(Math.floor((currentXP / range) * 100), 100);
-            xpToNext = nextLevel.minPoints - totalPoints;
-        }
-
-        // v21.0: Lv.4 정점에서 마라톤 기록이 없는 경우에 대한 안내 추가 가능
+        const progress = nextLevel ? Math.min(Math.floor((currentXP / range) * 100), 100) : 100;
+        const xpToNext = nextLevel ? (nextLevel.minPoints - totalPoints) : 0;
         const isStuckAtLevel4 = currentLevel.level === 4 && totalPoints >= 15001;
 
         return {
             ...currentLevel,
-            progress: isStuckAtLevel4 ? 99 : progress, // 99%에서 멈춤
+            currentLevelPoints: currentXP,
+            pointsToNextLevel: range,
+            progress: isStuckAtLevel4 ? 99 : progress,
             xpToNext: isStuckAtLevel4 ? 0 : xpToNext,
             nextLevelName: isStuckAtLevel4 ? '마라톤 완주 필요' : (nextLevel?.name || 'MAX'),
             isBlockedByMarathon: isStuckAtLevel4
