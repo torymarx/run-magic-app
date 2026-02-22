@@ -29,18 +29,21 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     const levelInfo = calculateLevelInfo(points);
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.94)',
-            zIndex: 1000,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '1rem',
-            backdropFilter: 'blur(15px)'
-        }}>
-            <section className="glass-card custom-scrollbar" style={{
+        <div
+            className="profile-modal-container"
+            style={{
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.94)',
+                zIndex: 1000,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '1rem',
+                backdropFilter: 'blur(15px)'
+            }}
+        >
+            <section className="profile-glass-card custom-scrollbar" style={{
                 padding: '2.5rem',
                 width: '100%',
                 maxWidth: '900px',
@@ -76,7 +79,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         {!isEditing ? (
                             <button
                                 onClick={() => { setIsEditing(true); setEditData(profile); }}
-                                className="nav-chip"
+                                className="nav-chip mobile-w-full"
                                 style={{
                                     padding: '0.7rem 1.5rem',
                                     display: 'flex',
@@ -96,9 +99,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                 <Edit3 size={18} /> Edit Profile
                             </button>
                         ) : (
-                            <div style={{ display: 'flex', gap: '0.8rem' }}>
+                            <div className="mobile-w-full" style={{ display: 'flex', gap: '0.8rem' }}>
                                 <button
                                     onClick={handleSave}
+                                    className="mobile-w-full"
                                     style={{
                                         padding: '0.7rem 2rem',
                                         background: 'var(--neon-green)',
@@ -115,6 +119,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                 </button>
                                 <button
                                     onClick={() => { setIsEditing(false); setEditData(profile); }}
+                                    className="mobile-w-full"
                                     style={{
                                         padding: '0.7rem 2rem',
                                         background: 'rgba(255,255,255,0.05)',
@@ -133,6 +138,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         {!isEditing && (
                             <button
                                 onClick={onClose}
+                                className="mobile-hide"
                                 style={{
                                     background: 'rgba(255,255,255,0.05)',
                                     border: 'none',
@@ -161,7 +167,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                             <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
                                 <ChevronRight size={22} className="neon-text-blue" /> Evolution Stages
                             </h3>
-                            <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>Level up to unlock new forms ✨</span>
+                            <span className="mobile-hide" style={{ fontSize: '0.8rem', opacity: 0.5 }}>Level up to unlock new forms ✨</span>
                         </div>
 
                         <div className="custom-scrollbar" style={{
@@ -238,7 +244,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         <span style={{ fontSize: '0.9rem', fontWeight: '800', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <ShieldCheck size={18} className="neon-text-purple" /> SYSTEM ANALYSIS & STRATEGY
                         </span>
-                        <div style={{
+                        <div className="mobile-compact-padding" style={{
                             padding: '2rem',
                             background: 'linear-gradient(135deg, rgba(189,0,255,0.05) 0%, rgba(0,0,0,0.4) 100%)',
                             borderRadius: '32px',
@@ -249,7 +255,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                             gap: '0.8rem',
                             boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
                         }}>
-                            <p style={{ fontSize: '1.1rem', lineHeight: '1.7', margin: 0, opacity: 0.9, color: 'white', fontWeight: '500' }}>
+                            <p className="mobile-font-md" style={{ fontSize: '1.1rem', lineHeight: '1.7', margin: 0, opacity: 0.9, color: 'white', fontWeight: '500' }}>
                                 {profile.weight && profile.height ?
                                     `현재 런너님은 [${levelInfo.name}] 단계의 정점에 서 있습니다. ${points.toLocaleString()}XP를 달성했으며, 다음 진전을 위해 ${levelInfo.xpToNext.toLocaleString()}XP가 더 필요합니다. 당신의 신체 능력치는 레벨과 기록에 따라 실시간으로 진화하며, 마법진이 그 모든 땀방울을 기록하고 있습니다.` :
                                     "런너의 신체 데이터를 입력하면 더욱 정밀한 코칭 알고리즘이 가동되어 성장을 지원합니다. 현재 기본 성능으로 시스템이 대기 중입니다."}

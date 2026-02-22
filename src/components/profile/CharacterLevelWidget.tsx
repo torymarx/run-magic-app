@@ -91,40 +91,41 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
     );
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.5rem',
-            padding: '2.2rem',
-            background: 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.6) 100%)',
-            borderRadius: '36px',
-            border: `1px solid ${theme.color}44`,
-            boxShadow: `0 30px 60px rgba(0,0,0,0.6), inset 0 0 40px ${theme.color}11`,
-            width: '100%',
-            maxWidth: '680px',
-            position: 'relative',
-            overflow: 'hidden',
-            margin: '0 auto',
-            backdropFilter: 'blur(20px)'
-        }}>
+        <div
+            className="profile-glass-card"
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                padding: '2.2rem',
+                background: 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.6) 100%)',
+                borderRadius: '36px',
+                border: `1px solid ${theme.color}44`,
+                boxShadow: `0 30px 60px rgba(0,0,0,0.6), inset 0 0 40px ${theme.color}11`,
+                width: '100%',
+                maxWidth: '680px',
+                position: 'relative',
+                overflow: 'hidden',
+                margin: '0 auto',
+                backdropFilter: 'blur(20px)'
+            }}
+        >
             {/* Header: Name & Identity */}
-
-            {/* Header: Name & Identity */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 }}>
-                <div>
+            <div className="mobile-stack" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 }}>
+                <div className="mobile-text-center">
                     {isEditing ? (
                         <input
                             type="text"
                             value={profile.name}
                             onChange={(e) => onEditChange?.('name', e.target.value)}
-                            className="neon-input"
+                            className="neon-input mobile-w-full"
                             style={{
                                 background: 'none', border: 'none', borderBottom: `2px solid ${theme.color}`,
                                 color: 'white', fontSize: '2.4rem', fontWeight: '900', outline: 'none', width: '280px'
                             }}
                         />
                     ) : (
-                        <h2 style={{
+                        <h2 className="mobile-font-lg" style={{
                             margin: 0, fontSize: '2.8rem', fontWeight: '900', letterSpacing: '-1.5px',
                             background: `linear-gradient(135deg, #fff 0%, ${theme.color} 100%)`,
                             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
@@ -133,7 +134,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                             {profile.name}
                         </h2>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                    <div className="mobile-text-center" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
                         <span style={{
                             padding: '4px 12px', background: `${theme.color}22`, color: theme.color,
                             borderRadius: '20px', fontSize: '0.75rem', fontWeight: '900', letterSpacing: '1px',
@@ -141,13 +142,13 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                         }}>
                             {levelInfo.title || 'ELITE RUNNER'}
                         </span>
-                        <div style={{ height: '4px', width: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
+                        <div className="mobile-hide" style={{ height: '4px', width: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
                         <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>Lv.{levelInfo.level} {levelInfo.name}</span>
                     </div>
                 </div>
 
                 {/* Level Badge Shield */}
-                <div style={{ textAlign: 'right', position: 'relative' }}>
+                <div className="mobile-hide" style={{ textAlign: 'right', position: 'relative' }}>
                     <div style={{
                         width: '60px', height: '60px', borderRadius: '18px',
                         background: `linear-gradient(135deg, ${theme.color}, ${theme.color}aa)`,
@@ -162,13 +163,14 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             </div>
 
             {/* Main Content: Character (Left) & Status Dashboard (Right) */}
-            <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', zIndex: 2, minHeight: '320px' }}>
+            <div className="mobile-stack" style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', zIndex: 2, minHeight: '320px' }}>
 
                 {/* Character Area */}
-                <div style={{ position: 'relative', width: '240px', height: '320px', flexShrink: 0 }}>
+                <div className="mobile-w-full" style={{ position: 'relative', width: '240px', height: '320px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                     <img
                         src={characterUrl}
                         alt={levelInfo.name}
+                        className="mobile-w-full"
                         style={{
                             width: '100%', height: '110%', objectFit: 'contain',
                             filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.8))',
@@ -178,17 +180,17 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                 </div>
 
                 {/* Status Dashboard Area (AL-CHA-GE!) */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="mobile-w-full" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                     {/* Physical Specs (Horizontal Chips) */}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <div className="mobile-grid-2" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <SpecChip icon={User} label="GENDER" value={profile.gender?.toUpperCase()} field="gender" />
                         <SpecChip icon={Weight} label="WEIGHT" value={`${profile.weight}kg`} field="weight" />
                         <SpecChip icon={Ruler} label="HEIGHT" value={`${profile.height}cm`} field="height" />
                     </div>
 
                     {/* Attributes Section */}
-                    <div style={{
+                    <div className="mobile-compact-padding" style={{
                         background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '24px',
                         border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.4)'
                     }}>
@@ -200,7 +202,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
                     {/* Runner's Ambition (Goal) */}
                     <div style={{ padding: '0 10px' }}>
-                        <div style={{ fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
                             <Target size={10} color={theme.color} /> RUNNER'S AMBITION
                         </div>
                         {isEditing ? (
@@ -215,10 +217,10 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                 placeholder="당신의 질주 목표를 입력하세요..."
                             />
                         ) : (
-                            <p style={{
+                            <p className="mobile-font-md" style={{
                                 margin: 0, fontSize: '1rem', color: 'rgba(255,255,255,0.9)',
                                 fontStyle: 'italic', fontWeight: '500', lineHeight: 1.4,
-                                textShadow: '0 2px 10px rgba(0,0,0,0.5)'
+                                textShadow: '0 2px 10px rgba(0,0,0,0.5)', textAlign: 'center'
                             }}>
                                 "{profile.goal || 'No goal set... Start running now!'}"
                             </p>

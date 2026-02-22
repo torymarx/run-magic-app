@@ -436,3 +436,63 @@ input[type=number] {
     gap: 0.5rem;
   }
 }
+
+/* Profile UI Responsive Enhancements (v21.3) */
+@media (max-width: 768px) {
+    .profile-modal-container {
+        padding: 0.5rem !important;
+    }
+    
+    .profile-glass-card {
+        padding: 1.2rem !important;
+        border-radius: 24px !important;
+        gap: 1.5rem !important;
+    }
+
+    .mobile-stack {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 1.5rem !important;
+    }
+
+    .mobile-w-full {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .mobile-text-center {
+        text-align: center !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .mobile-grid-1 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .mobile-grid-2 {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+    }
+
+    .mobile-compact-padding {
+        padding: 1rem !important;
+    }
+
+    .mobile-hide {
+        display: none !important;
+    }
+
+    .mobile-font-lg {
+        font-size: 1.8rem !important;
+    }
+
+    .mobile-font-md {
+        font-size: 1.2rem !important;
+    }
+
+    .mobile-mt-minus {
+        margin-top: 5px !important;
+    }
+}
