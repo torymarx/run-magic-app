@@ -69,15 +69,24 @@ export const useAICoachSystem = (
             const coachScripts: Record<string, any> = {
                 apex: {
                     msg: `현재 페이스 ${paceStr}. 당신의 한계 돌파를 지켜보고 있습니다. 숨이 턱 끝까지 차오를 때 진정한 성장이 시작됩니다! 🔥`,
-                    rect: { title: "젖산 내성 강화", detail: "지금보다 초당 2~3초만 더 당겨보세요. 세포가 새로운 속도를 기억해야 합니다." }
+                    rect: {
+                        title: "젖산 내성 및 폭발적 파워 강화",
+                        detail: "지금 페이스에서 0.5km만 더 유지해보세요. 호흡이 가빠질 때 신체는 비로소 '다음 진화'를 위한 물리적 환경을 구축합니다. 여기서 3초만 더 당겨보십시오."
+                    }
                 },
                 insight: {
-                    msg: `생체역학 분석 중: 현재 페이스 ${paceStr}. 착지 충격 분산과 상체 기울기가 조화롭습니다. 효율적인 질주입니다. 🐟`,
-                    rect: { title: "운동 역학 최적화", detail: "팔 스윙의 리듬을 일정하게 유지하여 에너지 누수를 차단하세요. 효율이 최고의 기술입니다." }
+                    msg: `생체역학 실시간 분석 보고: 현재 페이스 ${paceStr}. 지면 접촉 시간이 단축되고 있으며, 에너지 반환율이 극대화되고 있습니다. 🐟`,
+                    rect: {
+                        title: "운동 역학적 효율성 정밀 최적화",
+                        detail: "팔 스윙의 진자 운동을 골반 높이에 맞추세요. 상체의 불필요한 흔들림을 제어하면 산소 소모량을 5% 이상 절감하여 후반부 페이스 저하를 막을 수 있습니다."
+                    }
                 },
                 wellness: {
-                    msg: `심박과 호흡의 밸런스가 안정적입니다. 페이스 ${paceStr}. 자연스러운 흐름을 즐기며 나아가세요. 🌿`,
-                    rect: { title: "바이오 리드믹 케어", detail: "지면 반발 충격이 무릎에 닿기 전 발바닥 전체로 분산시키세요. 예방이 전진보다 우선입니다." }
+                    msg: `바이오 밸런스가 매우 안정적입니다. 페이스 ${paceStr}. 자연과 호흡하며 당신만의 리듬을 찾아가는 과정이 아름답습니다. 🌿`,
+                    rect: {
+                        title: "심신 통합형 리듬 케어",
+                        detail: "어깨의 긴장을 풀고 발바닥 전체로 지면의 기운을 느끼며 부드럽게 굴려보세요. 기록보다는 오늘의 공기와 몸의 감각에 집중하는 것이 가장 큰 치유입니다."
+                    }
                 }
             };
 
@@ -93,39 +102,40 @@ export const useAICoachSystem = (
 
             const coachScripts: Record<string, any> = {
                 apex: {
-                    msg: `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 충분히 달성 가능한 사거리 안에 있습니다. 🔥`,
+                    msg: `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 단순한 열망을 넘어, 정밀한 훈련 데이터를 통해 충분히 요격 가능한 사거리 안에 들어왔습니다. 🔥`,
                     rect: {
-                        title: todayStats ? `오늘의 질주 분석 & 처방` : "폭발적 성장을 위한 처방",
+                        title: todayStats ? `오늘의 전술적 질주 분석 & 처방` : "전설적 레벨 도약을 위한 고강도 처방",
                         detail: todayStats
-                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 훌륭했습니다. 다음 진화인 '${levelInfo?.nextLevelName}'를 위해 내일은 회복에 집중하세요.`
-                            : `현재 레벨(${levelInfo?.level})에서 다음 단계인 '${levelInfo?.nextLevelName}'로 진화하기 위해서는 심폐 임계치 훈련이 필요합니다. 이번 주에는 1km 전력 질주를 3회 포함한 인터벌 세션을 추천합니다.`,
-                        insight: `런너님의 체격 조건(${profile?.weight}kg/${profile?.height}cm)은 근력 전달력이 우수합니다. 파워를 속도로 전환하는 인터벌이 가장 효율적입니다.`,
-                        mental: "한계를 마주하는 것은 고통이 아니라, 새로운 나를 만나는 축제입니다."
+                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 당신의 잠재력을 증명했습니다. 특히 후반부 가속력은 '${levelInfo?.nextLevelName}'로 가기 위한 핵심 열쇠입니다. 내일은 초회복을 위해 딥 슬립과 단백질 섭취에 집중하세요.`
+                            : `현재 레벨(${levelInfo?.level})에서 '${levelInfo?.nextLevelName}'로의 진화는 임계치 훈련량에 달려 있습니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 400m 전력 질주와 200m 조깅을 8회 반복하는 인터벌 세션을 반드시 포함하십시오.`,
+                        insight: `신체 조건(${profile?.weight}kg/${profile?.height}cm) 분석 결과, 둔근의 파워 전달력이 우수합니다. 오르막 주행을 주 1회 추가하면 폭발적인 가속력을 얻을 수 있습니다.`,
+                        mental: "고통은 한계를 뚫고 나가는 소리입니다. 그 소리를 즐기는 자만이 정상의 공기를 마실 수 있습니다."
                     }
                 },
                 insight: {
-                    msg: `[데이터 분석 리포트] ${runnerName}님의 프로필과 기록을 교차 분석했습니다. '${currentLevel}' 단계에서의 메타 대사 효율은 안정적인 궤도에 진입했습니다. 🐟`,
+                    msg: `[알고리즘 분석 리포트] ${runnerName}님의 프로필과 주행 빅데이터를 정밀 교차 분석했습니다. '${currentLevel}' 단계에서의 대사 효율과 에너지 효율성은 이미 상위 15%의 안정 궤도에 진입했습니다. 🐟`,
                     rect: {
-                        title: todayStats ? `최근 세션 분석 & 솔루션` : "역학적 효율성 극대화",
+                        title: todayStats ? `데이터 기반 세션 최적화 솔루션` : "물리적 한계 극복을 위한 역학 설계",
                         detail: todayStats
-                            ? `오늘 페이스(${todayStats.paceStr})를 최근 7일 평균과 비교했을 때 대사 효율은 균형적입니다. "${runnerGoal}" 달성을 위해 일관된 리듬을 유지하세요.`
-                            : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 리듬이 핵심입니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 데이터를 볼 때, 주행 후반부의 페이스 유지가 과제입니다. 보완을 위해 코어 강화 루틴을 병행하십시오.`,
-                        insight: `BMI 분석 결과, 관절에 가해지는 부하가 적절합니다. 착지 시 골반 정렬에 더 집중하면 부상 없이 주간 마일리지를 20% 더 늘릴 수 있습니다.`,
-                        mental: "데이터는 거짓말을 하지 않습니다. 숫자 뒤에 숨겨진 당신의 가능성을 믿으십시오."
+                            ? `오늘 페이스(${todayStats.paceStr})를 최근 7일 평균과 비교했을 때, 에너지 효율은 3.2% 향상되었습니다. "${runnerGoal}" 달성을 위해서는 심박수 변동성을 조금 더 좁히는 훈련이 효과적일 것입니다.`
+                            : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 물리 법칙의 적용이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 데이터 패턴을 볼 때, 5km 지점 이후의 피치 저하가 관찰됩니다. 보완을 위해 런지 및 플랭크 기반의 코어 보강 운동을 주 3회 권장합니다.`,
+                        insight: `BMI 및 체성분 예측 분석 결과, 관절에 가해지는 동적 부하가 최적 범위 내에 있습니다. 착지 시 골반의 수평 유지를 1cm만 더 신경 쓰면 에너지 손실을 8% 줄일 수 있습니다.`,
+                        mental: "숫자는 거짓말을 하지 않으며, 기록은 당신의 헌신을 투영하는 거울입니다. 데이터 속에 답이 있습니다."
                     }
                 },
                 wellness: {
-                    msg: `[마인드셋 가이드] 반가워요, ${runnerName}님! 벌써 ${overallStats?.count}번이나 길을 나서셨네요. '${currentLevel}' 단계의 노력이 프로필에 정성스럽게 기록되어 있습니다. 🌿`,
+                    msg: `[바이오 리드믹 가이드] 따뜻한 응원을 보냅니다, ${runnerName}님! 벌써 ${overallStats?.count}번이나 세상을 향해 발을 내디디셨네요. '${currentLevel}' 단계의 정성 어린 기록들이 당신의 미래를 밝히고 있습니다. 🌿`,
                     rect: {
-                        title: todayStats ? `오늘의 마음 챙김 & 가이드` : "지속 가능한 질주 전략",
+                        title: todayStats ? `오늘의 몸과 마음을 위한 힐링 처방` : "지속 가능한 성장을 위한 상생 전략",
                         detail: todayStats
-                            ? `오늘 ${todayStats.distance}km를 즐겁게 달리신 것 같아 기쁩니다. "${runnerGoal}"이라는 꿈을 향해 무리하지 않고 잘 가고 계세요.`
-                            : `"${runnerGoal}"이라는 소중한 꿈을 위해, 오늘은 몸의 신호에 귀를 기울여보세요. 최근 7일간의 기록(${recentStats?.count || 0}회)이 훌륭합니다. 이번 주는 회복런과 스트레칭으로 신경계의 피로를 씻어내는 건 어떨까요?`,
-                        insight: `현재 신체 스펙(${profile?.weight}kg)에서 무리한 고강도 훈련은 근막 긴장을 초래할 수 있습니다. 템포런보다는 즐거운 조깅으로 체력을 다지세요.`,
-                        mental: "가장 빠른 길은 멈추지 않는 것입니다. 당신의 속도로 충분히 아름답습니다."
+                            ? `오늘 ${todayStats.distance}km를 한 마리의 나비처럼 가볍게 달리신 것 같아 제 마음도 훈훈해집니다. "${runnerGoal}"이라는 소중한 꿈을 향해, 당신만의 아름다운 속도로 아주 잘 가고 계세요.`
+                            : `"${runnerGoal}"이라는 꿈을 이루기 위해 가장 중요한 것은 지치지 않는 마음입니다. 최근 7일간의 주행(${recentStats?.count || 0}회)을 통해 당신의 성실함을 확인했습니다. 이번 주는 따뜻한 차 한 잔과 함께 충분한 명상, 그리고 종아리 스트레칭으로 몸의 긴장을 보듬어주는 시간을 가져보세요.`,
+                        insight: `현재 ${profile?.weight}kg의 신체 밸런스는 매우 유연한 상태입니다. 하지만 과도한 추격보다는 느린 조깅을 통해 모세혈관 발달을 돕는 것이 장기적인 기초 체력 형성에 훨씬 이롭습니다.`,
+                        mental: "빨리 가는 것보다 중요한 것은 끝까지 가는 것이며, 함께 가는 것입니다. 당신의 속도는 이미 충분히 빛나고 있습니다."
                     }
                 }
             };
+
 
             const script = coachScripts[selectedCoachId] || coachScripts['wellness'];
             message = script.msg;

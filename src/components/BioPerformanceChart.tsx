@@ -386,6 +386,34 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
         return null;
     };
 
+    // --- Today vs Average Logic ---
+    const performanceAnalysis = useMemo(() => {
+        if (chartData.length === 0) return null;
+
+        // "Today" defined as the most recent record in the current chart data
+        const today = chartData[chartData.length - 1];
+
+        const totalDist = chartData.reduce((acc, curr) => acc + curr.distance, 0);
+        const totalTime = chartData.reduce((acc, curr) => acc + curr.totalTimeSeconds, 0);
+        const avgDist = totalDist / chartData.length;
+        const avgPaceSec = totalDist > 0 ? totalTime / totalDist : 0;
+        const avgWeight = chartData.reduce((acc, curr) => acc + curr.weight, 0) / chartData.length;
+
+        const paceDiffPercent = avgPaceSec > 0 ? ((today.paceSeconds - avgPaceSec) / avgPaceSec) * 100 : 0;
+        const distDiffPercent = avgDist > 0 ? ((today.distance - avgDist) / avgDist) * 100 : 0;
+        const weightDiffPercent = avgWeight > 0 ? ((today.weight - avgWeight) / avgWeight) * 100 : 0;
+
+        return {
+            today,
+            avgDist,
+            avgPaceSec,
+            avgWeight,
+            paceDiffPercent,
+            distDiffPercent,
+            weightDiffPercent
+        };
+    }, [chartData]);
+
     return (
         <div className="glass-card performance-studio-container" style={{ padding: '2.5rem', position: 'relative', overflow: 'hidden' }}>
             {/* Header & Nav */}
@@ -399,6 +427,54 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                     <button onClick={() => { onDateChange(new Date(viewingDate.getFullYear(), viewingDate.getMonth() + 1)); setIsUserNavigated(true); }} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><ChevronRight size={20} /></button>
                 </div>
             </div>
+
+            {/* Performance Comparison Summary */}
+            {performanceAnalysis && (
+                <div style={{
+                    marginBottom: '2.5rem',
+                    padding: '1.5rem',
+                    background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.05) 0%, rgba(189, 0, 255, 0.05) 100%)',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Zap size={18} className="neon-text-blue" />
+                        <span style={{ fontSize: '0.95rem', fontWeight: '900', letterSpacing: '0.5px' }}>TODAY'S ANALYSIS vs MONTHLY AVG</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>페이스 효율</span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{performanceAnalysis.paceDiffPercent <= 0 ? (Math.abs(performanceAnalysis.paceDiffPercent).toFixed(1) + '% 단축') : (performanceAnalysis.paceDiffPercent.toFixed(1) + '% 지연')}</span>
+                                <span style={{ fontSize: '0.7rem', color: performanceAnalysis.paceDiffPercent <= 0 ? '#00FF85' : '#FF4B4B' }}>
+                                    {performanceAnalysis.paceDiffPercent <= 0 ? '▲ 상향' : '▼ 하향'}
+                                </span>
+                            </div>
+                        </div>
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>주행 강도</span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{performanceAnalysis.distDiffPercent >= 0 ? (performanceAnalysis.distDiffPercent.toFixed(1) + '% 증가') : (Math.abs(performanceAnalysis.distDiffPercent).toFixed(1) + '% 감소')}</span>
+                                <span style={{ fontSize: '0.7rem', color: performanceAnalysis.distDiffPercent >= 0 ? '#00FF85' : '#FF4B4B' }}>
+                                    {performanceAnalysis.distDiffPercent >= 0 ? '▲ 상향' : '▼ 하향'}
+                                </span>
+                            </div>
+                        </div>
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>바이오 리듬 (체중)</span>
+                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{performanceAnalysis.weightDiffPercent <= 0 ? (Math.abs(performanceAnalysis.weightDiffPercent).toFixed(1) + '% 감소') : (performanceAnalysis.weightDiffPercent.toFixed(1) + '% 증가')}</span>
+                                <span style={{ fontSize: '0.7rem', color: performanceAnalysis.weightDiffPercent <= 0 ? '#00FF85' : '#888' }}>
+                                    {performanceAnalysis.weightDiffPercent <= 0 ? '▼ 긍정' : '▲ 관리'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Metrics */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem', flexWrap: 'wrap' }}>

@@ -53,42 +53,48 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
         </div>
     );
 
-    const SpecChip = ({ icon: Icon, value, label, field }: any) => (
-        <div
-            onClick={() => isEditing && field === 'gender' && onEditChange?.('gender', profile.gender === 'male' ? 'female' : 'male')}
-            style={{
-                background: 'rgba(255,255,255,0.03)',
-                padding: '6px 12px',
-                borderRadius: '12px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: isEditing && field === 'gender' ? 'pointer' : 'default',
-                transition: 'all 0.2s'
-            }}
-            className={isEditing && field === 'gender' ? 'hover-glow' : ''}
-        >
-            <Icon size={12} style={{ opacity: 0.5 }} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.6rem', opacity: 0.4, lineHeight: 1 }}>{label}</span>
-                {isEditing && (field === 'weight' || field === 'height') ? (
-                    <input
-                        type="number"
-                        step="0.1"
-                        value={field === 'weight' ? profile.weight : profile.height}
-                        onChange={(e) => onEditChange?.(field, parseFloat(e.target.value) || 0)}
-                        className="minimal-input"
-                        style={{
-                            background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', width: '50px', outline: 'none', padding: 0
-                        }}
-                    />
-                ) : (
-                    <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>{value}</span>
-                )}
+    const SpecChip = ({ icon: Icon, value, label, field }: any) => {
+        const isNumericField = field === 'weight' || field === 'height';
+
+        return (
+            <div
+                onClick={() => isEditing && field === 'gender' && onEditChange?.('gender', profile.gender === 'male' ? 'female' : 'male')}
+                style={{
+                    background: isEditing ? 'rgba(0, 209, 255, 0.1)' : 'rgba(255,255,255,0.03)',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    border: isEditing ? `1px solid var(--electric-blue)` : '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: isEditing && field === 'gender' ? 'pointer' : 'default',
+                    transition: 'all 0.2s',
+                    boxShadow: isEditing ? '0 0 10px rgba(0, 209, 255, 0.2)' : 'none'
+                }}
+                className={isEditing && field === 'gender' ? 'hover-glow' : ''}
+            >
+                <Icon size={12} style={{ opacity: isEditing ? 1 : 0.5, color: isEditing ? 'var(--electric-blue)' : 'inherit' }} />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '0.6rem', opacity: isEditing ? 0.8 : 0.4, lineHeight: 1, color: isEditing ? 'var(--electric-blue)' : 'inherit' }}>{label}</span>
+                    {isEditing && isNumericField ? (
+                        <input
+                            type="text"
+                            inputMode="decimal"
+                            value={field === 'weight' ? profile.weight : profile.height}
+                            onChange={(e) => onEditChange?.(field, e.target.value)}
+                            className="minimal-input"
+                            style={{
+                                background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', width: '60px', outline: 'none', padding: 0
+                            }}
+                            placeholder="0.0"
+                        />
+                    ) : (
+                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>{value}</span>
+                    )}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div
@@ -120,8 +126,10 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                             onChange={(e) => onEditChange?.('name', e.target.value)}
                             className="neon-input mobile-w-full"
                             style={{
-                                background: 'none', border: 'none', borderBottom: `2px solid ${theme.color}`,
-                                color: 'white', fontSize: '2.4rem', fontWeight: '900', outline: 'none', width: '280px'
+                                background: 'rgba(255,255,255,0.05)', border: 'none', borderBottom: `3px solid var(--electric-blue)`,
+                                color: 'white', fontSize: '2.4rem', fontWeight: '900', outline: 'none', width: '280px',
+                                padding: '4px 8px', borderRadius: '4px 4px 0 0',
+                                boxShadow: '0 4px 15px rgba(0, 209, 255, 0.1)'
                             }}
                         />
                     ) : (
@@ -210,9 +218,11 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                 value={profile.goal}
                                 onChange={(e) => onEditChange?.('goal', e.target.value)}
                                 style={{
-                                    width: '100%', background: 'rgba(255,255,255,0.05)', border: 'none',
-                                    borderRadius: '12px', color: 'white', padding: '10px', fontSize: '0.9rem',
-                                    outline: 'none', borderBottom: `1px solid ${theme.color}44`, height: '60px', resize: 'none'
+                                    width: '100%', background: 'rgba(255,255,255,0.08)', border: 'none',
+                                    borderRadius: '12px', color: 'white', padding: '12px', fontSize: '0.9rem',
+                                    outline: 'none', borderBottom: `2px solid var(--electric-blue)`, height: '80px', resize: 'none',
+                                    boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)',
+                                    transition: 'all 0.3s'
                                 }}
                                 placeholder="당신의 질주 목표를 입력하세요..."
                             />

@@ -22,9 +22,13 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
     const handleSave = () => {
-        onUpdate(editData);
+        const finalData = { ...editData };
+        if (finalData.weight) finalData.weight = parseFloat(finalData.weight as any) || 0;
+        if (finalData.height) finalData.height = parseFloat(finalData.height as any) || 0;
+        onUpdate(finalData);
         setIsEditing(false);
     };
+
 
     const levelInfo = calculateLevelInfo(points);
 
@@ -67,11 +71,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         isEditing={isEditing}
                         onEditChange={(field, value) => {
                             let processedValue: any = value;
-                            if (field === 'weight' || field === 'height') {
-                                processedValue = parseFloat(value) || 0;
-                            }
+                            // weight나 height는 입력 중에는 문자열로 유지하여 ". " 등을 입력 가능하게 함
                             setEditData(prev => ({ ...prev, [field]: processedValue }));
                         }}
+
                     />
 
                     {/* Action Buttons Row */}
