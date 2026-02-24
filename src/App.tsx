@@ -274,7 +274,11 @@ function App() {
                             onSave={async (data) => {
                                 setIsSyncing(true);
                                 try {
-                                    await handleManualSave({ ...data, coachId: selectedCoach.id });
+                                    await handleManualSave({
+                                        ...data,
+                                        coachId: selectedCoach.id,
+                                        runnerName: profile.name
+                                    });
                                     if (data.weight) {
                                         await updateProfile({ weight: data.weight });
                                     }
@@ -293,6 +297,7 @@ function App() {
                             allRecords={records}
                             onDelete={handleDeleteRecord}
                             isCloudConnected={isCloudConnected}
+                            profile={profile}
                         />
                     </div>
                 </div>

@@ -14,9 +14,13 @@ interface ManualRecordFormProps {
     allRecords?: any[];
     initialDate?: string | null;
     isCloudConnected?: boolean;
+    profile?: any;
 }
 
-const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, onDelete, lastRecord, allRecords = [], initialDate, isCloudConnected = false }) => {
+const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
+    onSave, onCancel, onDelete, lastRecord, allRecords = [],
+    initialDate, isCloudConnected = false, profile
+}) => {
     const [distance, setDistance] = useState<number>(lastRecord?.distance || 3);
     const [splits, setSplits] = useState<string[]>(lastRecord?.splits || ['06:33', '06:52', '06:44']);
     // v8.9: UTC가 아닌 로컬 타임(KST) 기준 날짜 생성 (오전 러닝 날짜 오류 수정)
@@ -32,7 +36,11 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
     const [weather, setWeather] = useState<string>(lastRecord?.weather || 'sun');
     const [condition, setCondition] = useState<string>(lastRecord?.condition || 'good');
     const [temp, setTemp] = useState<number>(lastRecord?.temp || 18);
-    const [weight, setWeight] = useState<number>(lastRecord?.weight ? parseFloat(lastRecord.weight.toString()) : 70.0);
+    const [weight, setWeight] = useState<number>(
+        lastRecord?.weight
+            ? parseFloat(lastRecord.weight.toString())
+            : (profile?.weight ? parseFloat(profile.weight.toString()) : 70.0)
+    );
     const [dust, setDust] = useState<string>(lastRecord?.dust || 'good');
     const [memo, setMemo] = useState<string>('');
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -125,7 +133,11 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({ onSave, onCancel, o
         setWeather(lastRecord?.weather || 'sun');
         setCondition(lastRecord?.condition || 'good');
         setTemp(lastRecord?.temp || 18);
-        setWeight(lastRecord?.weight ? parseFloat(lastRecord.weight.toString()) : 70.0);
+        setWeight(
+            lastRecord?.weight
+                ? parseFloat(lastRecord.weight.toString())
+                : (profile?.weight ? parseFloat(profile.weight.toString()) : 70.0)
+        );
         setDust(lastRecord?.dust || 'good');
         setMemo('');
 

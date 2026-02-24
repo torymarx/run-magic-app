@@ -2,7 +2,8 @@
 -- Supabase SQL Editor에 복사하여 실행해 주세요! 🚀
 
 ALTER TABLE records 
-ADD COLUMN IF NOT EXISTS "raceComparisons" JSONB;
+ADD COLUMN IF NOT EXISTS "raceComparisons" JSONB,
+ADD COLUMN IF NOT EXISTS "runnerName" TEXT;
 
 -- 혹시 누락되었을 수 있는 이전 버전 컬럼들 체크
 ALTER TABLE records 
