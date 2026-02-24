@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({
         female: { 1: '🐣', 2: '✨', 3: '🌿', 4: '🐆', 5: '👑' }
     };
     const gender = profile?.gender === 'female' ? 'female' : 'male';
-    const characterEmoji = CHARACTER_EMOJIS[gender][profile?.character_id || 1] || '🐣';
+    const characterEmoji = CHARACTER_EMOJIS[gender][profile?.characterId || 1] || '🐣';
 
     return (
         <header className="global-nav">

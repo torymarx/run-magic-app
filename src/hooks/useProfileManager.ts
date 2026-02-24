@@ -9,7 +9,7 @@ export interface UserProfile {
     goal: string;
     birthdate: string;
     gender: string;
-    character_id: number;
+    characterId: number;
     updated_at: string;
 }
 
@@ -21,7 +21,7 @@ const DEFAULT_PROFILE: UserProfile = {
     goal: '오늘도 즐겁게 질주합시다!',
     birthdate: '1990-01-01',
     gender: 'male',
-    character_id: 1,
+    characterId: 1,
     updated_at: new Date().toISOString()
 };
 
@@ -32,6 +32,9 @@ export const useProfileManager = (userId?: string) => {
     useEffect(() => {
         if (userId) {
             fetchProfile();
+        } else {
+            // v21.2: 로그아웃 시 프로필 정보 즉시 초기화 (잔상 제거)
+            setProfile(DEFAULT_PROFILE);
         }
     }, [userId]);
 
@@ -80,7 +83,7 @@ export const useProfileManager = (userId?: string) => {
             return;
         }
 
-        // character_id는 레벨 시스템에 의해 자동 결정되므로 수동 업데이트에서 필터링하거나 보호
+        // characterId는 레벨 시스템에 의해 자동 결정되므로 수동 업데이트에서 필터링하거나 보호
         const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
 
         try {

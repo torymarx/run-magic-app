@@ -129,11 +129,11 @@ function App() {
 
     // v19.1: 레벨 기반 자동 캐릭터 진화 시스템 (수동 선택 제거 대응)
     React.useEffect(() => {
-        if (user && profile && levelInfo.level !== profile.character_id) {
-            console.log(`🧬 레벨 업 탐지: [${profile.character_id} -> ${levelInfo.level}]. 캐릭터 자동 진화를 시작합니다.`);
-            updateProfile({ character_id: levelInfo.level });
+        if (user && profile && points > 0 && levelInfo.level !== profile.characterId) {
+            console.log(`🧬 레벨 업 탐지: [${profile.characterId} -> ${levelInfo.level}]. 캐릭터 자동 진화를 시작합니다.`);
+            updateProfile({ characterId: levelInfo.level });
         }
-    }, [points, profile?.character_id, user, levelInfo.level]);
+    }, [points, profile?.characterId, user, levelInfo.level]);
 
     const handleEditRecord = (record: any) => {
         setEditingRecord(record);
