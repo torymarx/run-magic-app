@@ -9,6 +9,71 @@ interface CharacterLevelWidgetProps {
     onEditChange?: (field: string, value: any) => void;
 }
 
+const StatBar = ({ label, value, icon: Icon, color }: any) => (
+    <div style={{ marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.6)' }}>
+                <Icon size={12} color={color} />
+                <span style={{ letterSpacing: '1px' }}>{label}</span>
+            </div>
+            <span style={{ fontSize: '0.8rem', fontWeight: '900', color: color }}>{Math.round(value)}%</span>
+        </div>
+        <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{
+                height: '100%',
+                width: `${value}%`,
+                background: `linear-gradient(90deg, ${color}66, ${color})`,
+                boxShadow: `0 0 10px ${color}44`,
+                borderRadius: '3px',
+                transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }} />
+        </div>
+    </div>
+);
+
+const SpecChip = ({ icon: Icon, value, label, field, isEditing, profile, onEditChange }: any) => {
+    const isNumericField = field === 'weight' || field === 'height';
+
+    return (
+        <div
+            onClick={() => isEditing && field === 'gender' && onEditChange?.('gender', profile.gender === 'male' ? 'female' : 'male')}
+            style={{
+                background: isEditing ? 'rgba(0, 209, 255, 0.1)' : 'rgba(255,255,255,0.03)',
+                padding: '6px 12px',
+                borderRadius: '12px',
+                border: isEditing ? `1px solid var(--electric-blue)` : '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: isEditing && field === 'gender' ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                boxShadow: isEditing ? '0 0 10px rgba(0, 209, 255, 0.2)' : 'none'
+            }}
+            className={isEditing && field === 'gender' ? 'hover-glow' : ''}
+        >
+            <Icon size={12} style={{ opacity: isEditing ? 1 : 0.5, color: isEditing ? 'var(--electric-blue)' : 'inherit' }} />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.6rem', opacity: isEditing ? 0.8 : 0.4, lineHeight: 1, color: isEditing ? 'var(--electric-blue)' : 'inherit' }}>{label}</span>
+                {isEditing && isNumericField ? (
+                    <input
+                        type="text"
+                        inputMode="decimal"
+                        value={field === 'weight' ? profile.weight : profile.height}
+                        onChange={(e) => onEditChange?.(field, e.target.value)}
+                        className="minimal-input"
+                        style={{
+                            background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', width: '60px', outline: 'none', padding: 0
+                        }}
+                        placeholder="0.0"
+                    />
+                ) : (
+                    <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>{value}</span>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
     totalPoints,
     calculateLevelInfo,
@@ -29,72 +94,6 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
     const safeGender = profile.gender === 'female' ? 'female' : 'male';
     const characterUrl = `/assets/characters/${safeGender}_lv${levelInfo.level}.png`;
-
-    // Internal Components for cleaner structure
-    const StatBar = ({ label, value, icon: Icon, color }: any) => (
-        <div style={{ marginBottom: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.6)' }}>
-                    <Icon size={12} color={color} />
-                    <span style={{ letterSpacing: '1px' }}>{label}</span>
-                </div>
-                <span style={{ fontSize: '0.8rem', fontWeight: '900', color: color }}>{Math.round(value)}%</span>
-            </div>
-            <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{
-                    height: '100%',
-                    width: `${value}%`,
-                    background: `linear-gradient(90deg, ${color}66, ${color})`,
-                    boxShadow: `0 0 10px ${color}44`,
-                    borderRadius: '3px',
-                    transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                }} />
-            </div>
-        </div>
-    );
-
-    const SpecChip = ({ icon: Icon, value, label, field }: any) => {
-        const isNumericField = field === 'weight' || field === 'height';
-
-        return (
-            <div
-                onClick={() => isEditing && field === 'gender' && onEditChange?.('gender', profile.gender === 'male' ? 'female' : 'male')}
-                style={{
-                    background: isEditing ? 'rgba(0, 209, 255, 0.1)' : 'rgba(255,255,255,0.03)',
-                    padding: '6px 12px',
-                    borderRadius: '12px',
-                    border: isEditing ? `1px solid var(--electric-blue)` : '1px solid rgba(255,255,255,0.05)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    cursor: isEditing && field === 'gender' ? 'pointer' : 'default',
-                    transition: 'all 0.2s',
-                    boxShadow: isEditing ? '0 0 10px rgba(0, 209, 255, 0.2)' : 'none'
-                }}
-                className={isEditing && field === 'gender' ? 'hover-glow' : ''}
-            >
-                <Icon size={12} style={{ opacity: isEditing ? 1 : 0.5, color: isEditing ? 'var(--electric-blue)' : 'inherit' }} />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '0.6rem', opacity: isEditing ? 0.8 : 0.4, lineHeight: 1, color: isEditing ? 'var(--electric-blue)' : 'inherit' }}>{label}</span>
-                    {isEditing && isNumericField ? (
-                        <input
-                            type="text"
-                            inputMode="decimal"
-                            value={field === 'weight' ? profile.weight : profile.height}
-                            onChange={(e) => onEditChange?.(field, e.target.value)}
-                            className="minimal-input"
-                            style={{
-                                background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', width: '60px', outline: 'none', padding: 0
-                            }}
-                            placeholder="0.0"
-                        />
-                    ) : (
-                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>{value}</span>
-                    )}
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div
@@ -192,9 +191,9 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
                     {/* Physical Specs (Horizontal Chips) */}
                     <div className="mobile-grid-2" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <SpecChip icon={User} label="GENDER" value={profile.gender?.toUpperCase()} field="gender" />
-                        <SpecChip icon={Weight} label="WEIGHT" value={`${profile.weight}kg`} field="weight" />
-                        <SpecChip icon={Ruler} label="HEIGHT" value={`${profile.height}cm`} field="height" />
+                        <SpecChip icon={User} label="GENDER" value={profile.gender?.toUpperCase()} field="gender" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                        <SpecChip icon={Weight} label="WEIGHT" value={`${profile.weight}kg`} field="weight" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                        <SpecChip icon={Ruler} label="HEIGHT" value={`${profile.height}cm`} field="height" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
                     </div>
 
                     {/* Attributes Section */}

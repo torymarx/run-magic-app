@@ -17,6 +17,73 @@ interface ManualRecordFormProps {
     profile?: any;
 }
 
+// 커스텀 스텝퍼 컴포넌트 (v14.7: 하이브리드 입력 방식 적용)
+// v21.3: 컴포넌트 분리 및 입력 편의성 개선
+const Stepper = ({ label, value, onChange, step, unit, icon }: any) => {
+    // 내부적으로 문자열 상태를 유지하여 "." 같은 미완성 입력이 가능하게 함
+    const [inputValue, setInputValue] = React.useState(value.toString());
+
+    React.useEffect(() => {
+        setInputValue(value.toString());
+    }, [value]);
+
+    const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const text = e.target.value;
+        setInputValue(text);
+        const parsed = parseFloat(text);
+        if (!isNaN(parsed)) {
+            onChange(parsed);
+        }
+    };
+
+    return (
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.6rem' }}>
+                {icon} {label}
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <button
+                    type="button"
+                    onClick={() => onChange(Number((parseFloat(value.toString()) - step).toFixed(1)))}
+                    style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: 'white', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    -
+                </button>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                    <input
+                        type="text"
+                        inputMode="decimal"
+                        value={inputValue}
+                        onChange={handleTextChange}
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--electric-blue)',
+                            fontSize: '1.2rem',
+                            fontWeight: 'bold',
+                            width: '50px',
+                            textAlign: 'center',
+                            outline: 'none',
+                            padding: 0,
+                            fontFamily: 'inherit'
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        onBlur={() => setInputValue(value.toString())} // 포커스 아웃 시 최종 파싱된 값으로 보정
+                    />
+                    <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>{unit}</span>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => onChange(Number((parseFloat(value.toString()) + step).toFixed(1)))}
+                    style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: 'white', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                    +
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
     onSave, onCancel, onDelete, lastRecord, allRecords = [],
     initialDate, isCloudConnected = false, profile
@@ -304,55 +371,6 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
         return null;
     };
 
-    // 커스텀 스텝퍼 컴포넌트 (v14.7: 하이브리드 입력 방식 적용)
-    const Stepper = ({ label, value, onChange, step, unit, icon }: any) => (
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '0.8rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.6rem' }}>
-                {icon} {label}
-            </label>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                <button
-                    type="button"
-                    onClick={() => onChange(Number((parseFloat(value.toString()) - step).toFixed(1)))}
-                    style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: 'white', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                    -
-                </button>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                    <input
-                        type="number"
-                        step={step}
-                        value={value}
-                        onChange={(e) => {
-                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                            onChange(val);
-                        }}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--electric-blue)',
-                            fontSize: '1.2rem',
-                            fontWeight: 'bold',
-                            width: '50px',
-                            textAlign: 'center',
-                            outline: 'none',
-                            padding: 0,
-                            fontFamily: 'inherit'
-                        }}
-                        onFocus={(e) => e.target.select()}
-                    />
-                    <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>{unit}</span>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => onChange(Number((parseFloat(value.toString()) + step).toFixed(1)))}
-                    style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', color: 'white', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                    +
-                </button>
-            </div>
-        </div>
-    );
 
     const formatTimeWithAMPM = (timeStr: string) => {
         if (!timeStr) return "";
