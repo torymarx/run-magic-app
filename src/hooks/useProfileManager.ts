@@ -28,18 +28,20 @@ const DEFAULT_PROFILE: UserProfile = {
 export const useProfileManager = (userId?: string) => {
     const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
     const [isLoading, setIsLoading] = useState(false);
+    const [isProfileLoaded, setIsProfileLoaded] = useState(false);
 
     useEffect(() => {
-        if (userId) {
+        if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
             fetchProfile();
         } else {
             // v21.2: 로그아웃 시 프로필 정보 즉시 초기화 (잔상 제거)
             setProfile(DEFAULT_PROFILE);
+            setIsProfileLoaded(false);
         }
     }, [userId]);
 
     const fetchProfile = async () => {
-        if (!userId) return;
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') return;
         setIsLoading(true);
         try {
             // 2. 클라우드에서 최신 정보 가져오기
@@ -51,6 +53,7 @@ export const useProfileManager = (userId?: string) => {
 
             if (data && !error) {
                 setProfile(data);
+                setIsProfileLoaded(true);
                 console.log("✅ Profile Synced from Cloud 🛡️");
             } else if (error && (error.code === 'PGRST116' || error.message?.includes('No object found'))) {
                 // 3. 프로필이 없는 신규 유저라면 서버에도 기본 프로필 생성 시도 (Proactive Sync)
@@ -63,6 +66,7 @@ export const useProfileManager = (userId?: string) => {
 
                 if (!upsertError) {
                     setProfile(newProfile);
+                    setIsProfileLoaded(true);
                     console.log("✅ New Cloud Profile Established! 🏁");
                 } else {
                     console.error("❌ Profile Auto-Creation Failed:", upsertError);
@@ -83,6 +87,11 @@ export const useProfileManager = (userId?: string) => {
             return;
         }
 
+        if (!isProfileLoaded) {
+            console.warn("⚠️ 프로필 로딩이 완료되기 전에는 업데이트할 수 없습니다.");
+            return;
+        }
+
         // characterId는 레벨 시스템에 의해 자동 결정되므로 수동 업데이트에서 필터링하거나 보호
         const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
 
@@ -93,6 +102,7 @@ export const useProfileManager = (userId?: string) => {
 
             if (!error) {
                 setProfile(newProfile);
+                setIsProfileLoaded(true);
                 console.log("✅ 프로필이 구름 요새에 저장되었습니다.");
             } else {
                 console.error("❌ 프로필 저장 에러:", error);
@@ -107,6 +117,7 @@ export const useProfileManager = (userId?: string) => {
         profile,
         updateProfile,
         isLoading,
+        isProfileLoaded,
         refreshProfile: fetchProfile
     };
 };

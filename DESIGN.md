@@ -1,26 +1,32 @@
 # DESIGN.md: Run-Magic 디자인 가이드
 
-## 1. 디자인 컨셉: "Neon Aurora & Glass"
-- **Keywords**: 역동성, 투명함, 미래지향적, 전문적
-- **Style**: Dark Glassmorphism (배경 흐림 효과와 네온 컬러의 조화)
+## 1. 디자인 컨셉: "Aurora Premium & RPG Immersion"
+- **Keywords**: 압도적 아우라, 보석 같은 질감, RPG 성장 서사, 미래지향적
+- **Style**: Aurora Theme 2.0 & Glassmorphism 3.0
 
-## 2. 컬러 팔레트
-- **Core Dark**: `#0A0A0C` (딥 다크 배경)
-- **Surface**: `rgba(255, 255, 255, 0.05)` (글래스 카드 배경)
-- **Electric Blue**: `#00D1FF` (주요 강조색, 페이스 지표)
-- **Neon Green**: `#39FF14` (성공, 에너지, 코칭 추천)
-- **Vibrant Purple**: `#BD00FF` (고급 통계, 개인 기록 갱신)
+## 2. 디자인 시스템 토큰
+- **Aurora Background**: 5개의 광원을 사용한 심해 색상과 몽환적인 애니메이션 (배경 블러 25px)
+- **Glassmorphism 3.0**: 
+  - `backdrop-filter: blur(25px)`
+  - `border: 0.5px solid rgba(255, 255, 255, 0.2)`
+  - 'Inner Light' (box-shadow) 효과로 보석 같은 질감 구현
+- **Typography**: 
+  - Headline: **Outfit** (세련미, 가독성)
+  - Body: **Inter** (정밀성, 위계)
 
-## 3. 타이포그래피
-- **Font**: Inter (또는 Roboto)
-- **Heading**: Bold, Tracking -2% (현대적이고 단단한 느낌)
-- **Body**: Regular, Line Height 1.6 (가독성 중점)
+## 3. 컬러 팔레트 (Neon & Aura)
+- **Core Dark**: `#0A0A0C` (심해 배경)
+- **Electric Cyan**: `#00F2FF` (미래적 지표)
+- **Neon Lime**: `#ADFF00` (에너지, 성취)
+- **Royal Amethyst**: `#9D00FF` (전설적 등급, 아우라)
+- **Critical Red**: `#FF005C` (경고, 한계 돌파)
 
-## 4. 컴포넌트 스타일
-- **Cards**: `backdrop-filter: blur(12px)`, `border: 1px solid rgba(255, 255, 255, 0.1)`, `border-radius: 20px`
-- **Buttons**: Gradient borders, Subtle hover scaling (+2%)
-- **Charts**: 네온 그라데이션 라인, Glowing effect
+## 4. RPG UI & 마이크로 인터랙션
+- **Character Card**: 전신 대형 카드 스타일 + 레벨별 가변 아우라 애니메이션
+- **Status Bars**: Speed(Cyan), Stamina(Green), Willpower(Purple) 게이지 시각화
+- **Staggered Reveal**: 페이지/섹션 진입 시 차례대로 떠오르는 애니메이션
+- **Input UX**: +/- 스텝퍼와 직접 타이핑이 결합된 하이브리드 입력
 
 ## 5. 애니메이션 가이드
-- **Transitions**: `cubic-bezier(0.4, 0, 0.2, 1)`, 300ms
-- **Feedback**: 수치 로딩 시 카운트업 애니메이션, 데이터 진입 시 좌측에서 우측으로 페이드인
+- **Timing**: `cubic-bezier(0.23, 1, 0.32, 1)` (빠르고 매끄러운 반응)
+- **Feedback**: 성공 시 Shimmer(빛 반사) 및 Glow(발광) 효과 극대화
