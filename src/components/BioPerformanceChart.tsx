@@ -405,6 +405,9 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
 
         return {
             today,
+            todayPaceStr: today.paceDisplay,
+            todayDistStr: today.distance.toFixed(1),
+            todayWeightStr: today.weight.toFixed(1),
             avgDist,
             avgPaceSec,
             avgWeight,
@@ -446,7 +449,10 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>페이스 효율</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>페이스 효율</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--neon-blue)', background: 'rgba(0, 209, 255, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>{performanceAnalysis.todayPaceStr}/km</span>
+                            </div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                 <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{performanceAnalysis.paceDiffPercent <= 0 ? (Math.abs(performanceAnalysis.paceDiffPercent).toFixed(1) + '% 단축') : (performanceAnalysis.paceDiffPercent.toFixed(1) + '% 지연')}</span>
                                 <span style={{ fontSize: '0.7rem', color: performanceAnalysis.paceDiffPercent <= 0 ? '#00FF85' : '#FF4B4B' }}>
@@ -455,7 +461,10 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                             </div>
                         </div>
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>주행 강도</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>주행 강도</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--neon-green)', background: 'rgba(57, 255, 20, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>{performanceAnalysis.todayDistStr}km</span>
+                            </div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                 <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{performanceAnalysis.distDiffPercent >= 0 ? (performanceAnalysis.distDiffPercent.toFixed(1) + '% 증가') : (Math.abs(performanceAnalysis.distDiffPercent).toFixed(1) + '% 감소')}</span>
                                 <span style={{ fontSize: '0.7rem', color: performanceAnalysis.distDiffPercent >= 0 ? '#00FF85' : '#FF4B4B' }}>
@@ -464,7 +473,10 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                             </div>
                         </div>
                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>바이오 리듬 (체중)</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>바이오 리듬 (체중)</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--vibrant-purple)', background: 'rgba(189, 0, 255, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>{performanceAnalysis.todayWeightStr}kg</span>
+                            </div>
                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                                 <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{performanceAnalysis.weightDiffPercent <= 0 ? (Math.abs(performanceAnalysis.weightDiffPercent).toFixed(1) + '% 감소') : (performanceAnalysis.weightDiffPercent.toFixed(1) + '% 증가')}</span>
                                 <span style={{ fontSize: '0.7rem', color: performanceAnalysis.weightDiffPercent <= 0 ? '#00FF85' : '#888' }}>
