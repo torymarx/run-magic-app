@@ -45,9 +45,9 @@ export const calculateCalories = (distanceKm: number, timeSeconds: number, weigh
     // 속도(km/h)에 따른 간이 MET 적용
     const speedKmh = distanceKm / timeHours;
     let met = 3; // 걷기 수준
-    if (speedKmh > 8) met = 9.8;
-    if (speedKmh > 10) met = 11.5;
-    if (speedKmh > 12) met = 12.8;
+    if (speedKmh >= 8) met = 9.8;
+    if (speedKmh >= 10) met = 11.5;
+    if (speedKmh >= 12) met = 12.8;
 
     return Math.round(met * weightKg * timeHours);
 };

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, ReferenceLine, Label } from 'recharts';
 import { Scale, Zap, Activity, ArrowUpRight, ArrowDownRight, Ruler, ChevronLeft, ChevronRight, Trophy, Clock, Minus, Plus } from 'lucide-react';
 import { parseTimeToSeconds, formatPace, formatSecondsToTime } from '../utils/calculations';
 
@@ -244,12 +244,27 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
     const goalPositionPercent = (goalSeconds / maxTimeInChart) * 100;
 
     const getGoalStatus = (diff: number) => {
-        if (diff <= -10) return { color: '#FFAA00', label: '압도적 달성! 🔥' };
-        if (diff <= 0) return { color: '#FFD700', label: '목표 달성 🏆' };
+        if (diff <= -10) return { color: '#00FFE0', label: '압도적 달성! 🔥' }; // Brighter cyan
+        if (diff <= 0) return { color: '#00FF85', label: '목표 달성 🏆' };
         if (diff <= 10) return { color: '#76EE00', label: '아까워요 😅' };
-        if (diff <= 20) return { color: '#00FF85', label: '일반적 런닝 🏃' };
-        if (diff <= 40) return { color: '#00D1FF', label: '좀 천천히 🍃' };
-        return { color: '#7B61FF', label: '걸었군요 🚶' };
+        if (diff <= 20) return { color: '#FFAA00', label: '일반적 런닝 🏃' };
+        if (diff <= 40) return { color: '#FF4B4B', label: '좀 천천히 🍃' };
+        return { color: '#888', label: '걸었군요 🚶' };
+    };
+
+    // 성과 기반 동적 색상 산출 함수 (낮을수록 밝음)
+    const getDynamicPaceColor = (paceSec: number) => {
+        if (paceSec <= 390) return '#00FFFF'; // 06:30 이하 - 가장 밝은 대청색
+        if (paceSec <= 400) return '#00D1FF'; // 06:40 이하
+        if (paceSec <= 410) return '#00A3FF'; // 06:50 이하
+        return '#0075FF'; // 그 이상 - 차분한 블루
+    };
+
+    const getDynamicWeightColor = (weight: number) => {
+        if (weight <= 75) return '#FF00FF'; // 75kg 이하 - 가장 밝은 마젠타
+        if (weight <= 80) return '#BD00FF'; // 80kg 이하
+        if (weight <= 85) return '#9D00D1'; // 85kg 이하
+        return '#7A00A3'; // 그 이상 - 차분한 퍼플
     };
 
 
@@ -630,38 +645,63 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
             {/* Other Charts (Pace/Weight) */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
                 <div style={{ height: 160 }}>
-                    <p style={{ fontSize: '0.8rem', color: '#BD00FF', marginBottom: '0.5rem' }}><Scale size={14} /> 체중 (kg)</p>
+                    <p style={{ fontSize: '0.8rem', color: performanceAnalysis ? getDynamicWeightColor(performanceAnalysis.today.weight) : '#BD00FF', marginBottom: '0.5rem' }}>
+                        <Scale size={14} /> 체중 (kg)
+                    </p>
                     <ResponsiveContainer>
                         <AreaChart data={chartData} syncId="runMagicSync">
                             <defs>
                                 <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#BD00FF" stopOpacity={0.4} />
-                                    <stop offset="95%" stopColor="#BD00FF" stopOpacity={0} />
+                                    <stop offset="5%" stopColor={performanceAnalysis ? getDynamicWeightColor(performanceAnalysis.today.weight) : '#BD00FF'} stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor={performanceAnalysis ? getDynamicWeightColor(performanceAnalysis.today.weight) : '#BD00FF'} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                             <YAxis domain={domains.weight} hide />
                             <Tooltip content={<CustomTooltip boxType="weight" />} />
-                            <Area type="monotone" dataKey="weight" stroke="#BD00FF" fill="url(#colorWeight)" strokeWidth={2} />
+                            <ReferenceLine y={75} stroke="#FF00FF" strokeDasharray="3 3" opacity={0.5}><Label value="75kg" position="insideRight" fill="#FF00FF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={80} stroke="#BD00FF" strokeDasharray="3 3" opacity={0.3}><Label value="80kg" position="insideRight" fill="#BD00FF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={85} stroke="#9D00D1" strokeDasharray="3 3" opacity={0.2}><Label value="85kg" position="insideRight" fill="#9D00D1" fontSize={10} /></ReferenceLine>
+                            <Area
+                                type="monotone"
+                                dataKey="weight"
+                                stroke={performanceAnalysis ? getDynamicWeightColor(performanceAnalysis.today.weight) : '#BD00FF'}
+                                fill="url(#colorWeight)"
+                                strokeWidth={2}
+                                animationDuration={1000}
+                            />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
 
                 <div style={{ height: 160 }}>
-                    <p style={{ fontSize: '0.8rem', color: '#00D1FF', marginBottom: '0.5rem' }}><Zap size={14} /> 페이스 (초/km)</p>
+                    <p style={{ fontSize: '0.8rem', color: performanceAnalysis ? getDynamicPaceColor(performanceAnalysis.today.paceSeconds) : '#00D1FF', marginBottom: '0.5rem' }}>
+                        <Zap size={14} /> 페이스 (초/km)
+                    </p>
                     <ResponsiveContainer>
                         <AreaChart data={chartData} syncId="runMagicSync">
                             <defs>
                                 <linearGradient id="colorPace" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#00D1FF" stopOpacity={0.4} />
-                                    <stop offset="95%" stopColor="#00D1FF" stopOpacity={0} />
+                                    <stop offset="5%" stopColor={performanceAnalysis ? getDynamicPaceColor(performanceAnalysis.today.paceSeconds) : '#00D1FF'} stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor={performanceAnalysis ? getDynamicPaceColor(performanceAnalysis.today.paceSeconds) : '#00D1FF'} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                             <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" axisLine={false} tickLine={false} style={{ fontSize: '0.7rem' }} />
                             <YAxis reversed domain={domains.pace} hide />
                             <Tooltip content={<CustomTooltip boxType="pace" />} />
-                            <Area type="monotone" dataKey="paceSeconds" stroke="#00D1FF" fill="url(#colorPace)" strokeWidth={2} />
+                            <ReferenceLine y={390} stroke="#00FFFF" strokeDasharray="3 3" opacity={0.5}><Label value="06:30" position="insideRight" fill="#00FFFF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={400} stroke="#00D1FF" strokeDasharray="3 3" opacity={0.4}><Label value="06:40" position="insideRight" fill="#00D1FF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={410} stroke="#00A3FF" strokeDasharray="3 3" opacity={0.3}><Label value="06:50" position="insideRight" fill="#00A3FF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={420} stroke="#0075FF" strokeDasharray="3 3" opacity={0.2}><Label value="07:00" position="insideRight" fill="#0075FF" fontSize={10} /></ReferenceLine>
+                            <Area
+                                type="monotone"
+                                dataKey="paceSeconds"
+                                stroke={performanceAnalysis ? getDynamicPaceColor(performanceAnalysis.today.paceSeconds) : '#00D1FF'}
+                                fill="url(#colorPace)"
+                                strokeWidth={2}
+                                animationDuration={1000}
+                            />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>

@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Map as MapIcon } from 'lucide-react';
 
 // Custom Hooks
 import { useRunTimer } from './hooks/useRunTimer';
@@ -23,6 +22,7 @@ import BioPerformanceChart from './components/BioPerformanceChart';
 import ProfileSection from './components/profile/ProfileSection';
 import AuthSection from './components/AuthSection';
 import LegalNoticeModal from './components/dashboard/LegalNoticeModal';
+import { SyncOverlay, GPSOverlay } from './components/common/Overlays';
 
 function App() {
     // 0. Auth Session & App State Logic
@@ -135,19 +135,7 @@ function App() {
         <div className="app-container" style={{ position: 'relative', minHeight: '100vh', padding: '80px 1rem 2rem 1rem', maxWidth: '1400px', margin: '0 auto' }}>
             <AuroraBackground />
 
-            {/* v12.3: 로그아웃/저장 중 오버레이 */}
-            {isSyncing && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.7)', zIndex: 9999,
-                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                    backdropFilter: 'blur(5px)'
-                }}>
-                    <div className="pulse" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--electric-blue)', marginBottom: '1.5rem' }} />
-                    <p className="neon-text-blue" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>데이터를 구름 요새에 안전하게 보관 중... 🛡️</p>
-                    <p style={{ marginTop: '0.5rem', opacity: 0.7 }}>잠시만 기다려 주세요. 금방 끝납니다!</p>
-                </div>
-            )}
+            <SyncOverlay isVisible={isSyncing} />
 
             <Header
                 isRecording={isRecording}
@@ -239,17 +227,7 @@ function App() {
                         viewingDate={viewingDate}
                         onDateChange={setViewingDate}
                     />
-                    {isRecording && (
-                        <div className="glass-card" style={{
-                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                            background: 'rgba(10, 10, 12, 0.8)', zIndex: 10
-                        }}>
-                            <MapIcon size={48} className="neon-text-blue" style={{ marginBottom: '1rem' }} />
-                            <p className="neon-text-blue" style={{ fontWeight: 'bold' }}>GPS 경로 실시간 추적 중...</p>
-                            <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', opacity: 0.6 }}>런너님의 동선을 감각적으로 그리고 있어요 ✨</p>
-                        </div>
-                    )}
+                    <GPSOverlay isRecording={isRecording} />
                 </div>
 
                 <div className="action-zone reveal delay-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
