@@ -173,10 +173,22 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
         const weights = chartData.map(d => d.weight);
         const paces = chartData.map(d => d.paceSeconds);
         return {
-            weight: [Math.min(...weights) - 0.3, Math.max(...weights) + 0.3],
+            weight: [Math.min(...weights) - 0.5, Math.max(...weights) + 0.5],
             pace: [Math.max(...paces) + 5, Math.min(...paces) - 5]
         };
     }, [chartData]);
+
+    const weightReferenceLines = useMemo(() => {
+        const [w0, w1] = domains.weight;
+        if (typeof w0 !== 'number' || typeof w1 !== 'number') return [];
+        const min = Math.floor(w0 * 2) / 2;
+        const max = Math.ceil(w1 * 2) / 2;
+        const lines = [];
+        for (let w = min; w <= max; w += 0.5) {
+            lines.push(w);
+        }
+        return lines;
+    }, [domains.weight]);
 
 
     // --- Draggable Goal Line Logic ---
@@ -660,11 +672,25 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                             <YAxis domain={domains.weight} hide />
                             <Tooltip content={<CustomTooltip boxType="weight" />} />
-                            <ReferenceLine y={76} stroke="#FF00FF" strokeDasharray="3 3" opacity={0.5}><Label value="76kg" position="insideRight" fill="#FF00FF" fontSize={10} /></ReferenceLine>
-                            <ReferenceLine y={78} stroke="#D100FF" strokeDasharray="3 3" opacity={0.4}><Label value="78kg" position="insideRight" fill="#D100FF" fontSize={10} /></ReferenceLine>
-                            <ReferenceLine y={80} stroke="#BD00FF" strokeDasharray="3 3" opacity={0.3}><Label value="80kg" position="insideRight" fill="#BD00FF" fontSize={10} /></ReferenceLine>
-                            <ReferenceLine y={82} stroke="#9D00D1" strokeDasharray="3 3" opacity={0.2}><Label value="82kg" position="insideRight" fill="#9D00D1" fontSize={10} /></ReferenceLine>
-                            <ReferenceLine y={84} stroke="#7A00A3" strokeDasharray="2 2" opacity={0.2}><Label value="84kg" position="insideRight" fill="#7A00A3" fontSize={10} /></ReferenceLine>
+                            {weightReferenceLines.map(w => {
+                                const isInteger = w % 1 === 0;
+                                return (
+                                    <ReferenceLine
+                                        key={`weight-ref-${w}`}
+                                        y={w}
+                                        stroke={isInteger ? "#BD00FF" : "rgba(189, 0, 255, 0.4)"}
+                                        strokeDasharray={isInteger ? "3 3" : "2 4"}
+                                        opacity={isInteger ? 0.3 : 0.1}
+                                    >
+                                        <Label
+                                            value={`${w.toFixed(1)}kg`}
+                                            position="insideRight"
+                                            fill={isInteger ? "#BD00FF" : "rgba(189, 0, 255, 0.5)"}
+                                            fontSize={isInteger ? 10 : 8}
+                                        />
+                                    </ReferenceLine>
+                                );
+                            })}
                             <Area
                                 type="monotone"
                                 dataKey="weight"
