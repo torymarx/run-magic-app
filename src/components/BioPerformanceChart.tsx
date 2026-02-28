@@ -261,10 +261,11 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
     };
 
     const getDynamicWeightColor = (weight: number) => {
-        if (weight <= 75) return '#FF00FF'; // 75kg 이하 - 가장 밝은 마젠타
-        if (weight <= 80) return '#BD00FF'; // 80kg 이하
-        if (weight <= 85) return '#9D00D1'; // 85kg 이하
-        return '#7A00A3'; // 그 이상 - 차분한 퍼플
+        if (weight <= 76) return '#FF00FF'; // 가장 밝음
+        if (weight <= 78) return '#D100FF';
+        if (weight <= 80) return '#BD00FF';
+        if (weight <= 82) return '#9D00D1';
+        return '#7A00A3'; // 82kg 이상 - 차분함
     };
 
 
@@ -659,9 +660,11 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                             <YAxis domain={domains.weight} hide />
                             <Tooltip content={<CustomTooltip boxType="weight" />} />
-                            <ReferenceLine y={75} stroke="#FF00FF" strokeDasharray="3 3" opacity={0.5}><Label value="75kg" position="insideRight" fill="#FF00FF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={76} stroke="#FF00FF" strokeDasharray="3 3" opacity={0.5}><Label value="76kg" position="insideRight" fill="#FF00FF" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={78} stroke="#D100FF" strokeDasharray="3 3" opacity={0.4}><Label value="78kg" position="insideRight" fill="#D100FF" fontSize={10} /></ReferenceLine>
                             <ReferenceLine y={80} stroke="#BD00FF" strokeDasharray="3 3" opacity={0.3}><Label value="80kg" position="insideRight" fill="#BD00FF" fontSize={10} /></ReferenceLine>
-                            <ReferenceLine y={85} stroke="#9D00D1" strokeDasharray="3 3" opacity={0.2}><Label value="85kg" position="insideRight" fill="#9D00D1" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={82} stroke="#9D00D1" strokeDasharray="3 3" opacity={0.2}><Label value="82kg" position="insideRight" fill="#9D00D1" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={84} stroke="#7A00A3" strokeDasharray="2 2" opacity={0.2}><Label value="84kg" position="insideRight" fill="#7A00A3" fontSize={10} /></ReferenceLine>
                             <Area
                                 type="monotone"
                                 dataKey="weight"
