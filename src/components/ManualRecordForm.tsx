@@ -108,6 +108,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
             ? parseFloat(lastRecord.weight.toString())
             : (profile?.weight ? parseFloat(profile.weight.toString()) : 70.0)
     );
+    const [heartRate, setHeartRate] = useState<number>(lastRecord?.heart_rate ? parseInt(lastRecord.heart_rate) : 120);
+    const [cadence, setCadence] = useState<number>(lastRecord?.cadence ? parseInt(lastRecord.cadence) : 160);
     const [dust, setDust] = useState<string>(lastRecord?.dust || 'good');
     const [memo, setMemo] = useState<string>('');
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -118,14 +120,14 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
     const [originalData, setOriginalData] = useState<any>(null);
 
     const getCurrentFormData = () => ({
-        distance, splits, date, time, weather, condition, temp, weight, dust, memo
+        distance, splits, date, time, weather, condition, temp, weight, heart_rate: heartRate, cadence, dust, memo
     });
 
     const isDirty = useMemo(() => {
         if (!originalData) return false;
         const current = getCurrentFormData();
         return JSON.stringify(current) !== JSON.stringify(originalData);
-    }, [distance, splits, date, time, weather, condition, temp, weight, dust, memo, originalData]);
+    }, [distance, splits, date, time, weather, condition, temp, weight, heartRate, cadence, dust, memo, originalData]);
 
     const splitRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -205,6 +207,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                 ? parseFloat(lastRecord.weight.toString())
                 : (profile?.weight ? parseFloat(profile.weight.toString()) : 70.0)
         );
+        setHeartRate(lastRecord?.heart_rate ? parseInt(lastRecord.heart_rate) : 120);
+        setCadence(lastRecord?.cadence ? parseInt(lastRecord.cadence) : 160);
         setDust(lastRecord?.dust || 'good');
         setMemo('');
 
@@ -218,6 +222,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
             condition: lastRecord?.condition || 'good',
             temp: lastRecord?.temp || 18,
             weight: lastRecord?.weight ? parseFloat(lastRecord.weight.toString()) : 70.0,
+            heart_rate: lastRecord?.heart_rate ? parseInt(lastRecord.heart_rate) : 120,
+            cadence: lastRecord?.cadence ? parseInt(lastRecord.cadence) : 160,
             dust: lastRecord?.dust || 'good',
             memo: ''
         };
@@ -266,6 +272,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                 condition,
                 temp,
                 weight: parseFloat(weight.toString()), // 080.6 방지 및 숫자 보장
+                heart_rate: heartRate ? parseInt(heartRate.toString()) : null,
+                cadence: cadence ? parseInt(cadence.toString()) : null,
                 dust,
                 memo
             });
@@ -296,6 +304,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
         setCondition(r.condition);
         setTemp(r.temp);
         setWeight(parseFloat(r.weight.toString()));
+        setHeartRate(r.heart_rate ? parseInt(r.heart_rate) : 120);
+        setCadence(r.cadence ? parseInt(r.cadence) : 160);
         setDust(r.dust);
         setMemo(r.memo || '');
         setSelectedDate(new Date(r.date));
@@ -310,6 +320,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
             condition: r.condition,
             temp: r.temp,
             weight: parseFloat(r.weight.toString()),
+            heart_rate: r.heart_rate ? parseInt(r.heart_rate) : 120,
+            cadence: r.cadence ? parseInt(r.cadence) : 160,
             dust: r.dust,
             memo: r.memo || ''
         });
@@ -571,6 +583,26 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                                 step={0.1}
                                 unit="kg"
                                 icon={<Scale size={14} />}
+                            />
+                        </div>
+
+                        {/* Performance Details Steppers */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <Stepper
+                                label="평균 심박수"
+                                value={heartRate}
+                                onChange={setHeartRate}
+                                step={1}
+                                unit="bpm"
+                                icon={<Flame size={14} />}
+                            />
+                            <Stepper
+                                label="케이던스"
+                                value={cadence}
+                                onChange={setCadence}
+                                step={1}
+                                unit="spm"
+                                icon={<History size={14} />}
                             />
                         </div>
 

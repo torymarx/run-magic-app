@@ -129,6 +129,18 @@ const RecordResultModal: React.FC<RecordResultModalProps> = ({ record, allRecord
                                     <Flame size={18} /> {record.calories} kcal
                                 </p>
                             </div>
+                            {record.heart_rate && (
+                                <div>
+                                    <p style={{ fontSize: '0.75rem', opacity: 0.6 }}>평균 심박수</p>
+                                    <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF4B4B' }}>{record.heart_rate} bpm</p>
+                                </div>
+                            )}
+                            {record.cadence && (
+                                <div>
+                                    <p style={{ fontSize: '0.75rem', opacity: 0.6 }}>케이던스</p>
+                                    <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#00D1FF' }}>{record.cadence} spm</p>
+                                </div>
+                            )}
                         </div>
 
                         <div style={{
