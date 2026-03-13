@@ -4,7 +4,7 @@
  */
 import React, { useMemo } from 'react';
 import { Trophy, Flag, Medal } from 'lucide-react';
-import { parseTimeToSeconds, formatPace } from '../../utils/calculations';
+import { parseTimeToSeconds, formatPace, getLocalDateString } from '../../utils/calculations';
 
 interface RaceRunner {
     id: string;
@@ -45,7 +45,7 @@ const VirtualRaceTrack: React.FC<VirtualRaceTrackProps> = ({ currentRecord, allR
 
             // 1. 어제의 기록 (현재 기록 날짜 - 1일 기준 검색)
             const d = new Date(currentRecord.date);
-            const yDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1).toISOString().split('T')[0];
+            const yDate = getLocalDateString(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
             const yesterdayRun = allRecords.find(r => r.date === yDate);
 
             // 2. 10일 평균 기록 (현재 기록 날짜 이전의 최신 10개 기록)

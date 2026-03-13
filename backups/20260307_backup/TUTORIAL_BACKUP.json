@@ -1,0 +1,195 @@
+{
+    "profile": {
+        "name": "튜토리얼 런너",
+        "weight": 72.5,
+        "height": 178.0,
+        "goal": "전설의 아크메이지 런킹이 되기 위한 여정! 🏆",
+        "birthdate": "1995-05-15",
+        "gender": "male",
+        "characterId": 3,
+        "updated_at": "2026-02-22T09:00:00.000Z"
+    },
+    "records": [
+        {
+            "id": 1740000000001,
+            "date": "2026-01-05",
+            "totalTime": "00:32:15",
+            "distance": 5.2,
+            "pace": "06:12",
+            "calories": 385,
+            "weather": "sun",
+            "temp": 12,
+            "condition": "good",
+            "dust": "good",
+            "memo": "런매직 첫 시작! 코치들의 조언이 신기하다.",
+            "coachId": "apex",
+            "isImproved": true,
+            "splits": [
+                "06:10",
+                "06:15",
+                "06:12",
+                "06:10",
+                "06:08"
+            ]
+        },
+        {
+            "id": 1740000000002,
+            "date": "2026-01-08",
+            "totalTime": "00:45:30",
+            "distance": 7.5,
+            "pace": "06:04",
+            "calories": 560,
+            "weather": "cloud",
+            "temp": 8,
+            "condition": "great",
+            "dust": "soso",
+            "memo": "Insight 코치가 말한 상체 각도를 신경 써 보았다.",
+            "coachId": "insight",
+            "isImproved": true,
+            "splits": [
+                "06:05",
+                "06:04",
+                "06:03",
+                "06:05",
+                "06:04",
+                "06:02",
+                "06:01"
+            ]
+        },
+        {
+            "id": 1740000000003,
+            "date": "2026-01-12",
+            "totalTime": "01:05:00",
+            "distance": 10.2,
+            "pace": "06:22",
+            "calories": 780,
+            "weather": "snow",
+            "temp": -2,
+            "condition": "soso",
+            "dust": "good",
+            "memo": "Atlas 코치와 함께한 생애 첫 10km! 힘들지만 뿌듯하다.",
+            "coachId": "atlas",
+            "isImproved": false,
+            "splits": [
+                "06:15",
+                "06:18",
+                "06:20",
+                "06:22",
+                "06:25"
+            ]
+        },
+        {
+            "id": 1740000000004,
+            "date": "2026-01-15",
+            "totalTime": "00:28:45",
+            "distance": 5.0,
+            "pace": "05:45",
+            "calories": 410,
+            "weather": "sun",
+            "temp": 5,
+            "condition": "great",
+            "dust": "good",
+            "memo": "Swift 코치의 비트감 있는 조언 덕분에 페이스가 빨라졌다.",
+            "coachId": "swift",
+            "isImproved": true,
+            "splits": [
+                "05:50",
+                "05:48",
+                "05:45",
+                "05:42",
+                "05:40"
+            ]
+        },
+        {
+            "id": 1740000000005,
+            "date": "2026-01-19",
+            "totalTime": "00:35:00",
+            "distance": 5.5,
+            "pace": "06:21",
+            "calories": 390,
+            "weather": "cloud",
+            "temp": 3,
+            "condition": "bad",
+            "dust": "bad",
+            "memo": "컨디션이 안 좋았지만 Zen 코치의 호흡법으로 끝까지 완주.",
+            "coachId": "zen",
+            "isImproved": false,
+            "splits": [
+                "06:20",
+                "06:25",
+                "06:30",
+                "06:15",
+                "06:10"
+            ]
+        },
+        {
+            "id": 1740000000006,
+            "date": "2026-01-22",
+            "totalTime": "00:52:10",
+            "distance": 8.8,
+            "pace": "05:55",
+            "calories": 620,
+            "weather": "sun",
+            "temp": 1,
+            "condition": "good",
+            "dust": "good",
+            "memo": "Marathon 코치가 알려준 미드풋 착지가 익숙해지고 있다.",
+            "coachId": "marathon",
+            "isImproved": true,
+            "splits": [
+                "06:00",
+                "05:58",
+                "05:55",
+                "05:52",
+                "05:50"
+            ]
+        },
+        {
+            "id": 1740000000007,
+            "date": "2026-01-26",
+            "totalTime": "00:40:00",
+            "distance": 6.0,
+            "pace": "06:40",
+            "calories": 420,
+            "weather": "rain",
+            "temp": 4,
+            "condition": "good",
+            "dust": "good",
+            "memo": "Wellness 코치가 제안한 가벼운 회복런.",
+            "coachId": "wellness",
+            "isImproved": false,
+            "splits": [
+                "06:45",
+                "06:40",
+                "06:35",
+                "06:40",
+                "06:45",
+                "06:50"
+            ]
+        },
+        {
+            "id": 1740000000008,
+            "date": "2026-01-30",
+            "totalTime": "00:58:00",
+            "distance": 10.5,
+            "pace": "05:31",
+            "calories": 810,
+            "weather": "sun",
+            "temp": 2,
+            "condition": "great",
+            "dust": "good",
+            "memo": "Apex 코치가 제안한 빌드업 질주 성공!",
+            "coachId": "apex",
+            "isImproved": true,
+            "splits": [
+                "05:50",
+                "05:40",
+                "05:30",
+                "05:20",
+                "05:10"
+            ]
+        }
+    ],
+    "exportedAt": "2026-02-22T18:50:00.000Z",
+    "version": "12.0"
+}

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTime, parseTimeToSeconds } from '../utils/calculations';
+import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTime, parseTimeToSeconds, getLocalDateString } from '../utils/calculations';
 import { MEDAL_DATA } from '../data/medals';
 import { LEVEL_DATA, POINT_RULES } from '../data/progression';
 
@@ -52,8 +52,7 @@ export const useRecordManager = (
 
         const dates = [...new Set(data.map(r => r.date))].sort().reverse();
         const getLocalDateStr = (d: Date) => {
-            const offset = d.getTimezoneOffset() * 60000;
-            return new Date(d.getTime() - offset).toISOString().split('T')[0];
+            return getLocalDateString(d);
         };
         const today = getLocalDateStr(new Date());
         const yesterday = getLocalDateStr(new Date(Date.now() - 86400000));
@@ -104,7 +103,7 @@ export const useRecordManager = (
             ? Math.min(...monthlyRecords.map(r => getPaceSeconds(r.pace)))
             : null;
 
-        const yesterdayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString().split('T')[0];
+        const yesterdayStr = getLocalDateString(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
         const yesterdayRecord = data.find(r => r.date === yesterdayStr);
 
         let monthlyAvgPace = null;
@@ -168,7 +167,7 @@ export const useRecordManager = (
 
             // 1. 어제의 기록 (현재 기록 날짜 - 1일 기준 검색)
             const d = new Date(data.date);
-            const yDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1).toISOString().split('T')[0];
+            const yDate = getLocalDateString(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
             const yesterdayRun = records.find(r => r.date === yDate);
 
             // 2. 10일 평균 기록 (현재 기록 날짜 이전의 최신 10개 기록)
@@ -295,7 +294,7 @@ export const useRecordManager = (
                 // Phase 1
                 case 'm1':
                     isUnlocked = true;
-                    achievementDate = data.length > 0 ? chronologicalData[0].date : new Date().toISOString().split('T')[0];
+                    achievementDate = data.length > 0 ? chronologicalData[0].date : getLocalDateString(new Date());
                     break;
                 case 'm2':
                     const d2 = findFirstOccurrence(r => r.distance >= 1);

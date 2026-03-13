@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, ReferenceLine, Label } from 'recharts';
 import { Scale, Zap, Activity, ArrowUpRight, ArrowDownRight, Ruler, ChevronLeft, ChevronRight, Trophy, Clock, Minus, Plus } from 'lucide-react';
-import { parseTimeToSeconds, formatPace, formatSecondsToTime } from '../utils/calculations';
+import { parseTimeToSeconds, formatPace, formatSecondsToTime, getLocalDateString } from '../utils/calculations';
 
 interface BioPerformanceChartProps {
     records: any[];
@@ -135,7 +135,7 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
         if (!Array.isArray(records) || records.length === 0) return { totalDist: 0, avgPace: "00:00", avgWeight: 0, totalSessions: 0 };
 
         // 1. Total Cumulative Distance (From 2026-01-01 to Anchor Date)
-        const anchorDateStr = anchorDate.toISOString().split('T')[0];
+        const anchorDateStr = getLocalDateString(anchorDate);
         const totalDist = records
             .filter(r => r.date >= '2026-01-01' && r.date <= anchorDateStr)
             .reduce((acc, curr) => acc + (parseFloat(curr.distance?.toString() || "0")), 0);

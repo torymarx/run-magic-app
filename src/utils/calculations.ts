@@ -1,4 +1,13 @@
 /**
+ * KST(한국 시간) 등 로컬 시간대 기준으로 YYYY-MM-DD 형식의 문자열을 반환합니다.
+ * UTC 기준으로 잘라버리면 한국 시간 오전 9시 이전은 하루 전날로 계산되는 버그 방지용
+ */
+export const getLocalDateString = (d: Date = new Date()): string => {
+    const offset = d.getTimezoneOffset() * 60000; // milliseconds
+    return new Date(d.getTime() - offset).toISOString().split('T')[0];
+};
+
+/**
  * MM:SS 형식의 문자열을 초 단위 숫자로 변환합니다.
  */
 export const parseTimeToSeconds = (timeStr: string): number => {
