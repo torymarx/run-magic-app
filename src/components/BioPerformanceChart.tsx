@@ -132,13 +132,14 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
     }, [records, anchorDate]);
 
     const stats = useMemo(() => {
-        if (!Array.isArray(records) || records.length === 0) return { totalDist: 0, avgPace: "00:00", avgWeight: 0, totalSessions: 0 };
+        if (!Array.isArray(records) || records.length === 0) return { totalDist: 0, avgPace: "00:00", avgWeight: 0, totalSessions: 0, globalTotalSessions: 0 };
 
         // 1. Total Cumulative Distance (From 2026-01-01 to Anchor Date)
         const anchorDateStr = getLocalDateString(anchorDate);
-        const totalDist = records
-            .filter(r => r.date >= '2026-01-01' && r.date <= anchorDateStr)
-            .reduce((acc, curr) => acc + (parseFloat(curr.distance?.toString() || "0")), 0);
+
+        const validRecords = records.filter(r => r.date >= '2026-01-01' && r.date <= anchorDateStr);
+        const totalDist = validRecords.reduce((acc, curr) => acc + (parseFloat(curr.distance?.toString() || "0")), 0);
+        const globalTotalSessions = validRecords.length;
 
         // 2. Averages & Counts (Based on CURRENT VIEW - chartData)
         if (chartData.length === 0) {
@@ -146,7 +147,8 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                 totalDist: totalDist.toFixed(1),
                 avgPace: "00:00",
                 avgWeight: 0,
-                totalSessions: 0
+                totalSessions: 0,
+                globalTotalSessions
             };
         }
 
@@ -164,7 +166,8 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
             totalDist: totalDist.toFixed(1), // Global Cumulative to anchorDate
             avgPace: formatPace(avgPaceSec), // Local Avg
             avgWeight: avgWeight.toFixed(1), // Local Avg
-            totalSessions, // Local Count
+            totalSessions, // Local (Monthly) Count
+            globalTotalSessions // Global Count (from 2026-01-01)
         };
     }, [chartData, records, anchorDate]);
 
@@ -539,7 +542,14 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                 />
                 <SummaryCard icon={Zap} label="평균 페이스" value={stats.avgPace} unit="/km" color="#00D1FF" diff={weeklyComparison.paceDiff} />
                 <SummaryCard icon={Scale} label="평균 체중" value={stats.avgWeight} unit="kg" color="#BD00FF" diff={weeklyComparison.weightDiff} />
-                <SummaryCard icon={Trophy} label="총 세션" value={stats.totalSessions} unit="회" color="#FFD700" />
+                <SummaryCard
+                    icon={Trophy}
+                    label="총 러닝 횟수"
+                    value={stats.totalSessions}
+                    unit="회"
+                    color="#FFD700"
+                    subText={`해당 월 / 2026년 총 ${stats.globalTotalSessions || 0}회`}
+                />
             </div>
 
             {/* Interactive Running Time Chart */}
