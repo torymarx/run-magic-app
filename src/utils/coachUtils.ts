@@ -6,6 +6,7 @@ export type RunnerProfile = 'AEROBIC_SIEVE' | 'MECHANICAL_BRAKE' | 'FATIGUE_SIGN
  * 런싱크 4.0 알고리즘 기반 러너 프로파일 진단
  */
 export const diagnoseRunnerProfile = (record: any): RunnerProfile => {
+    if (!record) return 'UNKNOWN';
     const { heart_rate: hr, cadence: cad, pace_seconds: pace, weight } = record;
     
     if (!hr || !cad || !pace) return 'UNKNOWN';
@@ -35,6 +36,7 @@ export const diagnoseRunnerProfile = (record: any): RunnerProfile => {
  * 기록 데이터를 바탕으로 선택된 코치의 맞춤 조언 메시지를 생성합니다.
  */
 export const getCoachAdvice = (record: any, coach: Coach): string => {
+    if (!record) return '기 기록 데이터를 기다리고 있습니다. ✨';
     const { temp, condition, isImproved, distance, weight } = record;
 
     // 1. 특수 상황 (기온)
