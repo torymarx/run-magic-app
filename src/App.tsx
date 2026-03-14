@@ -98,7 +98,7 @@ function App() {
 
     // 5. AI Coach System Logic
     const levelInfo = calculateLevelInfo(points);
-    const { message: coachMessage, recommendation, periodStats } = useAICoachSystem(
+    const { message: coachMessage, recommendation, periodStats, runnerProfile } = useAICoachSystem(
         selectedCoach.id,
         isRecording,
         distance,
@@ -196,6 +196,7 @@ function App() {
                     coachMessage={coachMessage}
                     recommendation={recommendation}
                     periodStats={periodStats}
+                    runnerProfile={runnerProfile}
                     onClose={() => setShowCoachReport(false)}
                 />
             )}

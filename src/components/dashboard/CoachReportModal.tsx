@@ -11,11 +11,12 @@ interface CoachReportModalProps {
         mental: string;
     };
     periodStats: any;
+    runnerProfile?: string;
     onClose: () => void;
 }
 
 const CoachReportModal: React.FC<CoachReportModalProps> = ({
-    coach, coachMessage, recommendation, periodStats, onClose
+    coach, coachMessage, recommendation, periodStats, runnerProfile, onClose
 }) => {
     return (
         <div style={{
@@ -91,6 +92,24 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                             }}>
                                 {coach.tendency}
                             </span>
+                            {runnerProfile && runnerProfile !== 'UNKNOWN' && (
+                                <span style={{
+                                    fontSize: '0.7rem',
+                                    padding: '2px 10px',
+                                    borderRadius: '20px',
+                                    background: 'rgba(255, 255, 255, 0.1)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    color: '#fff',
+                                    fontWeight: 'bold'
+                                }}>
+                                    진단: {
+                                        runnerProfile === 'AEROBIC_SIEVE' ? '유산소 누수형' :
+                                        runnerProfile === 'MECHANICAL_BRAKE' ? '기계적 브레이크형' :
+                                        runnerProfile === 'FATIGUE_SIGNATURE' ? '후반 붕괴형' :
+                                        runnerProfile === 'EFFICIENT' ? '효율적 엔진형' : runnerProfile
+                                    }
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -127,8 +146,10 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                                     <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: coach.color }}>{periodStats.avgPaceStr}</p>
                                 </div>
                                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                                    <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.6rem' }}>세션 횟수</p>
-                                    <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: coach.color }}>{periodStats.count}<span style={{ fontSize: '0.8rem', marginLeft: '2px' }}>회</span></p>
+                                    <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.6rem' }}>최근 심박 / 케이던스</p>
+                                    <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: coach.color }}>
+                                        {periodStats.lastHeartRate || '-'}<span style={{ fontSize: '0.7rem', opacity: 0.5 }}>bpm</span> / {periodStats.lastCadence || '-'}<span style={{ fontSize: '0.7rem', opacity: 0.5 }}>spm</span>
+                                    </p>
                                 </div>
                             </div>
                         )}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCoachAdvice } from '../coachUtils';
+import { getCoachAdvice, diagnoseRunnerProfile } from '../coachUtils';
 import { Coach } from '../../data/coaches';
 
 describe('coachUtils - getCoachAdvice', () => {
@@ -17,6 +17,57 @@ describe('coachUtils - getCoachAdvice', () => {
         expect(getCoachAdvice(record, mockCoachMental)).toContain('환경 적응력');
 
         expect(getCoachAdvice(record, mockCoachIntel)).toContain('대사 효율');
+    });
+
+    it('심박수가 높을 때 적절한 경고 및 격려 메시지를 반환한다', () => {
+        const highHrRecord = { heart_rate: 180, distance: 5, weight: 70 };
+        const mockWellnessCoach: Coach = { id: 'wellness', name: 'Wellness', emoji: '🌿', role: '부상 관리', color: '#4bff4b', themeColor: 'rgba(75, 255, 75, 0.2)', tendency: 'mental', message: 'test' };
+
+        const advice = getCoachAdvice(highHrRecord, mockWellnessCoach);
+        expect(advice).toContain('심박수');
+    });
+
+    it('should diagnose Aerobic Sieve profile', () => {
+        const aerobicSieveRecord = {
+            heart_rate: 170,
+            pace_seconds: 450, // 7:30 pace
+            cadence: 165,
+            weight: 85
+        };
+        const profile = diagnoseRunnerProfile(aerobicSieveRecord);
+        expect(profile).toBe('AEROBIC_SIEVE');
+    });
+
+    it('should diagnose Mechanical Brake profile', () => {
+        const mechanicalBrakeRecord = {
+            heart_rate: 140,
+            pace_seconds: 300, // 5:00 pace
+            cadence: 155, // Low cadence
+            weight: 75
+        };
+        const profile = diagnoseRunnerProfile(mechanicalBrakeRecord);
+        expect(profile).toBe('MECHANICAL_BRAKE');
+    });
+
+    it('should provide Run-Sync specific advice for Mechanical Brake', () => {
+        const mechanicalBrakeRecord = {
+            heart_rate: 140,
+            pace_seconds: 300,
+            cadence: 155,
+            weight: 75
+        };
+        const mockHardCoach: Coach = {
+            id: 'apex',
+            name: 'Apex',
+            emoji: '🦾',
+            role: 'Tester',
+            color: '#ff0000',
+            message: 'test',
+            tendency: 'hard',
+            themeColor: 'rgba(0,0,0,0)'
+        };
+        const advice = getCoachAdvice(mechanicalBrakeRecord, mockHardCoach);
+        expect(advice).toContain('기계적 브레이크형');
     });
 
     it('0도 이하의 혹한 상황에서 코치 성향에 맞는 조언을 반환한다', () => {
@@ -52,5 +103,28 @@ describe('coachUtils - getCoachAdvice', () => {
         expect(getCoachAdvice(record, mockCoachHard)).toContain('[고강도 처방]');
         expect(getCoachAdvice(record, mockCoachIntel)).toContain('[생체역학 분석]');
         expect(getCoachAdvice(record, mockCoachMental)).toContain('[회복 및 예방]');
+    });
+
+    it('심박수가 높을 때 적절한 경고 및 격려 메시지를 반환한다', () => {
+        const record = { heart_rate: 180, distance: 5, weight: 70 };
+
+        // Profile comparison takes priority, but individual HR advice is professionalized
+        expect(getCoachAdvice(record, mockCoachHard)).toContain('유산소 디커플링');
+    });
+
+    it('케이던스가 최적 범위일 때 칭찬 메시지를 반환한다', () => {
+        const record = { cadence: 180, heart_rate: 140, pace_seconds: 360, distance: 10, weight: 70 };
+        const mockCoachPacer: Coach = { id: 'marathon', name: 'Marathon', emoji: '🏃‍♂️', role: '러닝', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'pacer', message: 'test' };
+
+        // Matches EFFICIENT profile
+        expect(getCoachAdvice(record, mockCoachPacer)).toContain('효율적 엔진형');
+        expect(getCoachAdvice(record, mockCoachPacer)).toContain('180spm');
+    });
+
+    it('케이던스가 낮을 때 개선 방향을 제시한다', () => {
+        const record = { cadence: 150, distance: 5, weight: 70 };
+
+        expect(getCoachAdvice(record, mockCoachIntel)).toContain('수직 충격 부하');
+        expect(getCoachAdvice(record, mockCoachIntel)).toContain('보폭을 줄이고 회전수');
     });
 });
