@@ -232,12 +232,35 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({ records, onDelete, on
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', fontSize: '0.75rem', opacity: 0.9, marginBottom: '0.8rem' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>📏 {r.distance}km</span>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>⚡ {r.pace}</span>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>🔥 {r.calories}</span>
-                                    {r.heart_rate && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#FF4B4B' }}><Flame size={12} /> {r.heart_rate}</span>}
-                                    {r.cadence && <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#FFD700' }}><HistIcon size={12} /> {r.cadence}</span>}
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(3, 1fr)', 
+                                    gap: '0.5rem', 
+                                    alignItems: 'center', 
+                                    width: '100%', 
+                                    fontSize: '0.75rem', 
+                                    opacity: 0.9, 
+                                    marginBottom: '0.8rem' 
+                                }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ width: '16px', display: 'flex', justifyContent: 'center' }}>📏</span> {r.distance}km
+                                    </span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ width: '16px', display: 'flex', justifyContent: 'center' }}>⚡</span> {r.pace}
+                                    </span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ width: '16px', display: 'flex', justifyContent: 'center' }}>🔥</span> {r.calories}
+                                    </span>
+                                    {r.heart_rate && (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#FF4B4B' }}>
+                                            <span style={{ width: '16px', display: 'flex', justifyContent: 'center' }}><Flame size={12} /></span> {r.heart_rate}
+                                        </span>
+                                    )}
+                                    {r.cadence && (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#FFD700' }}>
+                                            <span style={{ width: '16px', display: 'flex', justifyContent: 'center' }}><HistIcon size={12} /></span> {r.cadence}
+                                        </span>
+                                    )}
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <button
