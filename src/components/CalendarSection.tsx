@@ -1,7 +1,7 @@
 import React from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Trash2, Plus, History as HistIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Trash2, Plus, History as HistIcon, Flame } from 'lucide-react';
 import { parseTimeToSeconds, formatSecondsToTime } from '../utils/calculations';
 
 interface Record {
@@ -19,6 +19,8 @@ interface Record {
     memo?: string;
     isImproved?: boolean;
     paceDiff?: string;
+    heart_rate?: number | string;
+    cadence?: number | string;
 }
 
 interface CalendarSectionProps {
@@ -230,10 +232,12 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({ records, onDelete, on
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', fontSize: '0.8rem', opacity: 0.8, marginBottom: '0.8rem' }}>
-                                    <div>📏 {r.distance}km</div>
-                                    <div>⚡ {r.pace}</div>
-                                    <div>🔥 {r.calories}kcal</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', fontSize: '0.8rem', opacity: 0.8, marginBottom: '0.8rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ textAlign: 'center' }}>📏</div> {r.distance}km</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ textAlign: 'center' }}>⚡</div> {r.pace}</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ textAlign: 'center' }}>🔥</div> {r.calories}kcal</div>
+                                    {r.heart_rate && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#FF4B4B' }}><Flame size={12} /> {r.heart_rate}bpm</div>}
+                                    {r.cadence && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#FFD700' }}><HistIcon size={12} /> {r.cadence}spm</div>}
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <button
