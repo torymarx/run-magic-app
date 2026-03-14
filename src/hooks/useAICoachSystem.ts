@@ -44,14 +44,16 @@ export const useAICoachSystem = (
         return { count: recentRecords.length, avgPaceSec, avgPaceStr: formatPace(avgPaceSec) };
     }, [records]);
 
-    // 3. 당일 성과 (Today): 현재 세션의 임계치 분석
+    // 3. 당일 성과 (Today): 현재 세션의 임계치 분석 (+ 심박/케이던스 추가)
     const todayStats = useMemo(() => {
         if (lastSavedRecord) {
             return {
                 paceSec: parseTimeToSeconds(lastSavedRecord.pace),
                 distance: lastSavedRecord.distance,
                 isImproved: lastSavedRecord.isImproved,
-                paceStr: lastSavedRecord.pace
+                paceStr: lastSavedRecord.pace,
+                heartRate: lastSavedRecord.heart_rate || lastSavedRecord.hr,
+                cadence: lastSavedRecord.cadence || lastSavedRecord.cad
             };
         }
         return null;
@@ -106,9 +108,9 @@ export const useAICoachSystem = (
                     rect: {
                         title: todayStats ? `오늘의 전술적 질주 분석 & 처방` : "전설적 레벨 도약을 위한 고강도 처방",
                         detail: todayStats
-                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 당신의 잠재력을 증명했습니다. 특히 후반부 가속력은 '${levelInfo?.nextLevelName}'로 가기 위한 핵심 열쇠입니다. 내일은 초회복을 위해 딥 슬립과 단백질 섭취에 집중하세요.`
+                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}, 심박수 ${todayStats.heartRate || 'N/A'}, 케이던스 ${todayStats.cadence || 'N/A'})은 당신의 잠재력을 증명했습니다. 특히 고케이던스와 안정적인 심박수는 '${levelInfo?.nextLevelName}'로 가기 위한 핵심 열쇠입니다.`
                             : `현재 레벨(${levelInfo?.level})에서 '${levelInfo?.nextLevelName}'로의 진화는 임계치 훈련량에 달려 있습니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 400m 전력 질주와 200m 조깅을 8회 반복하는 인터벌 세션을 반드시 포함하십시오.`,
-                        insight: `신체 조건(${profile?.weight}kg/${profile?.height}cm) 분석 결과, 둔근의 파워 전달력이 우수합니다. 오르막 주행을 주 1회 추가하면 폭발적인 가속력을 얻을 수 있습니다.`,
+                        insight: `최근 데이터(심박수: ${todayStats?.heartRate || 'N/A'}, 케이던스: ${todayStats?.cadence || 'N/A'}) 분석 결과, 둔근의 파워 전달력이 우수합니다. 심박존을 Z3-Z4로 의도적으로 올리는 훈련을 주 1회 추가하면 폭발적인 가속력을 얻을 수 있습니다.`,
                         mental: "고통은 한계를 뚫고 나가는 소리입니다. 그 소리를 즐기는 자만이 정상의 공기를 마실 수 있습니다."
                     }
                 },
@@ -119,7 +121,7 @@ export const useAICoachSystem = (
                         detail: todayStats
                             ? `오늘 페이스(${todayStats.paceStr})를 최근 7일 평균과 비교했을 때, 에너지 효율은 3.2% 향상되었습니다. "${runnerGoal}" 달성을 위해서는 심박수 변동성을 조금 더 좁히는 훈련이 효과적일 것입니다.`
                             : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 물리 법칙의 적용이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 데이터 패턴을 볼 때, 5km 지점 이후의 피치 저하가 관찰됩니다. 보완을 위해 런지 및 플랭크 기반의 코어 보강 운동을 주 3회 권장합니다.`,
-                        insight: `BMI 및 체성분 예측 분석 결과, 관절에 가해지는 동적 부하가 최적 범위 내에 있습니다. 착지 시 골반의 수평 유지를 1cm만 더 신경 쓰면 에너지 손실을 8% 줄일 수 있습니다.`,
+                        insight: `최근 주행의 심박수(${todayStats?.heartRate || '측정 불가'}) 및 케이던스(${todayStats?.cadence || '측정 불가'})를 분석한 결과, 관절에 가해지는 동적 부하가 최적 범위 내에 있습니다. 착지 시 골반의 수평 유지를 1cm만 더 신경 쓰면 효율을 더 높일 수 있습니다.`,
                         mental: "숫자는 거짓말을 하지 않으며, 기록은 당신의 헌신을 투영하는 거울입니다. 데이터 속에 답이 있습니다."
                     }
                 },
@@ -130,7 +132,7 @@ export const useAICoachSystem = (
                         detail: todayStats
                             ? `오늘 ${todayStats.distance}km를 한 마리의 나비처럼 가볍게 달리신 것 같아 제 마음도 훈훈해집니다. "${runnerGoal}"이라는 소중한 꿈을 향해, 당신만의 아름다운 속도로 아주 잘 가고 계세요.`
                             : `"${runnerGoal}"이라는 꿈을 이루기 위해 가장 중요한 것은 지치지 않는 마음입니다. 최근 7일간의 주행(${recentStats?.count || 0}회)을 통해 당신의 성실함을 확인했습니다. 이번 주는 따뜻한 차 한 잔과 함께 충분한 명상, 그리고 종아리 스트레칭으로 몸의 긴장을 보듬어주는 시간을 가져보세요.`,
-                        insight: `현재 ${profile?.weight}kg의 신체 밸런스는 매우 유연한 상태입니다. 하지만 과도한 추격보다는 느린 조깅을 통해 모세혈관 발달을 돕는 것이 장기적인 기초 체력 형성에 훨씬 이롭습니다.`,
+                        insight: `심박수(${todayStats?.heartRate || '측정 안됨'})와 케이던스(${todayStats?.cadence || '측정 안됨'}) 데이터는 장기적 생체 밸런스의 지표입니다. 현재 신체 밸런스는 매우 유연한 상태이며, 과도한 목표 압박보다는 느린 조깅으로 기초 체력을 다지는 것이 좋습니다.`,
                         mental: "빨리 가는 것보다 중요한 것은 끝까지 가는 것이며, 함께 가는 것입니다. 당신의 속도는 이미 충분히 빛나고 있습니다."
                     }
                 }

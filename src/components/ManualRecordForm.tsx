@@ -3,7 +3,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import {
     Plus, Trash2, Save, X, Clock, Sun, Cloud,
-    CloudRain, Snowflake, Smile, Meh, Frown, Thermometer, Scale, Wind
+    CloudRain, Snowflake, Smile, Meh, Frown, Thermometer, Scale, Wind, Flame, History
 } from 'lucide-react';
 
 interface ManualRecordFormProps {
@@ -566,7 +566,27 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                             />
                         </div>
 
-                        {/* Bio-Data Steppers */}
+                        {/* Core Performance Metrics */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <Stepper
+                                label="평균 심박수"
+                                value={heartRate}
+                                onChange={setHeartRate}
+                                step={1}
+                                unit="bpm"
+                                icon={<Flame size={14} color="#FF4B4B" />}
+                            />
+                            <Stepper
+                                label="케이던스"
+                                value={cadence}
+                                onChange={setCadence}
+                                step={1}
+                                unit="spm"
+                                icon={<History size={14} color="#FFD700" />}
+                            />
+                        </div>
+
+                        {/* Bio & Environment Steppers */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                             <Stepper
                                 label="기온"
@@ -583,26 +603,6 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                                 step={0.1}
                                 unit="kg"
                                 icon={<Scale size={14} />}
-                            />
-                        </div>
-
-                        {/* Performance Details Steppers */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                            <Stepper
-                                label="평균 심박수"
-                                value={heartRate}
-                                onChange={setHeartRate}
-                                step={1}
-                                unit="bpm"
-                                icon={<Flame size={14} />}
-                            />
-                            <Stepper
-                                label="케이던스"
-                                value={cadence}
-                                onChange={setCadence}
-                                step={1}
-                                unit="spm"
-                                icon={<History size={14} />}
                             />
                         </div>
 

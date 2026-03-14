@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, ReferenceLine, Label } from 'recharts';
-import { Scale, Zap, Activity, ArrowUpRight, ArrowDownRight, Ruler, ChevronLeft, ChevronRight, Trophy, Clock, Minus, Plus } from 'lucide-react';
-import { parseTimeToSeconds, formatPace, formatSecondsToTime, getLocalDateString } from '../utils/calculations';
+import React, { useState, useMemo, useEffect } from 'react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, ResponsiveContainer, Label } from 'recharts';
+import { Flame, History, ArrowUpRight, ArrowDownRight, Minus, Activity, ChevronLeft, ChevronRight, Zap, Scale, Trophy, Ruler } from 'lucide-react';
+import { parseTimeToSeconds, formatPace, getLocalDateString } from '../utils/calculations';
 
 interface BioPerformanceChartProps {
     records: any[];
@@ -47,26 +47,23 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
             })
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        return filtered.map((r, index) => {
-            const prev = index > 0 ? filtered[index - 1] : null;
-
-            const currentWeight = parseFloat(r.weight?.toString() || "0");
-            const prevWeight = prev ? parseFloat(prev.weight?.toString() || "0") : currentWeight;
-
-            const currentPaceSec = parseTimeToSeconds(r.pace);
-            const prevPaceSec = prev ? parseTimeToSeconds(prev.pace) : currentPaceSec;
+        return filtered.map((r) => {
+            const paceSeconds = parseTimeToSeconds(r.pace);
+            const weight = parseFloat(r.weight?.toString() || "0");
+            const hr = r.heart_rate ? parseInt(r.heart_rate.toString(), 10) : null;
+            const cad = r.cadence ? parseInt(r.cadence.toString(), 10) : null;
+            const totalTimeSeconds = parseTimeToSeconds(r.totalTime);
 
             return {
                 date: r.date.split('-').slice(1).join('/'),
                 fullDate: r.date,
-                weight: currentWeight,
-                weightChange: currentWeight - prevWeight, // Daily Diff
-                paceSeconds: currentPaceSec,
+                weight: weight,
+                paceSeconds: paceSeconds,
                 paceDisplay: r.pace,
-                paceChange: currentPaceSec - prevPaceSec, // Daily Diff
                 distance: parseFloat(r.distance?.toString() || "0"),
-                totalTimeSeconds: parseTimeToSeconds(r.totalTime),
-                calories: r.calories
+                totalTimeSeconds: totalTimeSeconds,
+                hr: hr,
+                cad: cad
             };
         });
     }, [records, viewingDate]);
@@ -172,12 +169,17 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
     }, [chartData, records, anchorDate]);
 
     const domains = useMemo(() => {
-        if (chartData.length === 0) return { weight: ['auto', 'auto'], pace: ['auto', 'auto'] };
+        if (chartData.length === 0) return { weight: ['auto', 'auto'], pace: ['auto', 'auto'], hr: ['auto', 'auto'], cad: ['auto', 'auto'] };
         const weights = chartData.map(d => d.weight);
         const paces = chartData.map(d => d.paceSeconds);
+        const hrs = chartData.map(d => d.hr || 0).filter(v => v > 0);
+        const cads = chartData.map(d => d.cad || 0).filter(v => v > 0);
+
         return {
             weight: [Math.min(...weights) - 0.5, Math.max(...weights) + 0.5],
-            pace: [Math.max(...paces) + 5, Math.min(...paces) - 5]
+            pace: [Math.max(...paces) + 5, Math.min(...paces) - 5],
+            hr: hrs.length ? [Math.max(60, Math.min(...hrs) - 10), Math.max(...hrs) + 10] : [100, 180],
+            cad: cads.length ? [Math.max(120, Math.min(...cads) - 10), Math.max(...cads) + 10] : [140, 200]
         };
     }, [chartData]);
 
@@ -194,79 +196,7 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
     }, [domains.weight]);
 
 
-    // --- Draggable Goal Line Logic ---
-    const [goalSeconds, setGoalSeconds] = useState(() => {
-        const saved = localStorage.getItem('run-magic-goal-time');
-        return saved ? parseInt(saved, 10) : 1200; // Default 20 min
-    });
-
-    useEffect(() => {
-        localStorage.setItem('run-magic-goal-time', goalSeconds.toString());
-    }, [goalSeconds]);
-
-    // Calculate Max Time for Chart Domain
-    const maxTimeInChart = useMemo(() => {
-        if (chartData.length === 0) return 3600;
-        const max = Math.max(...chartData.map(d => d.totalTimeSeconds));
-        return Math.max(max * 1.2, goalSeconds * 1.2, 1800);
-    }, [chartData, goalSeconds]);
-
-    const chartContainerRef = useRef<HTMLDivElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        setIsDragging(true);
-        e.preventDefault();
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isDragging || !chartContainerRef.current) return;
-
-            const { top, height } = chartContainerRef.current.getBoundingClientRect();
-            // const relativeY = top + height - e.clientY; // Unused
-
-            // Fix: handle relativeY correctly when scrolling or resizing
-            // Actually, clientY is viewport relative. BoundingRect is also viewport relative.
-            // But we need to check if 'top' changes.
-            // Using standard logic:
-            const yInContainer = e.clientY - top;
-            const yFromBottom = height - yInContainer;
-
-            let ratio = yFromBottom / height;
-            if (ratio < 0) ratio = 0;
-            if (ratio > 1) ratio = 1;
-
-            const newGoal = Math.round(ratio * maxTimeInChart);
-            const snappedGoal = Math.round(newGoal / 10) * 10;
-            setGoalSeconds(Math.max(600, snappedGoal));
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, maxTimeInChart]);
-
-    const goalPositionPercent = (goalSeconds / maxTimeInChart) * 100;
-
-    const getGoalStatus = (diff: number) => {
-        if (diff <= -10) return { color: '#00FFE0', label: '압도적 달성! 🔥' }; // Brighter cyan
-        if (diff <= 0) return { color: '#00FF85', label: '목표 달성 🏆' };
-        if (diff <= 10) return { color: '#76EE00', label: '아까워요 😅' };
-        if (diff <= 20) return { color: '#FFAA00', label: '일반적 런닝 🏃' };
-        if (diff <= 40) return { color: '#FF4B4B', label: '좀 천천히 🍃' };
-        return { color: '#888', label: '걸었군요 🚶' };
-    };
-
+    // --- Draggable Goal Line Logic REMOVED ---
     // 성과 기반 동적 색상 산출 함수 (낮을수록 밝음)
     const getDynamicPaceColor = (paceSec: number) => {
         if (paceSec <= 390) return '#00FFFF'; // 06:30 이하 - 가장 밝은 대청색
@@ -344,76 +274,74 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
     };
 
     // Updated Tooltip to handle specific types
-    const CustomTooltip = ({ active, payload, label, boxType }: any) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
+    const CustomTooltip = ({ active, payload, boxType }: any) => {
+        if (!active || !payload || !payload.length) return null;
 
-            // Common Container
-            const Container = ({ children }: any) => (
-                <div style={{ background: 'rgba(10, 10, 12, 0.95)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <p style={{ color: 'white', fontWeight: 'bold', marginBottom: '5px', fontSize: '0.85rem' }}>{label}</p>
-                    {children}
-                </div>
+        const data = payload[0].payload;
+
+        // Common Container
+        const Container = ({ children }: any) => (
+            <div style={{ background: 'rgba(10, 10, 12, 0.95)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <p style={{ color: 'white', fontWeight: 'bold', marginBottom: '5px', fontSize: '0.85rem' }}>{data.fullDate}</p>
+                {children}
+            </div>
+        );
+
+        if (boxType === 'hr') {
+            return (
+                <Container>
+                    <p style={{ color: '#FF4B4B', fontSize: '1rem', fontWeight: 'bold' }}>❤️ {data.hr} bpm</p>
+                </Container>
             );
-
-            // 1. Time Tooltip (Goal Comparison)
-            if (boxType === 'time') {
-                const diffSeconds = data.totalTimeSeconds - goalSeconds;
-                const status = getGoalStatus(diffSeconds);
-                const absDiff = Math.abs(diffSeconds);
-                return (
-                    <Container>
-                        <p style={{ color: '#00FF85', fontSize: '1rem', fontWeight: 'bold' }}>⏱ {formatSecondsToTime(data.totalTimeSeconds)}</p>
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '6px', paddingTop: '6px' }}>
-                            <p style={{ fontSize: '0.8rem', color: status.color, fontWeight: 'bold' }}>{status.label}</p>
-                            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-                                (목표 {diffSeconds <= 0 ? '-' : '+'}{absDiff}초)
-                            </p>
-                        </div>
-                    </Container>
-                );
-            }
-
-            // 2. Weight Tooltip (Daily Change)
-            if (boxType === 'weight') {
-                const diff = data.weightChange;
-                const isLoss = diff < 0; // Loss is usually intended
-                return (
-                    <Container>
-                        <p style={{ color: '#BD00FF', fontSize: '1rem', fontWeight: 'bold' }}>⚖️ {data.weight}kg</p>
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '6px', paddingTop: '6px' }}>
-                            {diff !== 0 ? (
-                                <p style={{ fontSize: '0.8rem', color: isLoss ? '#00FF85' : '#FF4B4B' }}>
-                                    {isLoss ? '감량' : '증가'} {Math.abs(diff).toFixed(1)}kg (전일 대비)
-                                </p>
-                            ) : (
-                                <p style={{ fontSize: '0.8rem', color: '#888' }}>체중 변화 없음</p>
-                            )}
-                        </div>
-                    </Container>
-                );
-            }
-
-            // 3. Pace Tooltip (Daily Change)
-            if (boxType === 'pace') {
-                const diff = data.paceChange;
-                const isFaster = diff < 0; // Less seconds/km is Faster
-                return (
-                    <Container>
-                        <p style={{ color: '#00D1FF', fontSize: '1rem', fontWeight: 'bold' }}>⚡ {data.paceDisplay}/km</p>
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '6px', paddingTop: '6px' }}>
-                            {diff !== 0 ? (
-                                <p style={{ fontSize: '0.8rem', color: isFaster ? '#FFD700' : '#FF4B4B' }}>
-                                    {isFaster ? '단축' : '지연'} {Math.abs(diff)}초 (전일 대비)
-                                </p>
-                            ) : (
-                                <p style={{ fontSize: '0.8rem', color: '#888' }}>페이스 변화 없음</p>
-                            )}
-                        </div>
-                    </Container>
-                );
-            }
         }
+
+        if (boxType === 'cad') {
+            return (
+                <Container>
+                    <p style={{ color: '#FFD700', fontSize: '1rem', fontWeight: 'bold' }}>👟 {data.cad} spm</p>
+                </Container>
+            );
+        }
+
+        if (boxType === 'weight') {
+            const diff = data.weightChange;
+            const isLoss = diff < 0; // Loss is usually intended
+            return (
+                <Container>
+                    <p style={{ color: '#BD00FF', fontSize: '1rem', fontWeight: 'bold' }}>⚖️ {data.weight}kg</p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '6px', paddingTop: '6px' }}>
+                        {diff !== 0 ? (
+                            <p style={{ fontSize: '0.8rem', color: isLoss ? '#00FF85' : '#FF4B4B' }}>
+                                {isLoss ? '감량' : '증가'} {Math.abs(diff).toFixed(1)}kg (전일 대비)
+                            </p>
+                        ) : (
+                            <p style={{ fontSize: '0.8rem', color: '#888' }}>체중 변화 없음</p>
+                        )}
+                    </div>
+                </Container>
+            );
+        }
+
+        // 3. Pace Tooltip (Daily Change)
+        if (boxType === 'pace') {
+            const diff = data.paceChange;
+            const isFaster = diff < 0; // Less seconds/km is Faster
+            return (
+                <Container>
+                    <p style={{ color: '#00D1FF', fontSize: '1rem', fontWeight: 'bold' }}>⚡ {data.paceDisplay}/km</p>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '6px', paddingTop: '6px' }}>
+                        {diff !== 0 ? (
+                            <p style={{ fontSize: '0.8rem', color: isFaster ? '#FFD700' : '#FF4B4B' }}>
+                                {isFaster ? '단축' : '지연'} {Math.abs(diff)}초 (전일 대비)
+                            </p>
+                        ) : (
+                            <p style={{ fontSize: '0.8rem', color: '#888' }}>페이스 변화 없음</p>
+                        )}
+                    </div>
+                </Container>
+            );
+        }
+
         return null;
     };
 
@@ -552,120 +480,7 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                 />
             </div>
 
-            {/* Interactive Running Time Chart */}
-            <div style={{ marginBottom: '3rem', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                    <p style={{ fontSize: '0.9rem', color: '#00FF85', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={16} /> 런닝 타임 목표 달성
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: '#FFD700', opacity: 0.8 }}>
-                            목표: {formatSecondsToTime(goalSeconds)}
-                        </span>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                            <button
-                                onClick={() => setGoalSeconds(prev => Math.max(600, prev - 1))}
-                                style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,215,0,0.3)',
-                                    borderRadius: '4px',
-                                    color: '#FFD700',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2px',
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,215,0,0.1)'}
-                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                title="1초 감소"
-                            >
-                                <Minus size={12} />
-                            </button>
-                            <button
-                                onClick={() => setGoalSeconds(prev => prev + 1)}
-                                style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,215,0,0.3)',
-                                    borderRadius: '4px',
-                                    color: '#FFD700',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2px',
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,215,0,0.1)'}
-                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                title="1초 증가"
-                            >
-                                <Plus size={12} />
-                            </button>
-                        </div>
-                        <span style={{ fontSize: '0.7rem', opacity: 0.4, marginLeft: '4px' }}>
-                            (드래그 또는 버튼으로 조정)
-                        </span>
-                    </div>
-                </div>
-
-                <div ref={chartContainerRef} style={{ height: 200, width: '100%', position: 'relative', cursor: isDragging ? 'grabbing' : 'default' }}>
-                    <ResponsiveContainer>
-                        <BarChart data={chartData} syncId="runMagicSync">
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                            <XAxis dataKey="date" hide />
-                            <YAxis hide domain={[0, maxTimeInChart]} />
-                            <Tooltip content={<CustomTooltip boxType="time" />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                            <Bar dataKey="totalTimeSeconds" radius={[4, 4, 0, 0]} animationDuration={300}>
-                                {chartData.map((entry, index) => {
-                                    const diff = entry.totalTimeSeconds - goalSeconds;
-                                    const status = getGoalStatus(diff);
-                                    return (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={status.color}
-                                            fillOpacity={0.8}
-                                            stroke={status.color}
-                                            strokeWidth={1}
-                                        />
-                                    );
-                                })}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-
-                    {/* Draggable Goal Line Overlay */}
-                    <div
-                        onMouseDown={handleMouseDown}
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            bottom: `${Math.min(goalPositionPercent, 100)}%`,
-                            height: '2px',
-                            background: isDragging ? '#FFD700' : 'rgba(255, 215, 0, 0.5)',
-                            borderTop: '1px dashed #FFD700',
-                            zIndex: 10,
-                            cursor: 'ns-resize',
-                            display: 'flex',
-                            alignItems: 'center',
-                            transition: isDragging ? 'none' : 'bottom 0.3s ease'
-                        }}
-                    >
-                        <div style={{
-                            position: 'absolute', right: '0', background: '#FFD700', color: 'black',
-                            fontSize: '0.75rem', fontWeight: 'bold', padding: '2px 8px', borderRadius: '10px 0 0 10px',
-                            transform: 'translateY(-50%)', pointerEvents: 'none'
-                        }}>
-                            GOAL {formatSecondsToTime(goalSeconds)}
-                        </div>
-                        <div style={{ position: 'absolute', width: '100%', height: '20px', top: '-10px', cursor: 'ns-resize' }}></div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Other Charts (Pace/Weight) */}
+            {/* Four Performance Charts */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
                 <div style={{ height: 160 }}>
                     <p style={{ fontSize: '0.8rem', color: performanceAnalysis ? getDynamicWeightColor(performanceAnalysis.today.weight) : '#BD00FF', marginBottom: '0.5rem' }}>
@@ -744,10 +559,75 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
+
+                {/* Heart Rate Chart */}
+                <div style={{ height: 160 }}>
+                    <p style={{ fontSize: '0.8rem', color: '#FF4B4B', marginBottom: '0.5rem' }}>
+                        <Flame size={14} /> 평균 심박수 (bpm)
+                    </p>
+                    <ResponsiveContainer>
+                        <AreaChart data={chartData} syncId="runMagicSync">
+                            <defs>
+                                <linearGradient id="colorHr" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#FF4B4B" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#FF4B4B" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                            <XAxis dataKey="date" hide />
+                            <YAxis domain={domains.hr} hide />
+                            <Tooltip content={<CustomTooltip boxType="hr" />} />
+                            <ReferenceLine y={140} stroke="#FF4B4B" strokeDasharray="3 3" opacity={0.2}><Label value="Z2" position="insideRight" fill="#FF4B4B" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={160} stroke="#FF0000" strokeDasharray="3 3" opacity={0.4}><Label value="Z4" position="insideRight" fill="#FF0000" fontSize={10} /></ReferenceLine>
+                            <Area
+                                type="monotone"
+                                dataKey="hr"
+                                stroke="#FF4B4B"
+                                fill="url(#colorHr)"
+                                strokeWidth={2}
+                                animationDuration={1000}
+                                connectNulls={true}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* Cadence Chart */}
+                <div style={{ height: 160 }}>
+                    <p style={{ fontSize: '0.8rem', color: '#FFD700', marginBottom: '0.5rem' }}>
+                        <History size={14} /> 케이던스 (spm)
+                    </p>
+                    <ResponsiveContainer>
+                        <AreaChart data={chartData} syncId="runMagicSync">
+                            <defs>
+                                <linearGradient id="colorCad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#FFD700" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#FFD700" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                            <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" axisLine={false} tickLine={false} style={{ fontSize: '0.7rem' }} />
+                            <YAxis domain={domains.cad} hide />
+                            <Tooltip content={<CustomTooltip boxType="cad" />} />
+                            <ReferenceLine y={170} stroke="#FFD700" strokeDasharray="3 3" opacity={0.3}><Label value="170" position="insideRight" fill="#FFD700" fontSize={10} /></ReferenceLine>
+                            <ReferenceLine y={180} stroke="#FF9900" strokeDasharray="3 3" opacity={0.5}><Label value="180" position="insideRight" fill="#FF9900" fontSize={10} /></ReferenceLine>
+                            <Area
+                                type="monotone"
+                                dataKey="cad"
+                                stroke="#FFD700"
+                                fill="url(#colorCad)"
+                                strokeWidth={2}
+                                animationDuration={1000}
+                                connectNulls={true}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
 
             <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', gap: '2rem', fontSize: '0.75rem', opacity: 0.5 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00FF85' }}></div> 런닝시간</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF4B4B' }}></div> 심박수</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFD700' }}></div> 케이던스</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#BD00FF' }}></div> 체중</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00D1FF' }}></div> 페이스</div>
             </div>
