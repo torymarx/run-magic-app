@@ -47,18 +47,30 @@ const BioPerformanceChart: React.FC<BioPerformanceChartProps> = ({ records, view
             })
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        return filtered.map((r) => {
+        return filtered.map((r, idx) => {
             const paceSeconds = parseTimeToSeconds(r.pace);
             const weight = parseFloat(r.weight?.toString() || "0");
             const hr = r.heart_rate ? parseInt(r.heart_rate.toString(), 10) : null;
             const cad = r.cadence ? parseInt(r.cadence.toString(), 10) : null;
             const totalTimeSeconds = parseTimeToSeconds(r.totalTime);
 
+            // 전일 대비 변화량 계산
+            let weightChange = 0;
+            let paceChange = 0;
+            if (idx > 0) {
+                const prevWeight = parseFloat(filtered[idx - 1].weight?.toString() || "0");
+                const prevPace = parseTimeToSeconds(filtered[idx - 1].pace);
+                weightChange = weight - prevWeight;
+                paceChange = paceSeconds - prevPace;
+            }
+
             return {
                 date: r.date.split('-').slice(1).join('/'),
                 fullDate: r.date,
                 weight: weight,
+                weightChange: weightChange,
                 paceSeconds: paceSeconds,
+                paceChange: paceChange,
                 paceDisplay: r.pace,
                 distance: parseFloat(r.distance?.toString() || "0"),
                 totalTimeSeconds: totalTimeSeconds,
