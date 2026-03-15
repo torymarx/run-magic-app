@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { parseTimeToSeconds, formatPace } from '../utils/calculations';
-import { diagnoseRunnerProfile } from '../utils/coachUtils';
+import { diagnoseRunnerProfile, getProfileKoreanName } from '../utils/coachUtils';
 
 interface Recommendation {
     title: string;
@@ -112,10 +112,10 @@ export const useAICoachSystem = (
                     msg: `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 단순한 열망을 넘어, 정밀한 훈련 데이터를 통해 충분히 요격 가능한 사거리 안에 들어왔습니다. 🔥`,
                     rect: {
                         title: todayStats ? `오늘의 전술적 질주 분석 & 처방` : "전설적 레벨 도약을 위한 고강도 처방",
-                        detail: todayStats && lastSavedRecord
-                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 당신의 잠재력을 증명했습니다. 런싱크 분석 결과 ${diagnoseRunnerProfile(lastSavedRecord) === 'AEROBIC_SIEVE' ? '유산소 엔진의 보강이 절실합니다.' : '기초 체력이 탄탄하게 구축되고 있습니다.'}`
+                        detail: todayStats && effectiveRecord
+                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 당신의 잠재력을 증명했습니다. 런싱크 분석 결과 ${diagnoseRunnerProfile(effectiveRecord) === 'AEROBIC_SIEVE' ? '유산소 엔진의 보강이 절실합니다.' : '기초 체력이 탄탄하게 구축되고 있습니다.'}`
                             : `현재 레벨(${levelInfo?.level})에서 '${levelInfo?.nextLevelName}'로의 진화는 임계치 훈련량에 달려 있습니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 400m 전력 질주와 200m 조깅을 8회 반복하는 인터벌 세션을 반드시 포함하십시오.`,
-                        insight: `런싱크 프로파일 진단: ${lastSavedRecord ? diagnoseRunnerProfile(lastSavedRecord) : 'UNKNOWN'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '유산소 디커플링 현상이 우려되니 Zone 2 훈련 비중을 높이세요.' : '심박 제어가 매우 안정적입니다.'}`,
+                        insight: `런싱크 프로파일 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '유산소 디커플링 현상이 우려되니 Zone 2 훈련 비중을 높이세요.' : '심박 제어가 매우 안정적입니다.'}`,
                         mental: "고통은 한계를 뚫고 나가는 소리입니다. 런싱크 4.0의 과학적 처방을 믿고 따르십시오."
                     }
                 },
@@ -123,10 +123,10 @@ export const useAICoachSystem = (
                     msg: `[알고리즘 분석 리포트] ${runnerName}님의 프로필과 주행 빅데이터를 정밀 교차 분석했습니다. '${currentLevel}' 단계에서의 대사 효율과 에너지 효율성은 이미 상위 15%의 안정 궤도에 진입했습니다. 🐟`,
                     rect: {
                         title: todayStats ? `데이터 기반 세션 최적화 솔루션` : "물리적 한계 극복을 위한 역학 설계",
-                        detail: todayStats && lastSavedRecord
-                            ? `오늘 페이스(${todayStats.paceStr})와 케이던스(${todayStats.cadence || 'N/A'}spm)를 분석했을 때, ${diagnoseRunnerProfile(lastSavedRecord) === 'MECHANICAL_BRAKE' ? '기계적 브레이크형 패턴이 감지되었습니다.' : '에너지 효율이 향상되었습니다.'} 보폭을 줄이고 회전력을 높이세요.`
+                        detail: todayStats && effectiveRecord
+                            ? `오늘 페이스(${todayStats.paceStr})와 케이던스(${todayStats.cadence || 'N/A'}spm)를 분석했을 때, ${diagnoseRunnerProfile(effectiveRecord) === 'MECHANICAL_BRAKE' ? '기계적 브레이크형 패턴이 감지되었습니다.' : '에너지 효율이 향상되었습니다.'} 보폭을 줄이고 회전력을 높이세요.`
                             : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 물리 법칙의 적용이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 데이터 패턴을 볼 때, 5km 지점 이후의 피치 저하가 관찰됩니다. 보완을 위해 런지 및 플랭크 기반의 코어 보강 운동을 주 3회 권장합니다.`,
-                        insight: `런싱크 물리 진단: ${lastSavedRecord ? diagnoseRunnerProfile(lastSavedRecord) : 'UNKNOWN'}. 심박수(${todayStats?.heartRate || '측정 불가'}) 및 케이던스(${todayStats?.cadence || '측정 불가'})를 분석한 결과, ${todayStats?.cadence && todayStats.cadence >= 170 ? '이상적인 케이던스 구간에서 질주하셨습니다.' : '케이던스를 5-10% 점진적으로 상향하여 오버스트라이딩을 방지하세요.'}`,
+                        insight: `런싱크 물리 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || '측정 불가'}) 및 케이던스(${todayStats?.cadence || '측정 불가'})를 분석한 결과, ${todayStats?.cadence && todayStats.cadence >= 170 ? '이상적인 케이던스 구간에서 질주하셨습니다.' : '케이던스를 5-10% 점진적으로 상향하여 오버스트라이딩을 방지하세요.'}`,
                         mental: "숫자는 거짓말을 하지 않으며, 런싱크 알고리즘은 당신의 헌신을 투영하는 거울입니다."
                     }
                 },
@@ -137,7 +137,7 @@ export const useAICoachSystem = (
                         detail: todayStats
                             ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 훌륭한 회복의 여정이었습니다. 런싱크 분석 결과 ${diagnoseRunnerProfile(effectiveRecord) === 'AEROBIC_SIEVE' ? '심박수가 페이스 대비 높으므로 무리한 증속은 피하십시오.' : '신체 밸런스와 심박 안정성이 매우 뛰어납니다.'}`
                             : `"${runnerGoal}"이라는 꿈을 이루기 위해 가장 중요한 것은 지치지 않는 마음입니다. 최근 7일간의 주행(${recentStats?.count || 0}회)을 통해 당신의 성실함을 확인했습니다. 이번 주는 따뜻한 차 한 잔과 함께 충분한 명상, 그리고 종아리 스트레칭으로 몸의 긴장을 보듬어주는 시간을 가져보세요.`,
-                        insight: `런싱크 바이오 인사이트: ${lastSavedRecord || records[0] ? diagnoseRunnerProfile(effectiveRecord) : 'UNKNOWN'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 165 ? '심장 부하가 관찰되니 3:2 호흡법으로 심박을 제어하세요.' : '현재 생체 리듬은 매우 유연하고 안정적인 상태입니다.'}`,
+                        insight: `런싱크 바이오 인사이트: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 165 ? '심장 부하가 관찰되니 3:2 호흡법으로 심박을 제어하세요.' : '현재 생체 리듬은 매우 유연하고 안정적인 상태입니다.'}`,
                         mental: "빨리 가는 것보다 중요한 것은 끝까지 가는 것입니다. 런싱크의 과학적 가이드가 당신의 건강한 질주를 지킵니다."
                     }
                 }

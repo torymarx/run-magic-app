@@ -7,7 +7,21 @@ export type RunnerProfile = 'AEROBIC_SIEVE' | 'MECHANICAL_BRAKE' | 'FATIGUE_SIGN
  */
 export const diagnoseRunnerProfile = (record: any): RunnerProfile => {
     if (!record) return 'UNKNOWN';
-    const { heart_rate: hr, cadence: cad, pace_seconds: pace, weight } = record;
+    
+    const hr = record.heart_rate || record.hr;
+    const cad = record.cadence || record.cad;
+    const weight = record.weight;
+    
+    // pace_seconds가 없으면 pace 스트링을 파싱하여 시도
+    let pace = record.pace_seconds;
+    if (!pace && record.pace) {
+        if (typeof record.pace === 'number') {
+            pace = record.pace;
+        } else if (typeof record.pace === 'string') {
+            const parts = record.pace.split(':').map(Number);
+            if (parts.length === 2) pace = parts[0] * 60 + parts[1];
+        }
+    }
     
     if (!hr || !cad || !pace) return 'UNKNOWN';
 
@@ -30,6 +44,20 @@ export const diagnoseRunnerProfile = (record: any): RunnerProfile => {
     if (cad >= 170 && hr <= 150) return 'EFFICIENT';
 
     return 'UNKNOWN';
+};
+
+/**
+ * 프로파일 영문명을 한글로 변환합니다.
+ */
+export const getProfileKoreanName = (profile: RunnerProfile): string => {
+    const names: Record<RunnerProfile, string> = {
+        'AEROBIC_SIEVE': '유산소 누수형',
+        'MECHANICAL_BRAKE': '기계적 브레이크형',
+        'FATIGUE_SIGNATURE': '후반 붕괴형',
+        'EFFICIENT': '효율적 엔진형',
+        'UNKNOWN': '데이터 분석 중'
+    };
+    return names[profile] || names['UNKNOWN'];
 };
 
 /**
