@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCoachAdvice, diagnoseRunnerProfile } from '../coachUtils';
+import { getCoachAdvice, diagnoseRunnerProfile, getDetailedPrescription } from '../coachUtils';
 import { Coach } from '../../data/coaches';
 
 describe('coachUtils - getCoachAdvice', () => {
@@ -126,5 +126,25 @@ describe('coachUtils - getCoachAdvice', () => {
 
         expect(getCoachAdvice(record, mockCoachIntel)).toContain('수직 충격 부하');
         expect(getCoachAdvice(record, mockCoachIntel)).toContain('보폭을 줄이고 회전수');
+    });
+
+    describe('getDetailedPrescription', () => {
+        it('should return 7 specific prescriptions based on coach ID', () => {
+             const apexPrescription = getDetailedPrescription('EFFICIENT', 'apex');
+             expect(apexPrescription.insight).toContain('최대 산소 섭취량');
+             expect(apexPrescription.mental).toContain('심연으로 다이빙하십시오');
+             expect(apexPrescription.issue).toContain('안주한다면 당신은 곧 정체기');
+
+             const zenPrescription = getDetailedPrescription('EFFICIENT', 'zen');
+             expect(zenPrescription.insight).toContain('신체와 정신의 통제가 거의 명상의 상태');
+             expect(zenPrescription.mental).toContain('대지 위를 흐르는 바람 자체');
+             expect(zenPrescription.issue).toContain('아름다운 몰입 상태');
+
+             const insightPrescription = getDetailedPrescription('AEROBIC_SIEVE', 'insight');
+             expect(insightPrescription.insight).toContain('비율이 40% 미만으로 떨어지는 임계점');
+
+             const marathonPrescription = getDetailedPrescription('AEROBIC_SIEVE', 'marathon');
+             expect(marathonPrescription.insight).toContain('글리코겐 대사 의존도');
+        });
     });
 });

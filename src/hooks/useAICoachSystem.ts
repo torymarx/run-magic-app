@@ -90,6 +90,34 @@ export const useAICoachSystem = (
                         detail: "팔 스윙의 진자 운동을 골반 높이에 맞추세요. 상체의 불필요한 흔들림을 제어하면 산소 소모량을 5% 이상 절감하여 후반부 페이스 저하를 막을 수 있습니다."
                     }
                 },
+                atlas: {
+                    msg: `항상성 유지 분석: 페이스 ${paceStr}. 엔진의 기초를 다지는 저강도 지속주 구간입니다. 조급해하지 마세요. 🏛️`,
+                    rect: {
+                        title: "LSD 기반 기초 지구력 빌드업",
+                        detail: "심박수가 요동치지 않도록 리듬을 일정하게 유지하세요. 지금 쌓는 이 낮은 강도의 마일리지가 훗날 고강도 인터벌의 든든한 버팀목이 됩니다."
+                    }
+                },
+                swift: {
+                    msg: `비트와 함께 달리세요! 페이스 ${paceStr}. 당신의 케이던스는 한 편의 음악과 같습니다. 경쾌하게! ⚡`,
+                    rect: {
+                        title: "신경-근육 협응성 및 템포 리듬",
+                        detail: "팔을 뒤로 치는 동작을 더 간결하게 가져가세요. 상체의 리듬이 하체로 전달될 때, 가장 효율적인 추진력이 발생합니다. 지면을 밀어내지 말고 스치듯 달리세요."
+                    }
+                },
+                marathon: {
+                    msg: `페이스 ${paceStr} 유지 중. 착지 시 발바닥의 탄성을 이용하세요. 코스 전체를 조망하는 현명한 러닝입니다. 🏃‍♂️`,
+                    rect: {
+                        title: "장거리 효율성 및 착지 메커니즘",
+                        detail: "발의 뒷꿈치가 아닌 중앙으로 지면을 누르듯 착지하여 충격을 탄성으로 전환하십시오. 이 주법이 에너지를 보존하며 목적지까지 당신을 실어 나를 것입니다."
+                    }
+                },
+                zen: {
+                    msg: `심박과 호흡이 조밀해지고 있습니다. 페이스 ${paceStr}. 내면의 소리에 귀 기울이며 몸의 긴장을 걷어내세요. 🧘`,
+                    rect: {
+                        title: "마인드풀니스 및 횡격막 호흡",
+                        detail: "코로 깊게 마시고 입으로 길게 내뱉으세요. 호흡이 차분해지면 부하가 걸린 근육도 부드럽게 이완됩니다. 기록이라는 압박에서 벗어나 지금 이 순간을 즐기세요."
+                    }
+                },
                 wellness: {
                     msg: `바이오 밸런스가 매우 안정적입니다. 페이스 ${paceStr}. 자연과 호흡하며 당신만의 리듬을 찾아가는 과정이 아름답습니다. 🌿`,
                     rect: {
@@ -109,59 +137,43 @@ export const useAICoachSystem = (
             const runnerName = profile?.name || "런너";
             const currentLevel = levelInfo?.name || "비기너";
 
+            // 코치별 성격이 담긴 메시지 생성
+            const getCoachMessage = (coachId: string) => {
+                switch(coachId) {
+                    case 'apex': return `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 단순한 열망을 넘어, 정밀한 훈련 데이터를 통해 충분히 요격 가능한 사거리 안에 들어왔습니다. 🔥`;
+                    case 'insight': return `[알고리즘 분석 리포트] ${runnerName}님의 프로필과 주행 빅데이터를 정밀 교차 분석했습니다. '${currentLevel}' 단계에서의 대사 효율과 에너지 효율성은 이미 상위 15%의 안정 궤도에 진입했습니다. 🐟`;
+                    case 'atlas': return `[지구력 아카이브] ${runnerName}님, '${currentLevel}' 레벨의 마일리지가 차곡차곡 쌓이고 있습니다. "${runnerGoal}"을 향한 기초 공사가 아주 견고합니다. 🏛️`;
+                    case 'swift': return `[리듬 플레이리스트] 활력이 넘치는군요, ${runnerName}님! '${currentLevel}'의 에너지가 질주 리듬에 고스란히 묻어납니다. ⚡`;
+                    case 'zen': return `[심신 안정 가이드] 평온한 질주였나요? '${currentLevel}' 단계에서 몸의 소리를 듣는 법을 익히셨네요. 🧘`;
+                    case 'marathon': return `[코스 전략 리포트] 꾸준함이 돋보입니다. '${currentLevel}' 레벨에서의 성실함이 "${runnerGoal}" 달성의 열쇠가 될 것입니다. 🏃‍♂️`;
+                    default: return `[바이오 리드믹 가이드] 따뜻한 응원을 보냅니다, ${runnerName}님! 벌써 ${overallStats?.count}번이나 세상을 향해 발을 내디디셨네요. '${currentLevel}' 단계의 정성 어린 기록들이 당신의 미래를 밝히고 있습니다. 🌿`;
+                }
+            };
+
             const coachScripts: Record<string, any> = {
-                apex: {
-                    msg: `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 단순한 열망을 넘어, 정밀한 훈련 데이터를 통해 충분히 요격 가능한 사거리 안에 들어왔습니다. 🔥`,
+                // 공통된 추천 구조를 가지되, detail은 getDetailedPrescription에서 코치별로 다르게 가져옴
+                generic: {
+                    msg: getCoachMessage(selectedCoachId),
                     rect: {
-                        title: todayStats ? `오늘의 전술적 질주 분석 & 처방` : "전설적 레벨 도약을 위한 고강도 처방",
+                        title: todayStats ? `오늘의 전술적 질주 분석 & 처방` : "로드맵 진화 가이드",
                         detail: todayStats && effectiveRecord
                             ? (() => {
                                 const profileType = diagnoseRunnerProfile(effectiveRecord);
-                                const pres = getDetailedPrescription(profileType);
-                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 당신의 잠재력을 증명했습니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}`;
+                                const pres = getDetailedPrescription(profileType, selectedCoachId);
+                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}) 분석 결과입니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}`;
                             })()
-                            : `현재 레벨(${levelInfo?.level})에서 '${levelInfo?.nextLevelName}'로의 진화는 임계치 훈련량에 달려 있습니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 400m 전력 질주와 200m 조깅을 8회 반복하는 인터벌 세션을 반드시 포함하십시오.`,
-                        insight: `런싱크 프로파일 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '유산소 디커플링 현상이 우려되니 Zone 2 훈련 비중을 높이세요.' : '심박 제어가 매우 안정적입니다.'}`,
-                        mental: "고통은 한계를 뚫고 나가는 소리입니다. 런싱크 4.0의 과학적 처방을 믿고 따르십시오."
-                    }
-                },
-                insight: {
-                    msg: `[알고리즘 분석 리포트] ${runnerName}님의 프로필과 주행 빅데이터를 정밀 교차 분석했습니다. '${currentLevel}' 단계에서의 대사 효율과 에너지 효율성은 이미 상위 15%의 안정 궤도에 진입했습니다. 🐟`,
-                    rect: {
-                        title: todayStats ? `데이터 기반 세션 최적화 솔루션` : "물리적 한계 극복을 위한 역학 설계",
-                        detail: todayStats && effectiveRecord
-                            ? (() => {
-                                const profileType = diagnoseRunnerProfile(effectiveRecord);
-                                const pres = getDetailedPrescription(profileType);
-                                return `오늘 페이스(${todayStats.paceStr})와 케이던스(${todayStats.cadence || 'N/A'}spm)를 분석한 결과입니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}`;
-                            })()
-                            : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 물리 법칙의 적용이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 데이터 패턴을 볼 때, 5km 지점 이후의 피치 저하가 관찰됩니다. 보완을 위해 런지 및 플랭크 기반의 코어 보강 운동을 주 3회 권장합니다.`,
-                        insight: `런싱크 물리 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || '측정 불가'}) 및 케이던스(${todayStats?.cadence || '측정 불가'})를 분석한 결과, ${todayStats?.cadence && todayStats.cadence >= 170 ? '이상적인 케이던스 구간에서 질주하셨습니다.' : '케이던스를 5-10% 점진적으로 상향하여 오버스트라이딩을 방지하세요.'}`,
-                        mental: "숫자는 거짓말을 하지 않으며, 런싱크 알고리즘은 당신의 헌신을 투영하는 거울입니다."
-                    }
-                },
-                wellness: {
-                    msg: `[바이오 리드믹 가이드] 따뜻한 응원을 보냅니다, ${runnerName}님! 벌써 ${overallStats?.count}번이나 세상을 향해 발을 내디디셨네요. '${currentLevel}' 단계의 정성 어린 기록들이 당신의 미래를 밝히고 있습니다. 🌿`,
-                    rect: {
-                        title: todayStats ? `바이오 밸런스 정밀 진단 및 회복 처방` : "지속 가능한 성장을 위한 상생 전략",
-                        detail: todayStats
-                            ? (() => {
-                                const profileType = diagnoseRunnerProfile(effectiveRecord);
-                                const pres = getDetailedPrescription(profileType);
-                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 훌륭한 회복의 여정이었습니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}`;
-                            })()
-                            : `"${runnerGoal}"이라는 꿈을 이루기 위해 가장 중요한 것은 지치지 않는 마음입니다. 최근 7일간의 주행(${recentStats?.count || 0}회)을 통해 당신의 성실함을 확인했습니다. 이번 주는 따뜻한 차 한 잔과 함께 충분한 명상, 그리고 종아리 스트레칭으로 몸의 긴장을 보듬어주는 시간을 가져보세요.`,
-                        insight: `런싱크 바이오 인사이트: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 165 ? '심장 부하가 관찰되니 3:2 호흡법으로 심박을 제어하세요.' : '현재 생체 리듬은 매우 유연하고 안정적인 상태입니다.'}`,
-                        mental: "빨리 가는 것보다 중요한 것은 끝까지 가는 것입니다. 런싱크의 과학적 가이드가 당신의 건강한 질주를 지킵니다."
+                            : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 데이터 축적이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 심박수 Zone 2-3 영역을 유지하는 저강도 세션을 포함하십시오.`,
+                        insight: `런싱크 프로파일 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '심장 부하가 관찰되니 강도를 조절하세요.' : '안정적인 궤적을 유지하고 있습니다.'}`,
+                        mental: selectedCoachId === 'apex' ? "고통은 한계를 뚫고 나가는 소리입니다." : "지속 가능한 성장이 진정한 승리입니다."
                     }
                 }
             };
 
-
-            const script = coachScripts[selectedCoachId] || coachScripts['wellness'];
+            const script = coachScripts['generic'];
             message = script.msg;
             recommendation = script.rect;
         }
+
 
         return {
             message,

@@ -129,6 +129,64 @@ const AICoachSidebar: React.FC<AICoachSidebarProps> = ({
                 >
                     {isRecording ? "러닝 종료하기" : `${selectedCoach.name} 코치의 상세 보고서`}
                 </button>
+
+                {/* Running Tip Section */}
+                <div style={{
+                    marginTop: '2rem',
+                    padding: '1.2rem',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '16px',
+                    border: '1px dashed rgba(255, 255, 255, 0.1)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        right: '-10px',
+                        fontSize: '3rem',
+                        opacity: 0.05,
+                        transform: 'rotate(15deg)'
+                    }}>💡</div>
+                    <p style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        color: selectedCoach.color,
+                        marginBottom: '0.6rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                    }}>
+                        <span>💡</span> 오늘의 런닝 팁
+                    </p>
+                    <p style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        marginBottom: '0.4rem',
+                        color: 'white'
+                    }}>
+                        {selectedCoach.id === 'apex' ? "케이던스의 비밀" :
+                         selectedCoach.id === 'insight' ? "지면 반발력 활용" :
+                         selectedCoach.id === 'atlas' ? "심박수 Zone 2의 마법" :
+                         selectedCoach.id === 'swift' ? "팔 스윙의 리듬" :
+                         selectedCoach.id === 'zen' ? "횡격막 호흡법" :
+                         selectedCoach.id === 'marathon' ? "미드풋 착지의 경제성" :
+                         "올바른 수분 보충"}
+                    </p>
+                    <p style={{
+                        fontSize: '0.75rem',
+                        opacity: 0.7,
+                        lineHeight: 1.5
+                    }}>
+                        {selectedCoach.id === 'apex' ? "케이던스를 180spm 이상으로 유지하면 충격 전이가 분산되어 부상을 방지하고 속도를 유지하는 데 유리합니다." :
+                         selectedCoach.id === 'insight' ? "지면을 세게 미는 것이 아니라, 지면이 밀어내는 반발력을 이용하여 가볍게 튕겨 오르듯 달리세요." :
+                         selectedCoach.id === 'atlas' ? "최대 심박의 60-70% 수준인 Zone 2 훈련은 미토콘드리아의 밀도를 높여 장거리 효율성을 극대화합니다." :
+                         selectedCoach.id === 'swift' ? "팔을 뒤로 치는 동작에 집중하세요. 팔의 리듬이 골반의 회전을 유도하여 자연스러운 추진력을 만듭니다." :
+                         selectedCoach.id === 'zen' ? "복식 호흡을 통해 폐의 하단까지 공기를 채우세요. 이는 심박수를 안정시키고 체내 산소 공급을 원활하게 합니다." :
+                         selectedCoach.id === 'marathon' ? "발의 앞부분이나 뒷부분이 아닌 중간으로 착지하세요. 이는 에너지를 탄성으로 전환하는 가장 경제적인 방법입니다." :
+                         "갈증을 느끼기 15분 전부터 조금씩 자주 물을 마시는 것이 체온 조절과 근육 경련 방지에 효과적입니다."}
+                    </p>
+                </div>
             </div>
         </div>
     );
