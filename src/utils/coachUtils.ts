@@ -201,3 +201,21 @@ export const getRandomCoach = (): Coach => {
     const randomIndex = Math.floor(Math.random() * coaches.length);
     return coaches[randomIndex];
 };
+
+/**
+ * 러닝 퍼포먼스 향상을 위한 전문 팁 데이터셋
+ */
+export const runningTips = [
+    { title: "올바른 호흡법", content: "2:2 호흡법(두 발자국에 들이마시고, 두 발자국에 내뱉기)은 일정한 리듬을 유지하고 이산화탄소 배출을 돕습니다." },
+    { title: "케이던스의 비밀", content: "분당 170-180보의 높은 케이던스는 지면 접촉 시간을 줄여 무릎 부상을 방지하고 효율성을 높입니다." },
+    { title: "수분 보충 전략", content: "갈증을 느끼기 전에 조금씩 자주 마시는 것이 중요합니다. 1시간 이상 주행 시 전해질 음료를 권장합니다." },
+    { title: "미드풋 착지의 장점", content: "발바닥 전체로 착지하는 미드풋은 충격을 분산시키고 아킬레스건의 탄성을 극대화하여 더 멀리 달리게 해줍니다." },
+    { title: "코어 보강의 중요성", content: "강한 코어는 질주 후반부에 폼이 무너지는 것을 막아줍니다. 주 2회 플랭크와 브릿지 운동을 추가하세요." },
+    { title: "회복의 과학", content: "달리기 직후의 스트레칭도 중요하지만, 질 좋은 수면과 마사지 건을 활용한 근막 이완이 실제 근육 성장을 돕습니다." },
+    { title: "신발 교체 시기", content: "러닝화의 수명은 보통 500-800km입니다. 겉은 멀쩡해 보여도 중창의 쿠션 성능이 다하면 부상 위험이 커집니다." }
+];
+
+export const getRandomRunningTip = () => {
+    const randomIndex = Math.floor(Math.random() * runningTips.length);
+    return runningTips[randomIndex];
+};

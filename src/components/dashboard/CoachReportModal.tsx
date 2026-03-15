@@ -1,5 +1,6 @@
 import React from 'react';
-import { Award, Activity, Info, TrendingUp, ShieldCheck, X } from 'lucide-react';
+import { Award, Activity, Info, TrendingUp, ShieldCheck, X, Lightbulb } from 'lucide-react';
+import { getRandomRunningTip } from '../../utils/coachUtils';
 
 interface CoachReportModalProps {
     coach: any;
@@ -18,6 +19,8 @@ interface CoachReportModalProps {
 const CoachReportModal: React.FC<CoachReportModalProps> = ({
     coach, coachMessage, recommendation, periodStats, runnerProfile, onClose
 }) => {
+    const runningTip = React.useMemo(() => getRandomRunningTip(), []);
+
     return (
         <div style={{
             position: 'fixed',
@@ -225,9 +228,29 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                                 <p style={{ fontSize: '0.95rem', opacity: 0.85, lineHeight: 1.6 }}>
                                     {recommendation.mental}
                                 </p>
-                                <div style={{ marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.8rem', opacity: 0.6 }}>
-                                    * 이 리포트는 런너님의 전체 {periodStats?.count || 0}개 세션과 최근 일주일 데이터를 정밀 분석하여 작성되었습니다.
+                            </div>
+
+                            {/* Running Tip Section */}
+                            <div style={{
+                                padding: '1.5rem',
+                                background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.05) 0%, rgba(0, 209, 255, 0.02) 100%)',
+                                border: '1px solid rgba(0, 209, 255, 0.1)',
+                                borderRadius: '20px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.8rem'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    <Lightbulb size={20} style={{ color: '#00D1FF' }} />
+                                    <p style={{ fontWeight: 'bold', fontSize: '1rem', color: '#00D1FF' }}>오늘의 러닝 팁: {runningTip.title}</p>
                                 </div>
+                                <p style={{ fontSize: '0.85rem', opacity: 0.7, lineHeight: 1.5 }}>
+                                    {runningTip.content}
+                                </p>
+                            </div>
+
+                            <div style={{ marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px', fontSize: '0.8rem', opacity: 0.6 }}>
+                                * 이 리포트는 런너님의 전체 {periodStats?.count || 0}개 세션과 최근 일주일 데이터를 정밀 분석하여 작성되었습니다.
                             </div>
                         </div>
                     </div>
