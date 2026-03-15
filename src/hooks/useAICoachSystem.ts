@@ -19,6 +19,9 @@ export const useAICoachSystem = (
     profile?: any,
     levelInfo?: any
 ) => {
+    // 0. 기반 데이터 정의: 현재 세션 또는 가장 최근 기록
+    const effectiveRecord = lastSavedRecord || (Array.isArray(records) && records.length > 0 ? records[0] : null);
+
     // 1. 전체 성과 (Overall): 연초부터 현재까지의 누적 성장 궤적
     const overallStats = useMemo(() => {
         if (!Array.isArray(records) || records.length === 0) return { count: 0, totalDist: 0, avgPaceStr: "0'00\"", totalHours: "0.0" };
@@ -31,10 +34,10 @@ export const useAICoachSystem = (
             totalDist,
             avgPaceStr: formatPace(avgPaceSec),
             totalHours: (totalSeconds / 3600).toFixed(1),
-            lastHeartRate: lastSavedRecord?.hr || lastSavedRecord?.heart_rate,
-            lastCadence: lastSavedRecord?.cad || lastSavedRecord?.cadence
+            lastHeartRate: effectiveRecord?.hr || effectiveRecord?.heart_rate,
+            lastCadence: effectiveRecord?.cad || effectiveRecord?.cadence
         };
-    }, [records]);
+    }, [records, effectiveRecord]);
 
     // 2. 최근 추세 (Recent - 7Days): 컨디션 및 리듬 변동성
     const recentStats = useMemo(() => {
@@ -48,7 +51,6 @@ export const useAICoachSystem = (
     }, [records]);
 
     // 3. 당일 성과 (Today): 현재 세션 또는 가장 최근 기록의 임계치 분석
-    const effectiveRecord = lastSavedRecord || (Array.isArray(records) && records.length > 0 ? records[0] : null);
 
     const todayStats = useMemo(() => {
         if (effectiveRecord) {
