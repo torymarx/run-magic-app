@@ -191,7 +191,7 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                                     <Award size={22} style={{ color: coach.color }} />
                                     <p style={{ fontWeight: 'bold', fontSize: '1.1rem', color: coach.color }}>{recommendation.title}</p>
                                 </div>
-                                <p style={{ fontSize: '0.95rem', opacity: 0.85, lineHeight: 1.6 }}>
+                                <p style={{ fontSize: '0.95rem', opacity: 0.85, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
                                     {recommendation.detail}
                                 </p>
                                 <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>

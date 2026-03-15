@@ -1,4 +1,4 @@
-import { Coach, coaches } from '../data/coaches';
+import { parseTimeToSeconds } from './calculations';
 
 export type RunnerProfile = 'AEROBIC_SIEVE' | 'MECHANICAL_BRAKE' | 'FATIGUE_SIGNATURE' | 'EFFICIENT' | 'UNKNOWN';
 
@@ -18,8 +18,7 @@ export const diagnoseRunnerProfile = (record: any): RunnerProfile => {
         if (typeof record.pace === 'number') {
             pace = record.pace;
         } else if (typeof record.pace === 'string') {
-            const parts = record.pace.split(':').map(Number);
-            if (parts.length === 2) pace = parts[0] * 60 + parts[1];
+            pace = parseTimeToSeconds(record.pace);
         }
     }
     
@@ -61,8 +60,43 @@ export const getProfileKoreanName = (profile: RunnerProfile): string => {
 };
 
 /**
+ * 프로파일별 구조화된 처방 데이터를 제공합니다.
+ */
+export const getDetailedPrescription = (profile: RunnerProfile) => {
+    const prescriptions: Record<RunnerProfile, { issue: string; improvement: string; nextTask: string }> = {
+        'AEROBIC_SIEVE': {
+            issue: '심박수가 페이스 대비 높게 유지되어 유산소 엔진이 비효율적인 상태입니다. (에너지 조기 방전 위험)',
+            improvement: '최대 심박수의 70% 이하인 Zone 2 영역에 전념하여 모세혈관과 미토콘드리아를 확장해야 합니다.',
+            nextTask: '내일은 기록을 잊고, 노래를 흥얼거릴 수 있을 정도의 낮은 강도로 40분간 지속주를 수행하세요.'
+        },
+        'MECHANICAL_BRAKE': {
+            issue: '케이던스가 낮아 보폭이 넓어지면서 착지 시 관절에 가해지는 수직 충격 부하가 큰 상태입니다.',
+            improvement: '보폭(Stride)을 줄이고 발을 몸의 무게 중심 바로 아래에 떨어뜨려 회전수(Cadence)를 180spm에 가깝게 높이세요.',
+            nextTask: '다음 세션에서는 메트로놈 앱을 175bpm에 맞추고 그 리듬에 발걸음을 맞추는 연습을 하세요.'
+        },
+        'FATIGUE_SIGNATURE': {
+            issue: '세션 후반부에 접어들며 심박수가 급격히 오르고 코어 균형이 무너지는 피로 누적 징후가 보입니다.',
+            improvement: '하체 근력뿐만 아니라 상체와 코어의 안정성을 키워 후반부 폼 붕괴를 지연시켜야 합니다.',
+            nextTask: '내일은 달리기 대신 15분간 플랭크, 런지, 브릿지 등 코어 보강 운동에 집중하여 기초를 다지세요.'
+        },
+        'EFFICIENT': {
+            issue: '심박과 케이던스의 조화가 매우 뛰어납니다. 현재는 기술적 보완보다 임계치 확장이 필요한 단계입니다.',
+            improvement: '안정적인 현재 페이스에서 더 긴 거리를 소화하거나, 구간 속도를 점진적으로 높이는 전략이 유효합니다.',
+            nextTask: '이번 주는 평소보다 거리를 10%만 더 늘려보는 LSD 훈련을 통해 당신의 한계를 한 칸 더 넓혀보세요.'
+        },
+        'UNKNOWN': {
+            issue: '정밀 진단을 위한 데이터를 수집 중입니다. 심박수와 케이던스 측정이 원활한지 확인해 주세요.',
+            improvement: '일주일에 3회 이상의 꾸준한 기록이 쌓이면 런싱크 알고리즘이 당신만의 고유한 패턴을 읽어냅니다.',
+            nextTask: '더 정확한 분석을 위해 내일도 멈추지 말고 당신의 기록을 앱에 남겨주세요.'
+        }
+    };
+    return prescriptions[profile];
+};
+
+/**
  * 기록 데이터를 바탕으로 선택된 코치의 맞춤 조언 메시지를 생성합니다.
  */
+import { Coach, coaches } from '../data/coaches';
 export const getCoachAdvice = (record: any, coach: Coach): string => {
     if (!record) return '기 기록 데이터를 기다리고 있습니다. ✨';
     const { temp, condition, isImproved, distance, weight } = record;
