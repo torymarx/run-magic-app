@@ -47,20 +47,22 @@ export const useAICoachSystem = (
         return { count: recentRecords.length, avgPaceSec, avgPaceStr: formatPace(avgPaceSec) };
     }, [records]);
 
-    // 3. 당일 성과 (Today): 현재 세션의 임계치 분석 (+ 심박/케이던스 추가)
+    // 3. 당일 성과 (Today): 현재 세션 또는 가장 최근 기록의 임계치 분석
+    const effectiveRecord = lastSavedRecord || (Array.isArray(records) && records.length > 0 ? records[0] : null);
+
     const todayStats = useMemo(() => {
-        if (lastSavedRecord) {
+        if (effectiveRecord) {
             return {
-                paceSec: parseTimeToSeconds(lastSavedRecord.pace),
-                distance: lastSavedRecord.distance,
-                isImproved: lastSavedRecord.isImproved,
-                paceStr: lastSavedRecord.pace,
-                heartRate: lastSavedRecord.heart_rate || lastSavedRecord.hr,
-                cadence: lastSavedRecord.cadence || lastSavedRecord.cad
+                paceSec: parseTimeToSeconds(effectiveRecord.pace || "0:00"),
+                distance: effectiveRecord.distance || 0,
+                isImproved: effectiveRecord.isImproved,
+                paceStr: effectiveRecord.pace || "0'00\"",
+                heartRate: effectiveRecord.heart_rate || effectiveRecord.hr,
+                cadence: effectiveRecord.cadence || effectiveRecord.cad
             };
         }
         return null;
-    }, [lastSavedRecord]);
+    }, [effectiveRecord]);
 
     const feedback = useMemo(() => {
         let message = "";
@@ -131,12 +133,12 @@ export const useAICoachSystem = (
                 wellness: {
                     msg: `[바이오 리드믹 가이드] 따뜻한 응원을 보냅니다, ${runnerName}님! 벌써 ${overallStats?.count}번이나 세상을 향해 발을 내디디셨네요. '${currentLevel}' 단계의 정성 어린 기록들이 당신의 미래를 밝히고 있습니다. 🌿`,
                     rect: {
-                        title: todayStats ? `오늘의 몸과 마음을 위한 힐링 처방` : "지속 가능한 성장을 위한 상생 전략",
+                        title: todayStats ? `바이오 밸런스 정밀 진단 및 회복 처방` : "지속 가능한 성장을 위한 상생 전략",
                         detail: todayStats
-                            ? `오늘 ${todayStats.distance}km를 한 마리의 나비처럼 가볍게 달리신 것 같아 제 마음도 훈훈해집니다. 심박수(${todayStats.heartRate || 'N/A'}bpm)도 당신의 성장을 차분하게 기록하고 있네요. "${runnerGoal}"을 향해 아주 잘 가고 계세요.`
+                            ? `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr})은 훌륭한 회복의 여정이었습니다. 런싱크 분석 결과 ${diagnoseRunnerProfile(effectiveRecord) === 'AEROBIC_SIEVE' ? '심박수가 페이스 대비 높으므로 무리한 증속은 피하십시오.' : '신체 밸런스와 심박 안정성이 매우 뛰어납니다.'}`
                             : `"${runnerGoal}"이라는 꿈을 이루기 위해 가장 중요한 것은 지치지 않는 마음입니다. 최근 7일간의 주행(${recentStats?.count || 0}회)을 통해 당신의 성실함을 확인했습니다. 이번 주는 따뜻한 차 한 잔과 함께 충분한 명상, 그리고 종아리 스트레칭으로 몸의 긴장을 보듬어주는 시간을 가져보세요.`,
-                        insight: `심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 데이터는 장기적 생체 밸런스의 지표입니다. ${todayStats?.heartRate && todayStats.heartRate > 165 ? '오늘은 심박이 다소 높았으니 충분히 쉬어주세요.' : '현재 신체 밸런스는 매우 유연한 상태입니다.'} 과도한 목표 압박보다는 느린 조깅이 좋습니다.`,
-                        mental: "빨리 가는 것보다 중요한 것은 끝까지 가는 것이며, 함께 가는 것입니다. 당신의 속도는 이미 충분히 빛나고 있습니다."
+                        insight: `런싱크 바이오 인사이트: ${lastSavedRecord || records[0] ? diagnoseRunnerProfile(effectiveRecord) : 'UNKNOWN'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 165 ? '심장 부하가 관찰되니 3:2 호흡법으로 심박을 제어하세요.' : '현재 생체 리듬은 매우 유연하고 안정적인 상태입니다.'}`,
+                        mental: "빨리 가는 것보다 중요한 것은 끝까지 가는 것입니다. 런싱크의 과학적 가이드가 당신의 건강한 질주를 지킵니다."
                     }
                 }
             };
@@ -162,6 +164,6 @@ export const useAICoachSystem = (
         recommendation: feedback.recommendation, 
         periodStats: overallStats, 
         recentStats,
-        runnerProfile: lastSavedRecord ? diagnoseRunnerProfile(lastSavedRecord) : 'UNKNOWN'
+        runnerProfile: effectiveRecord ? diagnoseRunnerProfile(effectiveRecord) : 'UNKNOWN'
     };
 };
