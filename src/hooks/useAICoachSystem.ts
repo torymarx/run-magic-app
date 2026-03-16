@@ -1,12 +1,18 @@
 import { useMemo } from 'react';
 import { parseTimeToSeconds, formatPace } from '../utils/calculations';
 import { diagnoseRunnerProfile, getProfileKoreanName, getDetailedPrescription } from '../utils/coachUtils';
+import { calculateVDOT, getRecommendedPaces, getIntensityLabel, RecommendedPaces } from '../utils/vdotUtils';
 
 interface Recommendation {
     title: string;
     detail: string;
     insight?: string;
     mental?: string;
+    vdotInfo?: {
+        value: number;
+        paces: RecommendedPaces;
+        currentIntensity: string;
+    };
 }
 
 export const useAICoachSystem = (
@@ -54,13 +60,21 @@ export const useAICoachSystem = (
 
     const todayStats = useMemo(() => {
         if (effectiveRecord) {
+            const paceSec = parseTimeToSeconds(effectiveRecord.pace || "0:00");
+            const distance = effectiveRecord.distance || 0;
+            const timeMin = parseTimeToSeconds(effectiveRecord.totalTime || "0:00") / 60;
+            
+            // Calculate VDOT for this specific record
+            const vdotValue = calculateVDOT(distance, timeMin);
+
             return {
-                paceSec: parseTimeToSeconds(effectiveRecord.pace || "0:00"),
-                distance: effectiveRecord.distance || 0,
+                paceSec,
+                distance,
                 isImproved: effectiveRecord.isImproved,
                 paceStr: effectiveRecord.pace || "0'00\"",
                 heartRate: effectiveRecord.heart_rate || effectiveRecord.hr,
-                cadence: effectiveRecord.cadence || effectiveRecord.cad
+                cadence: effectiveRecord.cadence || effectiveRecord.cad,
+                vdot: vdotValue
             };
         }
         return null;
@@ -160,11 +174,23 @@ export const useAICoachSystem = (
                             ? (() => {
                                 const profileType = diagnoseRunnerProfile(effectiveRecord);
                                 const pres = getDetailedPrescription(profileType, selectedCoachId);
-                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}) 분석 결과입니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}`;
+                                const vdotPaces = getRecommendedPaces(todayStats.vdot);
+                                
+                                let vdotTip = "";
+                                if (todayStats.vdot > 0) {
+                                    vdotTip = `\n\n📊 VDOT 분석(${todayStats.vdot.toFixed(1)}): 이 기록을 바탕으로 산출된 추천 훈련 페이스입니다.\n• 조깅(Easy): ${vdotPaces.easy}\n• 유산소역치: ${vdotPaces.threshold}\n• 인터벌: ${vdotPaces.interval}`;
+                                }
+                                
+                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}) 분석 결과입니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}${vdotTip}`;
                             })()
                             : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 데이터 축적이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 심박수 Zone 2-3 영역을 유지하는 저강도 세션을 포함하십시오.`,
-                        insight: `런싱크 프로파일 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '심장 부하가 관찰되니 강도를 조절하세요.' : '안정적인 궤적을 유지하고 있습니다.'}`,
-                        mental: selectedCoachId === 'apex' ? "고통은 한계를 뚫고 나가는 소리입니다." : "지속 가능한 성장이 진정한 승리입니다."
+                        insight: `런싱크 프로파일 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '심장 부하가 관찰되니 강도를 조절하세요.' : '안정적인 궤적을 유지하고 있습니다.'}${todayStats && todayStats.vdot > 0 ? ` [강도: ${getIntensityLabel(todayStats.vdot, todayStats.paceSec)}]` : ''}`,
+                        mental: selectedCoachId === 'apex' ? "고통은 한계를 뚫고 나가는 소리입니다." : "지속 가능한 성장이 진정한 승리입니다.",
+                        vdotInfo: todayStats && todayStats.vdot > 0 ? {
+                            value: todayStats.vdot,
+                            paces: getRecommendedPaces(todayStats.vdot),
+                            currentIntensity: getIntensityLabel(todayStats.vdot, todayStats.paceSec)
+                        } : undefined
                     }
                 }
             };

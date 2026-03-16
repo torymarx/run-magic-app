@@ -1,4 +1,12 @@
-# Run-Magic App Development History (v23.0)
+# Run-Magic App Development History (v23.1)
+
+## [v23.1] - 2026-03-16
+### 잭 대니얼스 VDOT 기반 과학적 훈련 시스템 도입 (VDOT Intelligence)
+- **실시간 VDOT 산출 엔진**: 잭 대니얼스의 공식을 이식한 `vdotUtils.ts`를 통해 질주 기록별 레이싱 지수(VDOT)를 자동 계산.
+- **맞춤형 훈련 페이스 가이드**: 산출된 VDOT를 기반으로 조깅(E), 마라톤(M), 역치(T), 인터벌(I), 레피티션(R) 등 5대 훈련 페이스를 즉시 제안.
+- **코칭 리포트 고도화**: `CoachReportModal.tsx`에 'VDOT 지능형 카드'를 추가하여 현재 질주 강도를 분석하고 다음 훈련을 위한 과학적 가이드라인 전시.
+- **동적 코칭 메시지 연동**: `useAICoachSystem`을 통해 모든 AI 코치가 런너의 VDOT 지수를 인지하고 페르소나에 맞는 전문 조언을 제공하도록 강화.
+
 
 ## [v23.0] - 2026-03-15
 ### 런싱크 4.0 알고리즘 및 지능형 코칭 시스템 통합 (Run-Sync 4.0 Integration)

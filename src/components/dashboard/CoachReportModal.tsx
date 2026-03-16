@@ -10,6 +10,17 @@ interface CoachReportModalProps {
         detail: string;
         insight: string;
         mental: string;
+        vdotInfo?: {
+            value: number;
+            paces: {
+                easy: string;
+                marathon: string;
+                threshold: string;
+                interval: string;
+                repetition: string;
+            };
+            currentIntensity: string;
+        };
     };
     periodStats: any;
     runnerProfile?: string;
@@ -169,6 +180,67 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                                 "{coachMessage}"
                             </p>
                         </div>
+
+                        {/* VDOT Intelligence Card (NEW) */}
+                        {recommendation.vdotInfo && (
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(0, 209, 255, 0.05) 0%, rgba(57, 255, 20, 0.05) 100%)',
+                                borderRadius: '24px',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                padding: '1.5rem',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '1rem'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                        <div style={{ padding: '6px', background: 'rgba(0, 209, 255, 0.2)', borderRadius: '8px' }}>
+                                            <Award size={18} color="#00D1FF" />
+                                        </div>
+                                        <span style={{ fontSize: '1rem', fontWeight: '900', color: '#fff', letterSpacing: '0.5px' }}>런싱크 VDOT 레이싱 지수: {recommendation.vdotInfo.value.toFixed(1)}</span>
+                                    </div>
+                                    <span style={{ 
+                                        fontSize: '0.75rem', 
+                                        padding: '4px 12px', 
+                                        borderRadius: '12px', 
+                                        background: 'rgba(57, 255, 20, 0.2)', 
+                                        color: '#39ff14',
+                                        fontWeight: 'bold',
+                                        border: '1px solid rgba(57, 255, 20, 0.3)'
+                                    }}>
+                                        분석 강도: {recommendation.vdotInfo.currentIntensity}
+                                    </span>
+                                </div>
+
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+                                    gap: '0.8rem' 
+                                }}>
+                                    {[
+                                        { label: '조깅 (Easy)', pace: recommendation.vdotInfo.paces.easy, color: '#39ff14' },
+                                        { label: '마라톤 (M)', pace: recommendation.vdotInfo.paces.marathon, color: '#00D1FF' },
+                                        { label: '역치 (T)', pace: recommendation.vdotInfo.paces.threshold, color: '#FFD700' },
+                                        { label: '인터벌 (I)', pace: recommendation.vdotInfo.paces.interval, color: '#FF4B4B' },
+                                        { label: '레피티션 (R)', pace: recommendation.vdotInfo.paces.repetition, color: '#BD00FF' }
+                                    ].map((p, idx) => (
+                                        <div key={idx} style={{ 
+                                            background: 'rgba(0,0,0,0.3)', 
+                                            padding: '0.8rem', 
+                                            borderRadius: '14px', 
+                                            border: '1px solid rgba(255,255,255,0.03)',
+                                            textAlign: 'center'
+                                        }}>
+                                            <div style={{ fontSize: '0.65rem', opacity: 0.5, marginBottom: '4px' }}>{p.label}</div>
+                                            <div style={{ fontSize: '1.05rem', fontWeight: '900', color: p.color }}>{p.pace}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p style={{ fontSize: '0.75rem', opacity: 0.5, margin: 0, textAlign: 'center' }}>
+                                    * 잭 대니얼스의 VDOT 공식에 기반한 과학적 추천 페이스입니다. 훈련 목적에 맞춰 활용하세요.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Prescription & Deep Analysis Section */}
