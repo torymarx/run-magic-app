@@ -368,7 +368,7 @@ export const calculateBMI = (weight: number, height: number): { value: number; c
 /**
  * 기록이 없는 신규 사용자를 위한 초기 진단 컨설팅 시나리오
  */
-export const getInitialConsultation = (weight: number, height: number, goal: string, coachId: string): InitialConsultation => {
+export const getInitialConsultation = (weight: number, height: number, coachId: string): InitialConsultation => {
     const { value: bmi, category } = calculateBMI(weight, height);
     
     const scenarios: Record<string, any> = {

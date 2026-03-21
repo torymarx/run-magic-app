@@ -185,7 +185,7 @@ export const useAICoachSystem = (
                             : (() => {
                                 const weight = profile?.weight || 70;
                                 const height = profile?.height || 175;
-                                const initial = getInitialConsultation(weight, height, runnerGoal, selectedCoachId);
+                                const initial = getInitialConsultation(weight, height, selectedCoachId);
                                 return `환영합니다! 아직 기록이 없지만, 런너님의 신체 데이터(BMI: ${initial.bmi.toFixed(1)})를 기반으로 수립한 초기 전략입니다.\n\n⚠️ 가이드라인: ${initial.advice.issue}\n\n💡 추천 시작법: ${initial.advice.improvement}\n\n🗓️ 첫 번째 미션: ${initial.advice.nextTask}`;
                             })(),
                         insight: todayStats && effectiveRecord 
@@ -193,7 +193,7 @@ export const useAICoachSystem = (
                             : (() => {
                                 const weight = profile?.weight || 70;
                                 const height = profile?.height || 175;
-                                const initial = getInitialConsultation(weight, height, runnerGoal, selectedCoachId);
+                                const initial = getInitialConsultation(weight, height, selectedCoachId);
                                 return `신체 프로필 분석 결과: ${initial.bmiCategory}군에 해당합니다. ${initial.advice.insight}`;
                             })(),
                         mental: todayStats && effectiveRecord
@@ -201,7 +201,7 @@ export const useAICoachSystem = (
                             : (() => {
                                 const weight = profile?.weight || 70;
                                 const height = profile?.height || 175;
-                                const initial = getInitialConsultation(weight, height, runnerGoal, selectedCoachId);
+                                const initial = getInitialConsultation(weight, height, selectedCoachId);
                                 return initial.advice.mental;
                             })(),
                         vdotInfo: todayStats && todayStats.vdot > 0 ? {
@@ -209,7 +209,7 @@ export const useAICoachSystem = (
                             paces: getRecommendedPaces(todayStats.vdot),
                             currentIntensity: getIntensityLabel(todayStats.vdot, todayStats.paceSec)
                         } : undefined,
-                        initialDiagnosis: !todayStats || !effectiveRecord ? getInitialConsultation(profile?.weight || 70, profile?.height || 175, runnerGoal, selectedCoachId) : undefined
+                        initialDiagnosis: !todayStats || !effectiveRecord ? getInitialConsultation(profile?.weight || 70, profile?.height || 175, selectedCoachId) : undefined
                     }
                 }
             };

@@ -921,7 +921,31 @@ export const useRecordManager = (
             sessions: records.length,
             time: records.reduce((acc, r) => acc + (parseTimeToSeconds(r.totalTime) / 60 || 0), 0),
             streak: streak,
-            bestPace: records.length > 0 ? Math.min(...records.filter(r => r.distance > 0).map(r => parseTimeToSeconds(r.pace))) : 9999
+            bestPace: records.length > 0 ? Math.min(...records.filter(r => r.distance > 0).map(r => parseTimeToSeconds(r.pace))) : 9999,
+            // v24.0: 상세 미션 카운터 추가
+            dawnCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 5 && h < 9;
+            }).length,
+            nightCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 19 || h < 24;
+            }).length,
+            weekendCount: records.filter(r => {
+                const day = new Date(r.date).getDay();
+                return day === 0 || day === 6;
+            }).length,
+            mondayCount: records.filter(r => new Date(r.date).getDay() === 1).length,
+            shortRunCount: records.filter(r => r.distance <= 2).length,
+            earlyCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 4 && h < 6;
+            }).length,
+            lateCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 22 || h < 2;
+            }).length,
+            stormCount: records.filter(r => r.weather === 'rain' || r.weather === 'snow').length
         },
         refreshData: () => fetchInitialData(false)
     };

@@ -9,7 +9,9 @@ export interface Medal {
     phase: number;
     iconType: string; // Lucide icon name mapping
     targetValue: number;
-    category: 'distance' | 'time' | 'sessions' | 'streak' | 'pace' | 'special';
+    category: 'distance' | 'time' | 'sessions' | 'streak' | 'pace' | 'special' | 
+              'dawnCount' | 'nightCount' | 'weekendCount' | 'mondayCount' | 
+              'shortRunCount' | 'earlyCount' | 'lateCount' | 'stormCount';
 }
 
 export const MEDAL_DATA: Medal[] = [
@@ -17,20 +19,20 @@ export const MEDAL_DATA: Medal[] = [
     { id: 'm1', name: '마법진 활성화', points: 2, criteria: '앱 최초 로그인 및 프로필 설정', description: '흑요석 베이스 위에 레이저로 각인된 푸른색 마법진. 은은한 속광 효과.', rarity: 'COMMON', phase: 1, iconType: 'Shield', targetValue: 1, category: 'special' },
     { id: 'm2', name: '마법의 씨앗', points: 5, criteria: '생애 첫 1km 완주 (걷기 포함)', description: '투명 캡슐 안에 떠 있는 네온 그린 홀로그램 씨앗.', rarity: 'COMMON', phase: 1, iconType: 'Sprout', targetValue: 1, category: 'distance' },
     { id: 'm3', name: '시간의 파편', points: 5, criteria: '처음으로 10분 연속 달리기', description: '공중에서 부양한 비대칭 크리스탈 조각. 내부 빛 굴절 효과.', rarity: 'COMMON', phase: 1, iconType: 'Zap', targetValue: 10, category: 'special' },
-    { id: 'm4', name: '여명의 축복', points: 10, criteria: '오전(05:00~09:00) 러닝 1회 완료', description: '황동 재질의 태양 펜던트. 아침 햇살 조명 효과.', rarity: 'UNCOMMON', phase: 1, iconType: 'Sun', targetValue: 1, category: 'special' },
-    { id: 'm5', name: '달빛의 인도', points: 10, criteria: '야간(19:00~24:00) 러닝 1회 완료', description: '크롬 질감의 초승달 배지. 강한 림 라이트 효과.', rarity: 'UNCOMMON', phase: 1, iconType: 'Moon', targetValue: 1, category: 'special' },
+    { id: 'm4', name: '여명의 축복', points: 10, criteria: '오전(05:00~09:00) 러닝 1회 완료', description: '황동 재질의 태양 펜던트. 아침 햇살 조명 효과.', rarity: 'UNCOMMON', phase: 1, iconType: 'Sun', targetValue: 1, category: 'dawnCount' },
+    { id: 'm5', name: '달빛의 인도', points: 10, criteria: '야간(19:00~24:00) 러닝 1회 완료', description: '크롬 질감의 초승달 배지. 강한 림 라이트 효과.', rarity: 'UNCOMMON', phase: 1, iconType: 'Moon', targetValue: 1, category: 'nightCount' },
 
     // Phase 2: 습관의 형성
     { id: 'm6', name: '견습생의 끈기', points: 15, criteria: '3일 연속 러닝 인증', description: '거친 오크나무 마법 지팡이. 끝에 박힌 앰버 보석 내 불씨.', rarity: 'UNCOMMON', phase: 2, iconType: 'Flame', targetValue: 3, category: 'streak' },
     { id: 'm7', name: '마나 순환', points: 15, criteria: '1주일 내 3회 이상 러닝', description: '뫼비우스의 띠 형태로 꼬인 투명 액체 튜브.', rarity: 'UNCOMMON', phase: 2, iconType: 'Activity', targetValue: 3, category: 'sessions' },
-    { id: 'm8', name: '휴일의 마법사', points: 10, criteria: '주말(토/일) 러닝 1회 완료', description: '낡은 가죽 질감의 마도서. 금박 엠보싱 텍스트.', rarity: 'UNCOMMON', phase: 2, iconType: 'BookOpen', targetValue: 1, category: 'special' },
+    { id: 'm8', name: '휴일의 마법사', points: 10, criteria: '주말(토/일) 러닝 1회 완료', description: '낡은 가죽 질감의 마도서. 금박 엠보싱 텍스트.', rarity: 'UNCOMMON', phase: 2, iconType: 'BookOpen', targetValue: 1, category: 'weekendCount' },
     { id: 'm9', name: '10km의 지평선', points: 20, criteria: '누적 달리기 거리 10km 돌파', description: '로즈골드 메탈 나침반. AI 마이크로칩 코어.', rarity: 'RARE', phase: 2, iconType: 'Compass', targetValue: 10, category: 'distance' },
     { id: 'm10', name: '마력의 물약', points: 20, criteria: '3km 쉬지 않고 완주', description: '둥근 플라스크 속 보라색 액체. 신비로운 그림자 효과.', rarity: 'RARE', phase: 2, iconType: 'FlaskConical', targetValue: 3, category: 'special' },
 
     // Phase 3: 마법의 응용
-    { id: 'm11', name: '부활의 주문', points: 10, criteria: '월요일 러닝 1회 완료', description: '돌무더기를 뚫고 피어나는 홀로그램 불사조 깃털.', rarity: 'UNCOMMON', phase: 3, iconType: 'Bird', targetValue: 1, category: 'special' },
+    { id: 'm11', name: '부활의 주문', points: 10, criteria: '월요일 러닝 1회 완료', description: '돌무더기를 뚫고 피어나는 홀로그램 불사조 깃털.', rarity: 'UNCOMMON', phase: 3, iconType: 'Bird', targetValue: 1, category: 'mondayCount' },
     { id: 'm12', name: '영겁의 모래', points: 10, criteria: '누적 달리기 시간 100분 돌파', description: '가로로 누운 황금빛 모래시계. 우주 모래 순환.', rarity: 'UNCOMMON', phase: 3, iconType: 'Timer', targetValue: 100, category: 'time' },
-    { id: 'm13', name: '바람의 정령', points: 10, criteria: '2km 이하 짧은 러닝 누적 5회 완료', description: '크리스탈 나비 날개. 오로라 빛 박막 간섭 효과.', rarity: 'UNCOMMON', phase: 3, iconType: 'Wind', targetValue: 5, category: 'sessions' },
+    { id: 'm13', name: '바람의 정령', points: 10, criteria: '2km 이하 짧은 러닝 누적 5회 완료', description: '크리스탈 나비 날개. 오로라 빛 박막 간섭 효과.', rarity: 'UNCOMMON', phase: 3, iconType: 'Wind', targetValue: 5, category: 'shortRunCount' },
     { id: 'm14', name: '일곱 별의 궤적', points: 15, criteria: '한 번에 7km 완주', description: '스페이스 블랙 원판 위 다이아몬드 북두칠성.', rarity: 'RARE', phase: 3, iconType: 'Star', targetValue: 7, category: 'special' },
 
     // Phase 4: 한계 돌파
@@ -81,9 +83,9 @@ export const MEDAL_DATA: Medal[] = [
     { id: 'm51', name: '은하수의 인도자', points: 100, criteria: '누적 1,500km 달성', description: '당신이 달린 길은 밤하늘의 은하수처럼 빛납니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Sparkles', targetValue: 1500, category: 'distance' },
     { id: 'm52', name: '시공의 관측자', points: 150, criteria: '누적 15,000분 주행', description: '시간의 흐름조차 당신의 발걸음 앞에서는 멈춥니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Telescope', targetValue: 15000, category: 'time' },
     { id: 'm53', name: '불멸의 위성', points: 200, criteria: '총 500회 러닝 달성', description: '지구를 500번 공전한 위성처럼, 당신은 영원합니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Satellite', targetValue: 500, category: 'sessions' },
-    { id: 'm54', name: '새벽의 실리우스', points: 80, criteria: '새벽 4~6시 러닝 20회', description: '가장 일찍 일어나는 별, 실리우스처럼 새벽을 밝힙니다.', rarity: 'LEGENDARY', phase: 8, iconType: 'Star', targetValue: 20, category: 'special' },
-    { id: 'm55', name: '밤의 베가', points: 80, criteria: '심야 22~02시 러닝 20회', description: '깊은 밤 가장 밝게 빛나는 거문고자리 일등성 베가.', rarity: 'LEGENDARY', phase: 8, iconType: 'Moon', targetValue: 20, category: 'special' },
-    { id: 'm56', name: '폭풍의 눈', points: 100, criteria: '악천후 속 러닝 10회 (비/눈 실측)', description: '어떤 역경도 당신의 고요한 질주를 방해할 수 없습니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Wind', targetValue: 10, category: 'special' },
+    { id: 'm54', name: '새벽의 실리우스', points: 80, criteria: '새벽 4~6시 러닝 20회', description: '가장 일찍 일어나는 별, 실리우스처럼 새벽을 밝힙니다.', rarity: 'LEGENDARY', phase: 8, iconType: 'Star', targetValue: 20, category: 'earlyCount' },
+    { id: 'm55', name: '밤의 베가', points: 80, criteria: '심야 22~02시 러닝 20회', description: '깊은 밤 가장 밝게 빛나는 거문고자리 일등성 베가.', rarity: 'LEGENDARY', phase: 8, iconType: 'Moon', targetValue: 20, category: 'lateCount' },
+    { id: 'm56', name: '폭풍의 눈', points: 100, criteria: '악천후 속 러닝 10회 (비/눈 실측)', description: '어떤 역경도 당신의 고요한 질주를 방해할 수 없습니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Wind', targetValue: 10, category: 'stormCount' },
     { id: 'm57', name: '안드로메다로의 도약', points: 300, criteria: '누적 2,000km 달성', description: '지구의 경계를 넘어 우주로 뻗어나가는 위대한 질주.', rarity: 'MYTHIC', phase: 8, iconType: 'Nebula', targetValue: 2000, category: 'distance' },
     { id: 'm58', name: '광속의 수렴', points: 150, criteria: '평균 페이스 4\'15" 진입', description: '빛의 속도에 수렴하는 당신의 압도적인 퍼포먼스.', rarity: 'MYTHIC', phase: 8, iconType: 'Lightning', targetValue: 255, category: 'pace' },
     { id: 'm59', name: '성좌의 수호자', points: 500, criteria: '총 1,000회 러닝 달성', description: '런매직 우주의 모든 영웅들의 귀감이 되는 성좌급 존재.', rarity: 'MYTHIC', phase: 8, iconType: 'Constellation', targetValue: 1000, category: 'sessions' },

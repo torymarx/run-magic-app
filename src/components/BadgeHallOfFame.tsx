@@ -400,22 +400,47 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'rgba(255,255,255,0.4)' }}>
                                                 <Lock size={12} />
-                                                <span>🔒 {hoveredItem.description}</span>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)' }}>
+                                                    🎯 미션: {hoveredItem.criteria}
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', paddingLeft: '16px' }}>
+                                                "{hoveredItem.description}"
                                             </div>
                                             
                                             {/* Progress Bar for Locked Medals */}
                                             {totalStats && hoveredItem.targetValue && (
                                                 <div style={{ marginTop: '4px' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '4px', opacity: 0.8 }}>
-                                                        <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY] }}>달성 목표까지</span>
+                                                        <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY] }}>달성 현황</span>
                                                         <span>
                                                             {(() => {
                                                                 const current = (totalStats as any)[hoveredItem.category] || 0;
+                                                                const unitMap: { [key: string]: string } = {
+                                                                    distance: 'km',
+                                                                    time: '분',
+                                                                    sessions: '회',
+                                                                    streak: '일',
+                                                                    dawnCount: '회',
+                                                                    nightCount: '회',
+                                                                    weekendCount: '회',
+                                                                    mondayCount: '회',
+                                                                    shortRunCount: '회',
+                                                                    earlyCount: '회',
+                                                                    lateCount: '회',
+                                                                    stormCount: '회'
+                                                                };
+                                                                const unit = unitMap[hoveredItem.category] || '';
+
                                                                 if (hoveredItem.category === 'bestPace') {
                                                                     return current === 9999 ? '기록 없음' : `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}"`;
                                                                 }
-                                                                return `${current.toFixed(1)} / ${hoveredItem.targetValue}`;
-                                                            })()}
+                                                                if (hoveredItem.category === 'pace') {
+                                                                    return `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}" / 목표 ${Math.floor(hoveredItem.targetValue/60)}'${(hoveredItem.targetValue%60).toString().padStart(2,'0')}"`;
+                                                                }
+                                                                
+                                                                return `${typeof current === 'number' ? (current % 1 === 0 ? current : current.toFixed(1)) : current}${unit} / ${hoveredItem.targetValue}${unit}`;
+                                                                })()}
                                                         </span>
                                                     </div>
                                                     <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
@@ -423,13 +448,14 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                                             height: '100%', 
                                                             width: `${(() => {
                                                                 const current = (totalStats as any)[hoveredItem.category] || 0;
-                                                                if (hoveredItem.category === 'bestPace') {
-                                                                    return current <= hoveredItem.targetValue ? 100 : Math.max(0, 100 - (current - hoveredItem.targetValue) / 10);
+                                                                if (hoveredItem.category === 'bestPace' || hoveredItem.category === 'pace') {
+                                                                    return current <= hoveredItem.targetValue ? 100 : Math.max(5, 100 - (current - hoveredItem.targetValue) / 2);
                                                                 }
                                                                 return Math.min(100, (current / hoveredItem.targetValue) * 100);
                                                             })()}%`, 
                                                             background: RARITY[hoveredItem.rarity as keyof typeof RARITY],
-                                                            boxShadow: `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}`
+                                                            boxShadow: `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}`,
+                                                            transition: 'width 1s ease-out'
                                                         }} />
                                                     </div>
                                                 </div>
