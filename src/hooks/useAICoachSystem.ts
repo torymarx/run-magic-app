@@ -1,18 +1,27 @@
 import { useMemo } from 'react';
 import { parseTimeToSeconds, formatPace } from '../utils/calculations';
-import { diagnoseRunnerProfile, getProfileKoreanName, getDetailedPrescription } from '../utils/coachUtils';
+import { diagnoseRunnerProfile, getProfileKoreanName, getDetailedPrescription, getInitialConsultation, InitialConsultation } from '../utils/coachUtils';
 import { calculateVDOT, getRecommendedPaces, getIntensityLabel, RecommendedPaces } from '../utils/vdotUtils';
 
 interface Recommendation {
     title: string;
     detail: string;
-    insight?: string;
-    mental?: string;
+    insight: string;
+    mental: string;
     vdotInfo?: {
         value: number;
         paces: RecommendedPaces;
         currentIntensity: string;
     };
+    initialDiagnosis?: InitialConsultation;
+}
+
+interface AICoachSystemReturn {
+    message: string;
+    recommendation: Recommendation;
+    periodStats: any;
+    recentStats: any;
+    runnerProfile: string;
 }
 
 export const useAICoachSystem = (
@@ -24,7 +33,7 @@ export const useAICoachSystem = (
     lastSavedRecord: any,
     profile?: any,
     levelInfo?: any
-) => {
+): AICoachSystemReturn => {
     // 0. 기반 데이터 정의: 현재 세션 또는 가장 최근 기록
     const effectiveRecord = lastSavedRecord || (Array.isArray(records) && records.length > 0 ? records[0] : null);
 
@@ -57,14 +66,11 @@ export const useAICoachSystem = (
     }, [records]);
 
     // 3. 당일 성과 (Today): 현재 세션 또는 가장 최근 기록의 임계치 분석
-
     const todayStats = useMemo(() => {
         if (effectiveRecord) {
             const paceSec = parseTimeToSeconds(effectiveRecord.pace || "0:00");
             const distance = effectiveRecord.distance || 0;
             const timeMin = parseTimeToSeconds(effectiveRecord.totalTime || "0:00") / 60;
-            
-            // Calculate VDOT for this specific record
             const vdotValue = calculateVDOT(distance, timeMin);
 
             return {
@@ -82,9 +88,12 @@ export const useAICoachSystem = (
 
     const feedback = useMemo(() => {
         let message = "";
-        let recommendation: Recommendation = { title: "전략적 분석", detail: "당신의 러닝 데이터를 분석 중입니다." };
+        let recommendation: any = { title: "전략적 분석", detail: "당신의 러닝 데이터를 분석 중입니다." };
 
-        // [실시간 코칭: 기록 중] Professional Persona
+        const runnerGoal = profile?.goal || "멋지게 달리기";
+        const runnerName = profile?.name || "런너";
+        const currentLevel = levelInfo?.name || "비기너";
+
         if (isRecording) {
             const currentPaceSeconds = distance > 0 ? timer / distance : 0;
             const paceStr = formatPace(currentPaceSeconds);
@@ -144,14 +153,7 @@ export const useAICoachSystem = (
             const script = coachScripts[selectedCoachId] || coachScripts['wellness'];
             message = script.msg;
             recommendation = script.rect;
-        }
-        // [심층 분석 & 로드맵 가이드: 프로필 기반 조언]
-        else {
-            const runnerGoal = profile?.goal || "멋지게 달리기";
-            const runnerName = profile?.name || "런너";
-            const currentLevel = levelInfo?.name || "비기너";
-
-            // 코치별 성격이 담긴 메시지 생성
+        } else {
             const getCoachMessage = (coachId: string) => {
                 switch(coachId) {
                     case 'apex': return `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 단순한 열망을 넘어, 정밀한 훈련 데이터를 통해 충분히 요격 가능한 사거리 안에 들어왔습니다. 🔥`;
@@ -165,7 +167,6 @@ export const useAICoachSystem = (
             };
 
             const coachScripts: Record<string, any> = {
-                // 공통된 추천 구조를 가지되, detail은 getDetailedPrescription에서 코치별로 다르게 가져옴
                 generic: {
                     msg: getCoachMessage(selectedCoachId),
                     rect: {
@@ -175,22 +176,40 @@ export const useAICoachSystem = (
                                 const profileType = diagnoseRunnerProfile(effectiveRecord);
                                 const pres = getDetailedPrescription(profileType, selectedCoachId);
                                 const vdotPaces = getRecommendedPaces(todayStats.vdot);
-                                
                                 let vdotTip = "";
                                 if (todayStats.vdot > 0) {
                                     vdotTip = `\n\n📊 VDOT 분석(${todayStats.vdot.toFixed(1)}): 이 기록을 바탕으로 산출된 추천 훈련 페이스입니다.\n• 조깅(Easy): ${vdotPaces.easy}\n• 유산소역치: ${vdotPaces.threshold}\n• 인터벌: ${vdotPaces.interval}`;
                                 }
-                                
                                 return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}) 분석 결과입니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}${vdotTip}`;
                             })()
-                            : `"${runnerGoal}"을(를) 달성하기 위해서는 일관된 데이터 축적이 필요합니다. 누적 ${overallStats?.totalDist.toFixed(1)}km의 기반 위에, 이번 주는 심박수 Zone 2-3 영역을 유지하는 저강도 세션을 포함하십시오.`,
-                        insight: `런싱크 프로파일 진단: ${effectiveRecord ? getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord)) : '분석 대기'}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '심장 부하가 관찰되니 강도를 조절하세요.' : '안정적인 궤적을 유지하고 있습니다.'}${todayStats && todayStats.vdot > 0 ? ` [강도: ${getIntensityLabel(todayStats.vdot, todayStats.paceSec)}]` : ''}`,
-                        mental: selectedCoachId === 'apex' ? "고통은 한계를 뚫고 나가는 소리입니다." : "지속 가능한 성장이 진정한 승리입니다.",
+                            : (() => {
+                                const weight = profile?.weight || 70;
+                                const height = profile?.height || 175;
+                                const initial = getInitialConsultation(weight, height, runnerGoal, selectedCoachId);
+                                return `환영합니다! 아직 기록이 없지만, 런너님의 신체 데이터(BMI: ${initial.bmi.toFixed(1)})를 기반으로 수립한 초기 전략입니다.\n\n⚠️ 가이드라인: ${initial.advice.issue}\n\n💡 추천 시작법: ${initial.advice.improvement}\n\n🗓️ 첫 번째 미션: ${initial.advice.nextTask}`;
+                            })(),
+                        insight: todayStats && effectiveRecord 
+                            ? `런싱크 프로파일 진단: ${getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord))}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '심장 부하가 관찰되니 강도를 조절하세요.' : '안정적인 궤적을 유지하고 있습니다.'}${todayStats && todayStats.vdot > 0 ? ` [강도: ${getIntensityLabel(todayStats.vdot, todayStats.paceSec)}]` : ''}`
+                            : (() => {
+                                const weight = profile?.weight || 70;
+                                const height = profile?.height || 175;
+                                const initial = getInitialConsultation(weight, height, runnerGoal, selectedCoachId);
+                                return `신체 프로필 분석 결과: ${initial.bmiCategory}군에 해당합니다. ${initial.advice.insight}`;
+                            })(),
+                        mental: todayStats && effectiveRecord
+                            ? (selectedCoachId === 'apex' ? "고통은 한계를 뚫고 나가는 소리입니다." : "지속 가능한 성장이 진정한 승리입니다.")
+                            : (() => {
+                                const weight = profile?.weight || 70;
+                                const height = profile?.height || 175;
+                                const initial = getInitialConsultation(weight, height, runnerGoal, selectedCoachId);
+                                return initial.advice.mental;
+                            })(),
                         vdotInfo: todayStats && todayStats.vdot > 0 ? {
                             value: todayStats.vdot,
                             paces: getRecommendedPaces(todayStats.vdot),
                             currentIntensity: getIntensityLabel(todayStats.vdot, todayStats.paceSec)
-                        } : undefined
+                        } : undefined,
+                        initialDiagnosis: !todayStats || !effectiveRecord ? getInitialConsultation(profile?.weight || 70, profile?.height || 175, runnerGoal, selectedCoachId) : undefined
                     }
                 }
             };
@@ -199,7 +218,6 @@ export const useAICoachSystem = (
             message = script.msg;
             recommendation = script.rect;
         }
-
 
         return {
             message,
@@ -213,7 +231,7 @@ export const useAICoachSystem = (
 
     return { 
         message: feedback.message, 
-        recommendation: feedback.recommendation, 
+        recommendation: feedback.recommendation as Recommendation, 
         periodStats: overallStats, 
         recentStats,
         runnerProfile: effectiveRecord ? diagnoseRunnerProfile(effectiveRecord) : 'UNKNOWN'

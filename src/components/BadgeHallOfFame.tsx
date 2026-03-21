@@ -5,7 +5,7 @@ import {
     Sprout, Shield, BookOpen, Compass, FlaskConical, Bird, Hourglass, FastForward, Map, MapPin,
     Beaker, Dices, Gem, Globe, Settings, Aperture, Flower, Dog, CloudLightning, Train, Box,
     Clock, Hammer, Castle, SunMedium, Waves, Footprints, Watch, BatteryCharging, Infinity,
-    Gift, Sword, Wand2, Library, Rocket
+    Gift, Sword, Wand2, Library, Rocket, Sparkles, Telescope, Satellite, Cloud, Plus
 } from 'lucide-react';
 import { MEDAL_DATA } from '../data/medals';
 
@@ -13,16 +13,23 @@ interface BadgeHallOfFameProps {
     unlockedBadges: string[];
     unlockedMedals: string[];
     medalAchievements?: { [id: string]: string }; // v17.0
+    totalStats?: {
+        distance: number;
+        sessions: number;
+        time: number;
+        streak: number;
+        bestPace: number;
+    };
 }
 
-const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unlockedMedals, medalAchievements }) => {
-    // Rarity Colors
+const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unlockedMedals, medalAchievements, totalStats }) => {
     const RARITY = {
         COMMON: '#8C8C8C',
         UNCOMMON: '#00FF85', // Neon Green
         RARE: '#00D1FF',     // Electric Blue
         EPIC: '#BD00FF',     // Vivid Purple
-        LEGENDARY: '#FFD700' // Gold
+        LEGENDARY: '#FFD700', // Gold
+        MYTHIC: '#FF3D00'    // Deep Red/Orange for Mythic
     };
 
     // v15.0: 아이콘 타입 매핑 테이블
@@ -72,7 +79,14 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         Wand2: <Wand2 size={20} />,
         Library: <Library size={20} />,
         Rocket: <Rocket size={20} />,
-        Infinity: <Infinity size={20} />
+        Infinity: <Infinity size={20} />,
+        Sparkles: <Sparkles size={20} />,
+        Telescope: <Telescope size={20} />,
+        Satellite: <Satellite size={20} />,
+        Nebula: <Cloud size={20} />, // Nebula alternative if Cloud is used, or use Sparkles
+        Lightning: <Zap size={20} />,
+        Constellation: <Star size={20} />,
+        Earth: <Globe size={20} />
     };
 
     const allItems = MEDAL_DATA.map(m => ({
@@ -84,11 +98,14 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         points: m.points,
         rarity: m.rarity,
         phase: m.phase,
-        type: 'medal'
+        type: 'medal',
+        targetValue: m.targetValue,
+        category: m.category
     }));
 
     // Rarity Rank for Sorting
     const RARITY_RANK = {
+        MYTHIC: 6,
         LEGENDARY: 5,
         EPIC: 4,
         RARE: 3,
@@ -372,17 +389,63 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                 <div style={{ fontSize: '0.8rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', lineHeight: '1.4' }}>
                                     {hoveredItem.isUnlocked ? (
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span>{hoveredItem.description}</span>
+                                            <span>{hoveredItem.detail}</span>
                                             {hoveredItem.date && (
-                                                <span style={{ fontSize: '0.7rem', marginTop: '2px', color: 'var(--electric-blue)', opacity: 0.8 }}>
+                                                <span style={{ fontSize: '0.7rem', marginTop: '4px', color: 'var(--electric-blue)', opacity: 0.8 }}>
                                                     📅 달성일: {hoveredItem.date}
                                                 </span>
                                             )}
                                         </div>
                                     ) : (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <Lock size={12} />
-                                            <span>{hoveredItem.description}</span>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'rgba(255,255,255,0.4)' }}>
+                                                <Lock size={12} />
+                                                <span>🔒 {hoveredItem.description}</span>
+                                            </div>
+                                            
+                                            {/* Progress Bar for Locked Medals */}
+                                            {totalStats && hoveredItem.targetValue && (
+                                                <div style={{ marginTop: '4px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '4px', opacity: 0.8 }}>
+                                                        <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY] }}>달성 목표까지</span>
+                                                        <span>
+                                                            {(() => {
+                                                                const current = (totalStats as any)[hoveredItem.category] || 0;
+                                                                if (hoveredItem.category === 'bestPace') {
+                                                                    return current === 9999 ? '기록 없음' : `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}"`;
+                                                                }
+                                                                return `${current.toFixed(1)} / ${hoveredItem.targetValue}`;
+                                                            })()}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                        <div style={{ 
+                                                            height: '100%', 
+                                                            width: `${(() => {
+                                                                const current = (totalStats as any)[hoveredItem.category] || 0;
+                                                                if (hoveredItem.category === 'bestPace') {
+                                                                    return current <= hoveredItem.targetValue ? 100 : Math.max(0, 100 - (current - hoveredItem.targetValue) / 10);
+                                                                }
+                                                                return Math.min(100, (current / hoveredItem.targetValue) * 100);
+                                                            })()}%`, 
+                                                            background: RARITY[hoveredItem.rarity as keyof typeof RARITY],
+                                                            boxShadow: `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}`
+                                                        }} />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            <div style={{ 
+                                                marginTop: '4px',
+                                                fontSize: '0.75rem', 
+                                                color: '#FFD700', // Gold color for points
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                <Plus size={12} /> {hoveredItem.points} XP 획득 가능
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -400,7 +463,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                             gap: '8px'
                         }}>
                             <Info size={14} />
-                            <span>메달을 탐색해 보세요</span>
+                            <span>메달을 탐색해 진행 현황을 확인해 보세요</span>
                         </div>
                     )}
                 </div>

@@ -99,7 +99,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                <Edit3 size={18} /> Edit Profile
+                                <Edit3 size={18} /> 프로필 수정 (Edit Profile)
                             </button>
                         ) : (
                             <div className="mobile-w-full" style={{ display: 'flex', gap: '0.8rem' }}>
@@ -118,7 +118,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                         boxShadow: '0 4px 15px rgba(57, 255, 20, 0.3)'
                                     }}
                                 >
-                                    SAVE
+                                    저장 (SAVE)
                                 </button>
                                 <button
                                     onClick={() => { setIsEditing(false); setEditData(profile); }}
@@ -134,7 +134,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                         fontSize: '0.9rem'
                                     }}
                                 >
-                                    CANCEL
+                                    취소 (CANCEL)
                                 </button>
                             </div>
                         )}
@@ -168,9 +168,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                     <div style={{ width: '100%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
-                                <ChevronRight size={22} className="neon-text-blue" /> Evolution Stages
+                                <ChevronRight size={22} className="neon-text-blue" /> 진급 단계 (Evolution Stages)
                             </h3>
-                            <span className="mobile-hide" style={{ fontSize: '0.8rem', opacity: 0.5 }}>Level up to unlock new forms ✨</span>
+                            <span className="mobile-hide" style={{ fontSize: '0.8rem', opacity: 0.5 }}>레벨업하여 새로운 모습을 해금하세요 ✨</span>
                         </div>
 
                         <div className="custom-scrollbar" style={{
@@ -203,7 +203,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                         }}
                                     >
                                         {isCurrent && (
-                                            <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--electric-blue)', color: 'black', fontSize: '0.65rem', padding: '3px 8px', borderRadius: '8px', fontWeight: '900' }}>CURRENT</div>
+                                            <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--electric-blue)', color: 'black', fontSize: '0.65rem', padding: '3px 8px', borderRadius: '8px', fontWeight: '900' }}>현재 단계</div>
                                         )}
 
                                         <div style={{
@@ -245,7 +245,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                     {/* AI Analysis Section - Expanded to full width as Goal is now in Widget */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '800', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <ShieldCheck size={18} className="neon-text-purple" /> SYSTEM ANALYSIS & STRATEGY
+                            <ShieldCheck size={18} className="neon-text-purple" /> 시스템 분석 및 전략 (SYSTEM ANALYSIS & STRATEGY)
                         </span>
                         <div className="mobile-compact-padding" style={{
                             padding: '2rem',
@@ -264,8 +264,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     "런너의 신체 데이터를 입력하면 더욱 정밀한 코칭 알고리즘이 가동되어 성장을 지원합니다. 현재 기본 성능으로 시스템이 대기 중입니다."}
                             </p>
                             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--vibrant-purple)', fontWeight: 'bold', background: 'rgba(189,0,255,0.1)', padding: '4px 12px', borderRadius: '10px' }}>ANALYSIS ACTIVE</div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--electric-blue)', fontWeight: 'bold', background: 'rgba(0, 209, 255, 0.1)', padding: '4px 12px', borderRadius: '10px' }}>STRATEGY SYNCED</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--vibrant-purple)', fontWeight: 'bold', background: 'rgba(189,0,255,0.1)', padding: '4px 12px', borderRadius: '10px' }}>분석 가동 중 (ANALYSIS ACTIVE)</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--electric-blue)', fontWeight: 'bold', background: 'rgba(0, 209, 255, 0.1)', padding: '4px 12px', borderRadius: '10px' }}>전략 동기화 완료 (STRATEGY SYNCED)</div>
                             </div>
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <RefreshCw size={16} className="neon-text-blue" />
-                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', letterSpacing: '0.5px', opacity: 0.6 }}>CLOUD DATA SYNC : {syncStatus?.time || 'LAST STABLE SESSION'}</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', letterSpacing: '0.5px', opacity: 0.6 }}>클라우드 데이터 동기화 (CLOUD DATA SYNC) : {syncStatus?.time || 'LAST STABLE SESSION'}</span>
                         </div>
                         <button
                             onClick={onRefreshData}
@@ -302,7 +302,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                 borderRadius: '10px'
                             }}
                         >
-                            RUN DIAGNOSTIC
+                            진단 실행 (RUN DIAGNOSTIC)
                         </button>
                     </div>
                 )}

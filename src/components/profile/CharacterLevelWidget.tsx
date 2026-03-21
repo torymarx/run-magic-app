@@ -191,9 +191,9 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
                     {/* Physical Specs (Horizontal Chips) */}
                     <div className="mobile-grid-2" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <SpecChip icon={User} label="GENDER" value={profile.gender?.toUpperCase()} field="gender" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
-                        <SpecChip icon={Weight} label="WEIGHT" value={`${profile.weight}kg`} field="weight" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
-                        <SpecChip icon={Ruler} label="HEIGHT" value={`${profile.height}cm`} field="height" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                        <SpecChip icon={User} label="성별 (GENDER)" value={profile.gender === 'male' ? '남성' : '여성'} field="gender" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                        <SpecChip icon={Weight} label="체중 (WEIGHT)" value={`${profile.weight}kg`} field="weight" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                        <SpecChip icon={Ruler} label="신장 (HEIGHT)" value={`${profile.height}cm`} field="height" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
                     </div>
 
                     {/* Attributes Section */}
@@ -201,16 +201,16 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                         background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '24px',
                         border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.4)'
                     }}>
-                        <h4 style={{ margin: '0 0 15px 0', fontSize: '0.9rem', color: theme.color, fontWeight: '900', letterSpacing: '2px' }}>CORE ATTRIBUTES</h4>
-                        <StatBar label="STAMINA" value={stats.stamina} icon={Heart} color="#FF4B4B" />
-                        <StatBar label="SPEED" value={stats.speed} icon={Zap} color="#FFD700" />
-                        <StatBar label="WILLPOWER" value={stats.willpower} icon={Sword} color="#00D1FF" />
+                        <h4 style={{ margin: '0 0 15px 0', fontSize: '0.9rem', color: theme.color, fontWeight: '900', letterSpacing: '2px' }}>핵심 능력치 (CORE ATTRIBUTES)</h4>
+                        <StatBar label="지구력 (STAMINA)" value={stats.stamina} icon={Heart} color="#FF4B4B" />
+                        <StatBar label="속도 (SPEED)" value={stats.speed} icon={Zap} color="#FFD700" />
+                        <StatBar label="의지력 (WILLPOWER)" value={stats.willpower} icon={Sword} color="#00D1FF" />
                     </div>
 
                     {/* Runner's Ambition (Goal) */}
                     <div style={{ padding: '0 10px' }}>
                         <div style={{ fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                            <Target size={10} color={theme.color} /> RUNNER'S AMBITION
+                            <Target size={10} color={theme.color} /> 런너의 야망 (RUNNER'S AMBITION)
                         </div>
                         {isEditing ? (
                             <textarea
@@ -241,7 +241,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             {/* EXP Gauge Footer */}
             <div style={{ marginTop: '0.5rem', zIndex: 2 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '8px', fontWeight: 'bold' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>EXP PROGRESS</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>경험치 진행 (EXP PROGRESS)</span>
                     <span style={{ color: theme.color }}>{Math.round(progress)}%</span>
                 </div>
                 <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '5px', overflow: 'hidden', padding: '2px' }}>
@@ -254,8 +254,8 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                         transition: 'width 1.2s cubic-bezier(0.22, 1, 0.36, 1)'
                     }} />
                 </div>
-                <div style={{ marginTop: '6px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
-                    {levelInfo.pointsToNextLevel - levelInfo.currentLevelPoints} PTS TO LEVEL UP
+                <div style={{ marginTop: '6px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontWeight: 'bold' }}>
+                    다음 레벨까지 <span style={{ color: theme.color }}>{levelInfo.pointsToNextLevel - levelInfo.currentLevelPoints} MP</span> 더 필요합니다 (PTS TO LEVEL UP)
                 </div>
             </div>
         </div>

@@ -21,6 +21,17 @@ interface CoachReportModalProps {
             };
             currentIntensity: string;
         };
+        initialDiagnosis?: {
+            bmi: number;
+            bmiCategory: string;
+            advice: {
+                issue: string;
+                improvement: string;
+                nextTask: string;
+                insight: string;
+                mental: string;
+            };
+        };
     };
     periodStats: any;
     runnerProfile?: string;
@@ -180,6 +191,42 @@ const CoachReportModal: React.FC<CoachReportModalProps> = ({
                                 "{coachMessage}"
                             </p>
                         </div>
+
+                        {/* Initial Diagnosis Illustration (NEW) */}
+                        {recommendation.initialDiagnosis && (
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 75, 75, 0.05) 100%)',
+                                borderRadius: '24px',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                padding: '1.5rem',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '1rem'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                        <div style={{ padding: '6px', background: 'rgba(255, 215, 0, 0.2)', borderRadius: '8px' }}>
+                                            <TrendingUp size={18} color="#FFD700" />
+                                        </div>
+                                        <span style={{ fontSize: '1rem', fontWeight: '900', color: '#fff' }}>초기 신체 밸런스 점검: BMI {recommendation.initialDiagnosis.bmi.toFixed(1)}</span>
+                                    </div>
+                                    <span style={{ 
+                                        fontSize: '0.75rem', 
+                                        padding: '4px 12px', 
+                                        borderRadius: '12px', 
+                                        background: recommendation.initialDiagnosis.bmiCategory === 'NORMAL' ? 'rgba(57, 255, 20, 0.2)' : 'rgba(255, 75, 75, 0.2)', 
+                                        color: recommendation.initialDiagnosis.bmiCategory === 'NORMAL' ? '#39ff14' : '#FF4B4B',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        분류: {recommendation.initialDiagnosis.bmiCategory}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '14px' }}>
+                                    오늘 바로 운동장에 나가기보다, 런싱크 AI가 제안하는 **'첫 번째 질주 전략'**을 먼저 읽어보세요. 
+                                    무게 중심과 관절 부하를 고려한 안전한 시작이 가장 빠른 단축의 길입니다.
+                                </div>
+                            </div>
+                        )}
 
                         {/* VDOT Intelligence Card (NEW) */}
                         {recommendation.vdotInfo && (

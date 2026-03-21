@@ -8,6 +8,7 @@ interface HeaderProps {
     totalDays: number;
     isCloudConnected: boolean;
     profile: any;
+    levelInfo: any; // v17.0
     onOpenManualForm: () => void;
     onOpenProfile: () => void;
     onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -21,6 +22,7 @@ const Header: React.FC<HeaderProps> = ({
     totalDays,
     isCloudConnected,
     profile,
+    levelInfo,
     onOpenManualForm,
     onOpenProfile,
     onImport,
@@ -41,10 +43,40 @@ const Header: React.FC<HeaderProps> = ({
                 <h1 className="neon-text-blue logo-text" style={{ fontSize: '1.8rem', margin: 0, cursor: 'pointer' }}>Run-Magic</h1>
                 <div className="hide-mobile" style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.1)' }} />
                 <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <span style={{ fontSize: '1.4rem' }}>{characterEmoji}</span>
-                    <p style={{ fontSize: '0.9rem', opacity: 0.8, maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {isRecording ? `🏃‍♂️ ${profile?.name}님, 페이스 조절에 집중하세요!` : `반가워요 ${profile?.name}님, 오늘도 힘차게!`}
-                    </p>
+                    <div className="character-avatar-mini" style={{
+                        width: '40px',
+                        height: '40px',
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.5rem',
+                        position: 'relative',
+                        cursor: 'pointer'
+                    }} onClick={onOpenProfile}>
+                        {characterEmoji}
+                        <div style={{
+                            position: 'absolute',
+                            bottom: '-4px',
+                            right: '-4px',
+                            background: 'var(--electric-blue)',
+                            color: 'black',
+                            fontSize: '0.6rem',
+                            padding: '1px 4px',
+                            borderRadius: '4px',
+                            fontWeight: 'bold'
+                        }}>
+                            LV.{profile?.characterId || 1}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{levelInfo?.name || '비기너'}</span>
+                        <p style={{ fontSize: '0.75rem', opacity: 0.6, margin: 0 }}>
+                            {isRecording ? `🏃‍♂️ 달리는 중...` : `${profile?.name || '런너'}님, 환영합니다!`}
+                        </p>
+                    </div>
                 </div>
             </div>
 

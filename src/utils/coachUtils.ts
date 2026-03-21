@@ -1,7 +1,19 @@
 import { parseTimeToSeconds } from './calculations';
 import { Coach, coaches } from '../data/coaches';
 
-export type RunnerProfile = 'AEROBIC_SIEVE' | 'MECHANICAL_BRAKE' | 'FATIGUE_SIGNATURE' | 'EFFICIENT' | 'UNKNOWN';
+export type RunnerProfile = 'AEROBIC_SIEVE' | 'MECHANICAL_BRAKE' | 'FATIGUE_SIGNATURE' | 'EFFICIENT' | 'UNKNOWN' | 'INITIAL_CONSULT';
+
+export interface InitialConsultation {
+    bmi: number;
+    bmiCategory: 'LOW' | 'NORMAL' | 'OVER' | 'OBESE';
+    advice: {
+        issue: string;
+        improvement: string;
+        nextTask: string;
+        insight: string;
+        mental: string;
+    };
+}
 
 /**
  * 런싱크 4.0 알고리즘 기반 러너 프로파일 진단
@@ -55,6 +67,7 @@ export const getProfileKoreanName = (profile: RunnerProfile): string => {
         'MECHANICAL_BRAKE': '기계적 브레이크형',
         'FATIGUE_SIGNATURE': '후반 붕괴형',
         'EFFICIENT': '효율적 엔진형',
+        'INITIAL_CONSULT': '초기 전략 진단',
         'UNKNOWN': '데이터 분석 중'
     };
     return names[profile] || names['UNKNOWN'];
@@ -269,6 +282,15 @@ export const getDetailedPrescription = (profile: RunnerProfile, coachId: string)
                 mental: "런너님의 맑은 미소야말로 오늘 남긴 최고의 페이스 기록입니다. 너무 예쁩니다."
             }
         },
+        'INITIAL_CONSULT': {
+            'wellness': {
+                issue: "첫 걸음이 가장 중요합니다.",
+                improvement: "천천히 가도를 높여보세요.",
+                nextTask: "가벼운 산책으로 시작하세요.",
+                insight: "초기 적응 기간입니다.",
+                mental: "함께 뛰어봐요."
+            }
+        },
         'UNKNOWN': {
             'apex': {
                 issue: "데이터가 불충분합니다! 적의 병력도 강점도 파악하지 못한 채 어떻게 전쟁에서 이기겠다는 겁니까? 명확히 측정하십시오.",
@@ -324,6 +346,79 @@ export const getDetailedPrescription = (profile: RunnerProfile, coachId: string)
 
     const profilePrescriptions = prescriptions[profile] || prescriptions['UNKNOWN'];
     return profilePrescriptions[coachId] || profilePrescriptions['wellness'] || profilePrescriptions['insight'];
+};
+
+/**
+ * BMI 계산 및 범주 분류
+ */
+export const calculateBMI = (weight: number, height: number): { value: number; category: 'LOW' | 'NORMAL' | 'OVER' | 'OBESE' } => {
+    if (!weight || !height || height <= 0) return { value: 0, category: 'NORMAL' };
+    const heightInMeters = height / 100;
+    const bmi = weight / (heightInMeters * heightInMeters);
+    
+    let category: 'LOW' | 'NORMAL' | 'OVER' | 'OBESE' = 'NORMAL';
+    if (bmi < 18.5) category = 'LOW';
+    else if (bmi < 25) category = 'NORMAL';
+    else if (bmi < 30) category = 'OVER';
+    else category = 'OBESE';
+    
+    return { value: bmi, category };
+};
+
+/**
+ * 기록이 없는 신규 사용자를 위한 초기 진단 컨설팅 시나리오
+ */
+export const getInitialConsultation = (weight: number, height: number, goal: string, coachId: string): InitialConsultation => {
+    const { value: bmi, category } = calculateBMI(weight, height);
+    
+    const scenarios: Record<string, any> = {
+        'OBESE': {
+            issue: "현재 신체 부하 지수가 높아 무리한 달리기는 관절에 치명적일 수 있습니다.",
+            improvement: "달리기보다는 '빠르게 걷기'부터 시작하여 체지방 대사를 활성화하는 기반을 닦아야 합니다.",
+            nextTask: "내일 첫 세션은 30분간 '숨이 약간 찰 정도의 가벼운 산책'으로 몸의 감각을 깨워보세요.",
+            insight: "과체중 상태에서의 착지 충격은 체중의 5배에 달합니다. 저강도 유산소 운동이 우선입니다.",
+            mental: "서두르지 마세요. 오늘의 한 걸음이 위대한 마라토너의 시작입니다."
+        },
+        'OVER': {
+            issue: "약간의 과부하 상태입니다. 심폐 엔진을 예열하기 위한 부드러운 시작이 필요합니다.",
+            improvement: "인터벌보다는 지속주, 하지만 아주 느린 페이스로 심장을 길들이는 것이 먼저입니다.",
+            nextTask: "20분간의 아주 가벼운 조깅(LSD 맛보기)과 10분간의 스트레칭을 첫 과제로 드립니다.",
+            insight: "근지구력보다 심혈관 시스템의 적응이 우선시되어야 하는 단계입니다.",
+            mental: "가벼워진 몸이 당신을 더 멀리 데려갈 것입니다. 그 과정을 즐기십시오."
+        },
+        'NORMAL': {
+            issue: "표준적인 신체 밸런스를 갖추고 계시네요. 이제 당신만의 리듬을 찾을 차례입니다.",
+            improvement: "러닝은 기술입니다. 속도보다는 케이던스와 호흡의 조화를 몸에 익히는 데 집중하세요.",
+            nextTask: "15분간 가볍게 뛰면서 '호흡이 편안한가'를 체크해 보는 탐색 질주를 추천합니다.",
+            insight: "좋은 기초를 가지고 있습니다. 효율적인 러닝 메커니즘을 처음부터 올바르게 설계할 수 있습니다.",
+            mental: "당신 안의 질주 본능을 깨울 준비가 되었습니다. 도로 위에서 뵙겠습니다."
+        },
+        'LOW': {
+            issue: "근력 기반이 다소 부족할 수 있습니다. 달리기만큼이나 보강 운동이 중요한 유형입니다.",
+            improvement: "단순 주행보다는 하체 근력을 강화하는 보강 운동을 병행하여 부상을 방지해야 합니다.",
+            nextTask: "가벼운 10분 러닝 후, 스쿼트와 런지 10회씩 3세트로 근력을 보충해 보세요.",
+            insight: "대사량은 좋으나 주행 충력을 흡수할 근섬유의 밀도가 낮을 수 있습니다.",
+            mental: "탄탄한 기초가 당신을 바람처럼 빠르게 만들어 줄 것입니다."
+        }
+    };
+
+    const baseAdvice = scenarios[category] || scenarios['NORMAL'];
+    
+    // 코치별 성향에 따른 톤앤매너 조정 (간략화)
+    let coachSpecific = { ...baseAdvice };
+    if (coachId === 'apex') {
+        coachSpecific.issue = "전투 준비가 덜 된 신체 조건입니다. " + baseAdvice.issue;
+        coachSpecific.mental = "고통을 인내하고 시스템을 구축하십시오. 타협은 패배입니다.";
+    } else if (coachId === 'wellness') {
+        coachSpecific.issue = "우리 몸을 사랑하는 마음으로 시작해 볼까요? " + baseAdvice.issue;
+        coachSpecific.mental = "오늘의 당신을 응원해요. 기분 좋은 땀방울을 기대할게요.";
+    }
+
+    return {
+        bmi,
+        bmiCategory: category,
+        advice: coachSpecific
+    };
 };
 
 /**

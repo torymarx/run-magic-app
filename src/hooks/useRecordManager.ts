@@ -662,6 +662,65 @@ export const useRecordManager = (
                         }
                     }
                     break;
+
+                // Phase 8: 전설을 넘어선 성좌 (New)
+                case 'm51':
+                    let accDist51 = 0;
+                    for (const r of chronologicalData) {
+                        accDist51 += r.distance;
+                        if (accDist51 >= 1500) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm52':
+                    let accTime52 = 0;
+                    for (const r of chronologicalData) {
+                        accTime52 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime52 >= 15000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm53':
+                    if (totalSessions >= 500) { isUnlocked = true; achievementDate = chronologicalData[499].date; }
+                    break;
+                case 'm54':
+                    const earlyRuns = chronologicalData.filter(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 4 && h < 6;
+                    });
+                    if (earlyRuns.length >= 20) { isUnlocked = true; achievementDate = earlyRuns[19].date; }
+                    break;
+                case 'm55':
+                    const lateRuns = chronologicalData.filter(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 22 || h < 2;
+                    });
+                    if (lateRuns.length >= 20) { isUnlocked = true; achievementDate = lateRuns[19].date; }
+                    break;
+                case 'm56':
+                    const stormRuns = chronologicalData.filter(r => r.weather === 'rain' || r.weather === 'snow');
+                    if (stormRuns.length >= 10) { isUnlocked = true; achievementDate = stormRuns[9].date; }
+                    break;
+                case 'm57':
+                    let accDist57 = 0;
+                    for (const r of chronologicalData) {
+                        accDist57 += r.distance;
+                        if (accDist57 >= 2000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm58':
+                    // 4'15" = 255s. 누적 최고 기록이 아닌 단일 기록으로 체크
+                    const d58 = findFirstOccurrence(r => r.distance > 0 && parseTimeToSeconds(r.pace) <= 255);
+                    if (d58) { isUnlocked = true; achievementDate = d58; }
+                    break;
+                case 'm59':
+                    if (totalSessions >= 1000) { isUnlocked = true; achievementDate = chronologicalData[999].date; }
+                    break;
+                case 'm60':
+                    let accDist60 = 0;
+                    for (const r of chronologicalData) {
+                        accDist60 += r.distance;
+                        if (accDist60 >= 40075) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
             }
 
             if (isUnlocked) {
@@ -857,6 +916,13 @@ export const useRecordManager = (
         lastSyncStatus,
         medalAchievements, // v17.0: 달성 날짜 데이터 노출
         calculateLevelInfo, // v16.0: 레벨 정보 계산기 노출
+        totalStats: {
+            distance: records.reduce((acc, r) => acc + (r.distance || 0), 0),
+            sessions: records.length,
+            time: records.reduce((acc, r) => acc + (parseTimeToSeconds(r.totalTime) / 60 || 0), 0),
+            streak: streak,
+            bestPace: records.length > 0 ? Math.min(...records.filter(r => r.distance > 0).map(r => parseTimeToSeconds(r.pace))) : 9999
+        },
         refreshData: () => fetchInitialData(false)
     };
 };
