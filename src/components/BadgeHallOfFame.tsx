@@ -548,7 +548,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                         color: 'rgba(255,255,255,0.2)',
                         pointerEvents: 'none'
                     }}>
-                        v24.7-FINAL
+                        v3.0.0
                     </div>
                 </div>
             </div>
