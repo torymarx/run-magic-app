@@ -279,6 +279,25 @@ export const useRecordManager = (
         // 기초 통계 산출
         const totalSessions = data.length;
 
+        // v24.1: 스트릭 로컬 계산 (상태 비동기 문제 해결)
+        let currentStreak = 0;
+        if (data.length > 0) {
+            const dates = [...new Set(data.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+            const today = getLocalDateString(new Date());
+            const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
+
+            if (dates[0] === today || dates[0] === yesterday) {
+                currentStreak = 1;
+                for (let i = 0; i < dates.length - 1; i++) {
+                    const current = new Date(dates[i]);
+                    const next = new Date(dates[i + 1]);
+                    const diffDays = Math.ceil(Math.abs(current.getTime() - next.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) currentStreak++;
+                    else break;
+                }
+            }
+        }
+
         // 메달별 조건 체크 (50개)
         MEDAL_DATA.forEach(medal => {
             let isUnlocked = false;
@@ -321,8 +340,8 @@ export const useRecordManager = (
 
                 // Phase 2
                 case 'm6':
-                    // 스트릭은 실시간 계산이므로 현재 세션 데이터 중 streak 요건 충족 시점 추정
-                    if (streak >= 3) {
+                    // v24.1: 로컬 변수 currentStreak 사용
+                    if (currentStreak >= 3) {
                         isUnlocked = true;
                         achievementDate = chronologicalData[chronologicalData.length - 1].date;
                     }
@@ -738,9 +757,9 @@ export const useRecordManager = (
         activityPoints += uniqueDays * (POINT_RULES.ATTENDANCE + POINT_RULES.RUNNING_SESSION);
 
         // 2. 연속 러닝 보너스 (50P): 3, 7, 14, 30일 등 주요 마일스톤 시점
-        if (streak >= 3) activityPoints += POINT_RULES.STREAK_BONUS;
-        if (streak >= 7) activityPoints += POINT_RULES.STREAK_BONUS;
-        if (streak >= 14) activityPoints += POINT_RULES.STREAK_BONUS;
+        if (currentStreak >= 3) activityPoints += POINT_RULES.STREAK_BONUS;
+        if (currentStreak >= 7) activityPoints += POINT_RULES.STREAK_BONUS;
+        if (currentStreak >= 14) activityPoints += POINT_RULES.STREAK_BONUS;
 
         // 3. 특정 시간대 보너스 (20P)
         const specialRuns = data.filter(r => {
@@ -920,7 +939,20 @@ export const useRecordManager = (
             distance: records.reduce((acc, r) => acc + (r.distance || 0), 0),
             sessions: records.length,
             time: records.reduce((acc, r) => acc + (parseTimeToSeconds(r.totalTime) / 60 || 0), 0),
-            streak: streak,
+            streak: (() => {
+                if (records.length === 0) return 0;
+                const dates = [...new Set(records.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+                const today = getLocalDateString(new Date());
+                const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
+                if (dates[0] !== today && dates[0] !== yesterday) return 0;
+                let count = 1;
+                for (let i = 0; i < dates.length - 1; i++) {
+                    const diffDays = Math.ceil(Math.abs(new Date(dates[i]).getTime() - new Date(dates[i+1]).getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) count++;
+                    else break;
+                }
+                return count;
+            })(),
             bestPace: records.length > 0 ? Math.min(...records.filter(r => r.distance > 0).map(r => parseTimeToSeconds(r.pace))) : 9999,
             // v24.0: 상세 미션 카운터 추가
             dawnCount: records.filter(r => {
