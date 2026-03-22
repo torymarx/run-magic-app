@@ -93,8 +93,8 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         id: m.id,
         name: m.name,
         icon: ICON_MAP[m.iconType] || <Medal size={20} />,
-        description: m.criteria,
-        detail: m.description,
+        description: m.description, // v24.3: 업적 스토리 복구
+        criteria: m.criteria,      // v24.3: 미션 조건 필드 분리
         points: m.points,
         rarity: m.rarity,
         phase: m.phase,
@@ -389,7 +389,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                 <div style={{ fontSize: '0.8rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', lineHeight: '1.4' }}>
                                     {hoveredItem.isUnlocked ? (
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span>{hoveredItem.detail}</span>
+                                            <span>{hoveredItem.description}</span>
                                             {hoveredItem.date && (
                                                 <span style={{ fontSize: '0.7rem', marginTop: '4px', color: 'var(--electric-blue)', opacity: 0.8 }}>
                                                     📅 달성일: {hoveredItem.date}

@@ -1,5 +1,10 @@
 # Run-Magic App Development History (v23.2)
 
+## [v24.3] - 2026-03-22
+### 컬렉션 설명 및 미션 데이터 정규화 (Collection Info Recovery)
+- **데이터 매핑 정상화**: `BadgeHallOfFame.tsx`에서 업적 스토리(`description`)와 미션 조건(`criteria`) 필드가 뒤섞이던 매핑 오류를 수정.
+- **UI 가독성 개선**: 잠금 메달 호버 시 업적의 의미(설명)와 획득 방법(미션)이 모두 명확하게 표시되도록 인벤토리 정보 패널 레이아웃 최적화.
+
 ## [v24.2] - 2026-03-22
 ### 메달 해금 조건(스트릭) 동기화 오류 수정 (Streak Activation Bug Fix)
 - **실시간 스트릭 계산 도입**: `recalculateAllAchievements` 함수가 React 상태 대신 즉시 계산된 로드 데이터를 사용하도록 수정하여 스트릭 메달(m6 등)이 즉각 해금되지 않던 문제 해결.
