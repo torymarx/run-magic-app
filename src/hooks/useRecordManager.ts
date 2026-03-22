@@ -10,7 +10,8 @@ export const useRecordManager = (
     setPoints: (p: number) => void,
     setUnlockedBadges: (b: string[]) => void,
     setUnlockedMedals: (m: string[]) => void,
-    userId: string = '00000000-0000-0000-0000-000000000000'
+    userId: string = '00000000-0000-0000-0000-000000000000',
+    profile?: any // v24.6: 일일 퀘스트 계산을 위한 프로필 데이터 추가
 ) => {
     const [records, setRecords] = useState<any[]>([]);
     const [lastSavedRecord, setLastSavedRecord] = useState<any>(null);
@@ -88,45 +89,45 @@ export const useRecordManager = (
         setTotalDays(uniqueTotalDays);
     };
 
-    const calculateBaselineData = (data: any[]) => {
-        if (!data || data.length === 0) return;
+    const calculateBaselineData = (recordsData: any[]) => {
+        if (!recordsData || recordsData.length === 0) return;
 
         const now = new Date();
         const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
         const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
 
-        const monthlyRecords = data.filter(r => new Date(r.date) >= oneMonthAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
-        const weeklyRecords = data.filter(r => new Date(r.date) >= oneWeekAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
+        const monthlyRecords = recordsData.filter((r: any) => new Date(r.date) >= oneMonthAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
+        const weeklyRecords = recordsData.filter((r: any) => new Date(r.date) >= oneWeekAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
         const getPaceSeconds = (paceStr: string) => parseTimeToSeconds(paceStr);
 
         const fastestPace = monthlyRecords.length > 0
-            ? Math.min(...monthlyRecords.map(r => getPaceSeconds(r.pace)))
+            ? Math.min(...monthlyRecords.map((r: any) => getPaceSeconds(r.pace)))
             : null;
 
         const yesterdayStr = getLocalDateString(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
-        const yesterdayRecord = data.find(r => r.date === yesterdayStr);
+        const yesterdayRecord = recordsData.find(r => r.date === yesterdayStr);
 
         let monthlyAvgPace = null;
         if (monthlyRecords.length > 0) {
-            const totalDist = monthlyRecords.reduce((acc, r) => acc + r.distance, 0);
-            const totalTime = monthlyRecords.reduce((acc, r) => acc + (getPaceSeconds(r.pace) * r.distance), 0);
+            const totalDist = monthlyRecords.reduce((acc: number, r: any) => acc + r.distance, 0);
+            const totalTime = monthlyRecords.reduce((acc: number, r: any) => acc + (getPaceSeconds(r.pace) * r.distance), 0);
             monthlyAvgPace = totalDist > 0 ? totalTime / totalDist : 0;
         }
 
         let weeklyAvgPace = null;
         if (weeklyRecords.length > 0) {
-            const totalDist = weeklyRecords.reduce((acc, r) => acc + r.distance, 0);
-            const totalTime = weeklyRecords.reduce((acc, r) => acc + (getPaceSeconds(r.pace) * r.distance), 0);
+            const totalDist = weeklyRecords.reduce((acc: number, r: any) => acc + r.distance, 0);
+            const totalTime = weeklyRecords.reduce((acc: number, r: any) => acc + (getPaceSeconds(r.pace) * r.distance), 0);
             weeklyAvgPace = totalDist > 0 ? totalTime / totalDist : 0;
         }
 
         const slowestPace = weeklyRecords.length > 0
-            ? Math.max(...weeklyRecords.map(r => getPaceSeconds(r.pace)))
+            ? Math.max(...weeklyRecords.map((r: any) => getPaceSeconds(r.pace)))
             : null;
 
         setBaselines({
             apex: fastestPace,
-            insight: yesterdayRecord ? getPaceSeconds(yesterdayRecord.pace) : (data.length > 0 ? getPaceSeconds(data[0].pace) : null),
+            insight: yesterdayRecord ? getPaceSeconds(yesterdayRecord.pace) : (recordsData.length > 0 ? getPaceSeconds(recordsData[0].pace) : null),
             atlas: monthlyAvgPace,
             swift: weeklyAvgPace,
             zen: slowestPace
@@ -266,23 +267,23 @@ export const useRecordManager = (
     const [medalAchievements, setMedalAchievements] = useState<{ [id: string]: string }>({});
 
     // v15.0/v17.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
-    const recalculateAllAchievements = (data: any[]) => {
-        if (!data) return;
+    const recalculateAllAchievements = (recordsData: any[]) => {
+        if (!recordsData) return;
 
         // v17.0: 날짜순 정렬된 복사본 (달성 시점 추적용)
-        const chronologicalData = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const chronologicalData = [...recordsData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         let newMedals: string[] = [];
         let newMedalAchievements: { [id: string]: string } = {};
         let recalculatedPoints = 0;
 
         // 기초 통계 산출
-        const totalSessions = data.length;
+        const totalSessions = recordsData.length;
 
         // v24.1: 스트릭 로컬 계산 (상태 비동기 문제 해결)
         let currentStreak = 0;
-        if (data.length > 0) {
-            const dates = [...new Set(data.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+        if (recordsData.length > 0) {
+            const dates = [...new Set(recordsData.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
             const today = getLocalDateString(new Date());
             const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
 
@@ -303,17 +304,17 @@ export const useRecordManager = (
             let isUnlocked = false;
             let achievementDate = '-';
 
-            // 달성일 추적 도우미
-            const findFirstOccurrence = (predicate: (r: any, idx: number, arr: any[]) => boolean) => {
-                const first = chronologicalData.find(predicate);
-                return first ? first.date : null;
+            // 데이터 기반 분석용 헬퍼 함수
+            const findFirstOccurrence = (predicate: (r: any) => boolean) => {
+                const found = chronologicalData.find(predicate);
+                return found ? found.date : null;
             };
-
+            
             switch (medal.id) {
                 // Phase 1
                 case 'm1':
                     isUnlocked = true;
-                    achievementDate = data.length > 0 ? chronologicalData[0].date : getLocalDateString(new Date());
+                    achievementDate = recordsData.length > 0 ? chronologicalData[0].date : getLocalDateString(new Date());
                     break;
                 case 'm2':
                     const d2 = findFirstOccurrence(r => r.distance >= 1);
@@ -347,7 +348,7 @@ export const useRecordManager = (
                     }
                     break;
                 case 'm7':
-                    if (data.length >= 3) {
+                    if (recordsData.length >= 3) {
                         isUnlocked = true;
                         achievementDate = chronologicalData[2].date;
                     }
@@ -749,12 +750,17 @@ export const useRecordManager = (
             }
         });
 
-        // v16.0: 활동 포인트 정밀 산출
+        // v16.0 -> v24.6: 활동 포인트 정밀 산출 (일일 퀘스트 반영)
         let activityPoints = 0;
+        // 기존 파라미터 data를 그대로 사용합니다.
 
-        // 1. 방문 및 러닝 기록 등록 (각 10P)
-        const uniqueDays = new Set(data.map(r => r.date)).size;
-        activityPoints += uniqueDays * (POINT_RULES.ATTENDANCE + POINT_RULES.RUNNING_SESSION);
+        // 1. 일일 방문 퀘스트 (Attendance) - 프로필의 실제 방문 내역 기준
+        const attendanceDays = profile?.attendanceDates?.length || 0;
+        activityPoints += attendanceDays * POINT_RULES.ATTENDANCE;
+
+        // 2. 일일 러닝 인증 (Running Session) - 레코드가 기록된 고유 날짜 기준
+        const runningDays = new Set(recordsData.map((r: any) => r.date)).size;
+        activityPoints += runningDays * POINT_RULES.RUNNING_SESSION;
 
         // 2. 연속 러닝 보너스 (50P): 3, 7, 14, 30일 등 주요 마일스톤 시점
         if (currentStreak >= 3) activityPoints += POINT_RULES.STREAK_BONUS;
@@ -762,7 +768,7 @@ export const useRecordManager = (
         if (currentStreak >= 14) activityPoints += POINT_RULES.STREAK_BONUS;
 
         // 3. 특정 시간대 보너스 (20P)
-        const specialRuns = data.filter(r => {
+        const specialRuns = recordsData.filter((r: any) => {
             const h = parseInt(r.time.split(':')[0]);
             return h < 6 || h >= 21; // 얼리버드 or 나이트런
         }).length;

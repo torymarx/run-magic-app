@@ -71,7 +71,7 @@ function App() {
         calculateLevelInfo,
         medalAchievements: currentMedalAchievements,
         totalStats
-    } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id);
+    } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id, profile);
 
     // 4. Record Handlers (Operation Diet)
     const {
@@ -145,6 +145,7 @@ function App() {
                 isCloudConnected={isCloudConnected}
                 profile={profile}
                 levelInfo={levelInfo}
+                hasRunToday={records.some(r => r.date === new Date().toLocaleDateString('en-CA'))}
                 onOpenManualForm={() => setShowManualForm(true)}
                 onOpenProfile={() => setShowProfileModal(true)}
                 onImport={handleImport}

@@ -134,6 +134,9 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
     // State for auto-scrolling & Info Panel
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
     const [hoveredItem, setHoveredItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<any>(null);
+
+    const activeItem = hoveredItem || selectedItem;
 
     // Robust Auto-Scroll Implementation
     const animationFrameId = React.useRef<number | null>(null);
@@ -180,6 +183,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
             <div
                 className="inventory-slot"
                 onMouseEnter={() => setHoveredItem(item)}
+                onClick={() => setSelectedItem(selectedItem?.id === item.id ? null : item)}
                 style={{
                     position: 'relative',
                     minWidth: '70px',
@@ -336,30 +340,30 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     display: 'flex',
                     alignItems: 'center',
                     padding: '0.8rem 1.5rem',
-                    opacity: hoveredItem ? 1 : 0.7,
+                    opacity: activeItem ? 1 : 0.7,
                     transition: 'all 0.3s',
                     gap: '1.2rem',
                     boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6)',
                     position: 'relative',
                     overflow: 'hidden'
                 }}>
-                    {hoveredItem ? (
+                    {activeItem ? (
                         <>
                             <div style={{
                                 width: '50px',
                                 height: '50px',
                                 minWidth: '50px',
                                 borderRadius: '15px',
-                                background: hoveredItem.isUnlocked ? `${RARITY[hoveredItem.rarity as keyof typeof RARITY]}22` : 'rgba(255,255,255,0.02)',
-                                border: `2px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.1)'}`,
+                                background: activeItem.isUnlocked ? `${RARITY[activeItem.rarity as keyof typeof RARITY]}22` : 'rgba(255,255,255,0.02)',
+                                border: `2px solid ${activeItem.isUnlocked ? RARITY[activeItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.1)'}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
-                                boxShadow: hoveredItem.isUnlocked ? `0 0 15px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none',
+                                color: activeItem.isUnlocked ? RARITY[activeItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
+                                boxShadow: activeItem.isUnlocked ? `0 0 15px ${RARITY[activeItem.rarity as keyof typeof RARITY]}44` : 'none',
                                 animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                             }}>
-                                {hoveredItem.icon}
+                                {activeItem.icon}
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', flex: 1 }}>
@@ -367,114 +371,157 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                                     <span style={{
                                         fontSize: '1rem',
                                         fontWeight: 'bold',
-                                        color: hoveredItem.isUnlocked ? '#fff' : 'rgba(255,255,255,0.3)',
-                                        textShadow: hoveredItem.isUnlocked ? `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}44` : 'none'
+                                        color: activeItem.isUnlocked ? '#fff' : 'rgba(255,255,255,0.3)',
+                                        textShadow: activeItem.isUnlocked ? `0 0 10px ${RARITY[activeItem.rarity as keyof typeof RARITY]}44` : 'none'
                                     }}>
-                                        {hoveredItem.phase && <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY], marginRight: '6px', fontSize: '0.75rem' }}>P{hoveredItem.phase}</span>}
-                                        {hoveredItem.name}
+                                        {activeItem.phase && <span style={{ color: RARITY[activeItem.rarity as keyof typeof RARITY], marginRight: '6px', fontSize: '0.75rem' }}>P{activeItem.phase}</span>}
+                                        {activeItem.name}
                                     </span>
                                     <span style={{
                                         fontSize: '0.6rem',
                                         padding: '1px 6px',
                                         borderRadius: '8px',
-                                        background: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '33' : 'rgba(255,255,255,0.05)',
-                                        color: hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
-                                        border: `1px solid ${hoveredItem.isUnlocked ? RARITY[hoveredItem.rarity as keyof typeof RARITY] + '44' : 'rgba(255,255,255,0.1)'}`,
+                                        background: activeItem.isUnlocked ? RARITY[activeItem.rarity as keyof typeof RARITY] + '33' : 'rgba(255,255,255,0.05)',
+                                        color: activeItem.isUnlocked ? RARITY[activeItem.rarity as keyof typeof RARITY] : 'rgba(255,255,255,0.2)',
+                                        border: `1px solid ${activeItem.isUnlocked ? RARITY[activeItem.rarity as keyof typeof RARITY] + '44' : 'rgba(255,255,255,0.1)'}`,
                                         fontWeight: 'bold',
                                         textTransform: 'uppercase'
                                     }}>
-                                        {hoveredItem.rarity}
+                                        {activeItem.rarity}
                                     </span>
                                 </div>
-                                <div style={{ fontSize: '0.8rem', color: hoveredItem.isUnlocked ? 'rgba(255,255,255,0.6)' : 'rgba(0,209,255,0.5)', lineHeight: '1.4' }}>
-                                    {hoveredItem.isUnlocked ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span>{hoveredItem.description}</span>
-                                            {hoveredItem.date && (
-                                                <span style={{ fontSize: '0.7rem', marginTop: '4px', color: 'var(--electric-blue)', opacity: 0.8 }}>
-                                                    📅 달성일: {hoveredItem.date}
-                                                </span>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'rgba(255,255,255,0.4)' }}>
-                                                <Lock size={12} />
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(255,255,255,0.7)' }}>
-                                                    🎯 미션: {hoveredItem.criteria}
-                                                </span>
-                                            </div>
-                                            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', paddingLeft: '16px' }}>
-                                                "{hoveredItem.description}"
-                                            </div>
-                                            
-                                            {/* Progress Bar for Locked Medals */}
-                                            {totalStats && hoveredItem.targetValue && (
-                                                <div style={{ marginTop: '4px' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '4px', opacity: 0.8 }}>
-                                                        <span style={{ color: RARITY[hoveredItem.rarity as keyof typeof RARITY] }}>달성 현황</span>
-                                                        <span>
-                                                            {(() => {
-                                                                const current = (totalStats as any)[hoveredItem.category] || 0;
-                                                                const unitMap: { [key: string]: string } = {
-                                                                    distance: 'km',
-                                                                    time: '분',
-                                                                    sessions: '회',
-                                                                    streak: '일',
-                                                                    dawnCount: '회',
-                                                                    nightCount: '회',
-                                                                    weekendCount: '회',
-                                                                    mondayCount: '회',
-                                                                    shortRunCount: '회',
-                                                                    earlyCount: '회',
-                                                                    lateCount: '회',
-                                                                    stormCount: '회'
-                                                                };
-                                                                const unit = unitMap[hoveredItem.category] || '';
-
-                                                                if (hoveredItem.category === 'bestPace') {
-                                                                    return current === 9999 ? '기록 없음' : `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}"`;
-                                                                }
-                                                                if (hoveredItem.category === 'pace') {
-                                                                    return `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}" / 목표 ${Math.floor(hoveredItem.targetValue/60)}'${(hoveredItem.targetValue%60).toString().padStart(2,'0')}"`;
-                                                                }
-                                                                
-                                                                return `${typeof current === 'number' ? (current % 1 === 0 ? current : current.toFixed(1)) : current}${unit} / ${hoveredItem.targetValue}${unit}`;
-                                                                })()}
-                                                        </span>
-                                                    </div>
-                                                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                                                        <div style={{ 
-                                                            height: '100%', 
-                                                            width: `${(() => {
-                                                                const current = (totalStats as any)[hoveredItem.category] || 0;
-                                                                if (hoveredItem.category === 'bestPace' || hoveredItem.category === 'pace') {
-                                                                    return current <= hoveredItem.targetValue ? 100 : Math.max(5, 100 - (current - hoveredItem.targetValue) / 2);
-                                                                }
-                                                                return Math.min(100, (current / hoveredItem.targetValue) * 100);
-                                                            })()}%`, 
-                                                            background: RARITY[hoveredItem.rarity as keyof typeof RARITY],
-                                                            boxShadow: `0 0 10px ${RARITY[hoveredItem.rarity as keyof typeof RARITY]}`,
-                                                            transition: 'width 1s ease-out'
-                                                        }} />
-                                                    </div>
-                                                </div>
-                                            )}
-                                            
+                                <div style={{ fontSize: '0.85rem', lineHeight: '1.5' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {/* v24.7: 미션 정보 (사용자 요청에 따라 최우선 가시성 확보) */}
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '10px', 
+                                            background: activeItem.isUnlocked ? 'rgba(0, 209, 255, 0.15)' : 'rgba(255,255,255,0.05)',
+                                            padding: '10px 14px',
+                                            borderRadius: '10px',
+                                            borderLeft: `4px solid ${activeItem.isUnlocked ? '#00D1FF' : 'rgba(255,255,255,0.2)'}`,
+                                            boxShadow: activeItem.isUnlocked ? '0 0 15px rgba(0, 209, 255, 0.2)' : 'none',
+                                            marginTop: '4px'
+                                        }}>
                                             <div style={{ 
-                                                marginTop: '4px',
-                                                fontSize: '0.75rem', 
-                                                color: '#FFD700', // Gold color for points
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                gap: '4px',
-                                                fontWeight: 'bold'
+                                                justifyContent: 'center',
+                                                width: '24px',
+                                                height: '24px',
+                                                background: activeItem.isUnlocked ? '#00D1FF22' : 'rgba(255,255,255,0.05)',
+                                                borderRadius: '50%'
                                             }}>
-                                                <Plus size={12} /> {hoveredItem.points} XP 획득 가능
+                                                {activeItem.isUnlocked ? <Trophy size={14} color="#00D1FF" /> : <Lock size={14} color="rgba(255,255,255,0.4)" />}
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ 
+                                                    fontSize: '0.95rem', 
+                                                    fontWeight: '800', 
+                                                    color: activeItem.isUnlocked ? '#00FF85' : 'rgba(255,255,255,0.9)',
+                                                    letterSpacing: '-0.01em'
+                                                }}>
+                                                                                                         {activeItem.isUnlocked ? '✅ CLEAR!' : '🎯 MISSION'}
+
+                                                </span>
+                                                <span style={{ 
+                                                    fontSize: '0.9rem', 
+                                                    fontWeight: 'bold', 
+                                                    color: activeItem.isUnlocked ? '#fff' : 'rgba(255,255,255,0.7)',
+                                                    marginTop: '-1px'
+                                                }}>
+                                                    {activeItem.criteria}
+                                                </span>
+                                                {activeItem.isUnlocked && activeItem.date && (
+                                                    <span style={{ fontSize: '0.7rem', color: 'rgba(0, 209, 255, 0.7)', marginTop: '2px' }}>
+                                                        🗓️ {activeItem.date} 인증 성공
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
+
+                                        {/* 배경 스토리 (Flavor Text) */}
+                                        <div style={{ 
+                                            fontSize: '0.8rem', 
+                                            color: 'rgba(255,255,255,0.5)', 
+                                            opacity: 0.8,
+                                            paddingLeft: '12px',
+                                            lineHeight: '1.4',
+                                            borderLeft: '1px solid rgba(255,255,255,0.05)',
+                                            marginLeft: '4px'
+                                        }}>
+                                            {activeItem.description}
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {!activeItem.isUnlocked && (
+                                    <>
+                                        {totalStats && activeItem.targetValue && (
+                                            <div style={{ marginTop: '4px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '4px', opacity: 0.8 }}>
+                                                    <span style={{ color: RARITY[activeItem.rarity as keyof typeof RARITY] }}>달성 현황</span>
+                                                    <span>
+                                                        {(() => {
+                                                            const current = (totalStats as any)[activeItem.category] || 0;
+                                                            const unitMap: { [key: string]: string } = {
+                                                                distance: 'km',
+                                                                time: '분',
+                                                                sessions: '회',
+                                                                streak: '일',
+                                                                dawnCount: '회',
+                                                                nightCount: '회',
+                                                                weekendCount: '회',
+                                                                mondayCount: '회',
+                                                                shortRunCount: '회',
+                                                                earlyCount: '회',
+                                                                lateCount: '회',
+                                                                stormCount: '회'
+                                                            };
+                                                            const unit = unitMap[activeItem.category] || '';
+
+                                                            if (activeItem.category === 'bestPace') {
+                                                                return current === 9999 ? '기록 없음' : `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}"`;
+                                                            }
+                                                            if (activeItem.category === 'pace') {
+                                                                return `${Math.floor(current/60)}'${(current%60).toString().padStart(2,'0')}" / 목표 ${Math.floor(activeItem.targetValue/60)}'${(activeItem.targetValue%60).toString().padStart(2,'0')}"`;
+                                                            }
+                                                            
+                                                            return `${typeof current === 'number' ? (current % 1 === 0 ? current : current.toFixed(1)) : current}${unit} / ${activeItem.targetValue}${unit}`;
+                                                            })()}
+                                                    </span>
+                                                </div>
+                                                <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                    <div style={{ 
+                                                        height: '100%', 
+                                                        width: `${(() => {
+                                                            const current = (totalStats as any)[activeItem.category] || 0;
+                                                            if (activeItem.category === 'bestPace' || activeItem.category === 'pace') {
+                                                                return current <= activeItem.targetValue ? 100 : Math.max(5, 100 - (current - activeItem.targetValue) / 2);
+                                                            }
+                                                            return Math.min(100, (current / activeItem.targetValue) * 100);
+                                                        })()}%`, 
+                                                        background: RARITY[activeItem.rarity as keyof typeof RARITY],
+                                                        boxShadow: `0 0 10px ${RARITY[activeItem.rarity as keyof typeof RARITY]}`,
+                                                        transition: 'width 1s ease-out'
+                                                    }} />
+                                                </div>
+                                                <div style={{ 
+                                                    marginTop: '8px',
+                                                    fontSize: '0.75rem', 
+                                                    color: '#FFD700', // Gold color for points
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    <Plus size={12} /> {activeItem.points} XP 획득 가능
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </>
                     ) : (
@@ -492,6 +539,17 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                             <span>메달을 탐색해 진행 현황을 확인해 보세요</span>
                         </div>
                     )}
+                    
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        right: '8px',
+                        fontSize: '0.6rem',
+                        color: 'rgba(255,255,255,0.2)',
+                        pointerEvents: 'none'
+                    }}>
+                        v24.7-FINAL
+                    </div>
                 </div>
             </div>
 

@@ -10,6 +10,7 @@ export interface UserProfile {
     birthdate: string;
     gender: string;
     characterId: number;
+    attendanceDates?: string[]; // v24.6
     updated_at: string;
 }
 
@@ -22,6 +23,7 @@ const DEFAULT_PROFILE: UserProfile = {
     birthdate: '1990-01-01',
     gender: 'male',
     characterId: 1,
+    attendanceDates: [],
     updated_at: new Date().toISOString()
 };
 
@@ -52,13 +54,34 @@ export const useProfileManager = (userId?: string) => {
                 .single();
 
             if (data && !error) {
-                setProfile(data);
+                // v24.6: 자동 출석 체크 로직 (Daily Quest) 🏁
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                const currentAttendance = data.attendanceDates || [];
+                
+                if (!currentAttendance.includes(todayStr)) {
+                    console.log(`🎫 자동 출석 보상! [${todayStr}]. 클라우드 저장소를 업데이트합니다.`);
+                    const updatedAttendance = [...currentAttendance, todayStr];
+                    const updatedProfile = { ...data, attendanceDates: updatedAttendance, updated_at: new Date().toISOString() };
+                    
+                    // Supabase에 즉시 반영
+                    await supabase.from('profiles').upsert(updatedProfile);
+                    setProfile(updatedProfile);
+                } else {
+                    setProfile(data);
+                }
+                
                 setIsProfileLoaded(true);
                 console.log("✅ Profile Synced from Cloud 🛡️");
             } else if (error && (error.code === 'PGRST116' || error.message?.includes('No object found'))) {
                 // 3. 프로필이 없는 신규 유저라면 서버에도 기본 프로필 생성 시도 (Proactive Sync)
                 console.log("🐣 신규 런너님을 위한 클라우드 요새를 준비합니다...");
-                const newProfile = { ...DEFAULT_PROFILE, id: userId, updated_at: new Date().toISOString() };
+                const todayStr = new Date().toLocaleDateString('en-CA');
+                const newProfile = { 
+                    ...DEFAULT_PROFILE, 
+                    id: userId, 
+                    attendanceDates: [todayStr], // 신규 가입 시 첫 출석 자동 기록
+                    updated_at: new Date().toISOString() 
+                };
 
                 const { error: upsertError } = await supabase
                     .from('profiles')

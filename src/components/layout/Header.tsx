@@ -8,7 +8,8 @@ interface HeaderProps {
     totalDays: number;
     isCloudConnected: boolean;
     profile: any;
-    levelInfo: any; // v17.0
+    levelInfo: any;
+    hasRunToday: boolean; // v24.6
     onOpenManualForm: () => void;
     onOpenProfile: () => void;
     onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -23,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({
     isCloudConnected,
     profile,
     levelInfo,
+    hasRunToday,
     onOpenManualForm,
     onOpenProfile,
     onImport,
@@ -103,6 +105,49 @@ const Header: React.FC<HeaderProps> = ({
                     <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isCloudConnected ? '#00FF85' : '#FFCC00' }}>
                         {isCloudConnected ? "SYNC" : "SYNCING"}
                     </span>
+                </div>
+
+                {/* v24.6: 일일 퀘스트 (Daily Quest) 스테이터스 */}
+                <div className="daily-quest-group hide-mobile" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    background: 'rgba(0,0,0,0.2)',
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.05)'
+                }}>
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold', textTransform: 'uppercase', marginRight: '4px' }}>QUEST</span>
+                    
+                    {/* 방문 퀘스트 (Attendance) - 프로필에 오늘 날짜가 있으면 완료 */}
+                    {(() => {
+                        const todayStr = new Date().toLocaleDateString('en-CA');
+                        const hasVisited = profile?.attendanceDates?.includes(todayStr);
+                        return (
+                            <div style={{ 
+                                display: 'flex', alignItems: 'center', gap: '4px', 
+                                opacity: hasVisited ? 1 : 0.4,
+                                color: hasVisited ? '#00FF85' : 'white',
+                                transition: 'all 0.3s'
+                            }} title={hasVisited ? "오늘의 방문 완료! (10 XP)" : "오늘의 방문 전 (10 XP 획기 가능)"}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: hasVisited ? '#00FF85' : 'white' }} />
+                                <span style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>방문</span>
+                            </div>
+                        );
+                    })()}
+
+                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+
+                    {/* 러닝 퀘스트 (Running) */}
+                    <div style={{ 
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        opacity: hasRunToday ? 1 : 0.4,
+                        color: hasRunToday ? '#00D1FF' : 'white',
+                        transition: 'all 0.3s'
+                    }} title={hasRunToday ? "오늘의 러닝 완료! (10 XP)" : "오늘의 러닝 전 (10 XP 획득 가능)"}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: hasRunToday ? '#00D1FF' : 'white' }} />
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold' }}>러닝</span>
+                    </div>
                 </div>
             </div>
 
