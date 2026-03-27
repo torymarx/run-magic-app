@@ -48,7 +48,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
             }}
         >
             <section className="profile-glass-card custom-scrollbar" style={{
-                padding: '2.5rem',
+                padding: '1.5rem', // 모바일/작은 화면 컷 방지를 위해 2.5rem -> 1.5rem
                 width: '100%',
                 maxWidth: '900px',
                 maxHeight: '92vh',
@@ -56,7 +56,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '2.5rem',
+                gap: '1.5rem', // 2.5rem -> 1.5rem
                 animation: 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                 background: 'rgba(20, 25, 30, 0.8)',
                 border: '1px solid rgba(255,255,255,0.08)',
