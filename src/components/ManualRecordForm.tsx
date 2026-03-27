@@ -3,8 +3,9 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import {
     Plus, Trash2, Save, X, Clock, Sun, Cloud,
-    CloudRain, Snowflake, Smile, Meh, Frown, Thermometer, Scale, Wind, Flame, History
+    CloudRain, Snowflake, Smile, Meh, Frown, Thermometer, Scale, Wind, Flame, History, CloudSun
 } from 'lucide-react';
+import { useWeatherData } from '../hooks/useWeatherData';
 
 interface ManualRecordFormProps {
     onSave: (record: any) => void;
@@ -115,6 +116,30 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
     const [editingId, setEditingId] = useState<number | null>(null);
     const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
     const [isSaving, setIsSaving] = useState<boolean>(false); // v13.1: 중복 클릭 방지
+
+    // v25.0: 날씨 자동 입력 시스템
+    const { isLoading: isWeatherLoading, isAutoFilled, fetchWeather } = useWeatherData();
+    const [weatherAutoFetched, setWeatherAutoFetched] = useState(false);
+
+    // v25.0: 오늘 날짜 + 신규 입력 + 위치 설정됨 → 자동 날씨 조회
+    useEffect(() => {
+        const todayStr = getLocalDate();
+        const isToday = date === todayStr;
+        const hasLocation = profile?.locationCity;
+        const isNewRecord = !editingId;
+
+        if (isToday && hasLocation && isNewRecord && !weatherAutoFetched) {
+            fetchWeather(profile.locationCity, profile.locationStation).then((data) => {
+                if (data) {
+                    setWeather(data.weather);
+                    setTemp(data.temp);
+                    setDust(data.dust);
+                    setWeatherAutoFetched(true);
+                    console.log('🌤️ 날씨 자동 입력 완료!');
+                }
+            });
+        }
+    }, [date, profile?.locationCity]);
 
     // v8.2: 더티 체킹을 위한 원본 데이터 저장
     const [originalData, setOriginalData] = useState<any>(null);
@@ -605,6 +630,32 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                                 icon={<Scale size={14} />}
                             />
                         </div>
+
+                        {/* v25.0: 자동 날씨 입력 인디케이터 */}
+                        {isAutoFilled && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.6rem 1rem', marginBottom: '0.8rem',
+                                background: 'rgba(0, 209, 255, 0.08)',
+                                border: '1px solid rgba(0, 209, 255, 0.2)',
+                                borderRadius: '12px', fontSize: '0.8rem',
+                                color: 'var(--electric-blue)', fontWeight: '600'
+                            }}>
+                                <CloudSun size={16} />
+                                🌤️ {profile?.locationCity} 날씨 정보를 자동으로 불러왔습니다 (수정 가능)
+                            </div>
+                        )}
+                        {isWeatherLoading && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                padding: '0.6rem 1rem', marginBottom: '0.8rem',
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                borderRadius: '12px', fontSize: '0.8rem',
+                                color: 'rgba(255,255,255,0.5)'
+                            }}>
+                                ⏳ 날씨 정보를 불러오는 중...
+                            </div>
+                        )}
 
                         {/* Weather & Condition Section */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>

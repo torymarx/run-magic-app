@@ -11,6 +11,8 @@ export interface UserProfile {
     gender: string;
     characterId: number;
     attendanceDates?: string[]; // v24.6
+    locationCity?: string;    // v25.0: 도시명 (예: '광주', '서울')
+    locationStation?: string; // v25.0: 에어코리아 측정소명 (예: '서석동')
     updated_at: string;
 }
 
@@ -24,6 +26,8 @@ const DEFAULT_PROFILE: UserProfile = {
     gender: 'male',
     characterId: 1,
     attendanceDates: [],
+    locationCity: '',    // v25.0: 기본 미설정
+    locationStation: '', // v25.0: 기본 미설정
     updated_at: new Date().toISOString()
 };
 

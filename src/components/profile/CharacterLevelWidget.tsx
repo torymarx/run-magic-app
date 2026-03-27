@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Weight, Ruler, Shield, Target, Zap, Heart, Sword } from 'lucide-react';
+import { User, Weight, Ruler, Shield, Target, Zap, Heart, Sword, MapPin } from 'lucide-react';
 
 interface CharacterLevelWidgetProps {
     totalPoints: number;
@@ -232,6 +232,52 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                 textShadow: '0 2px 10px rgba(0,0,0,0.5)', textAlign: 'center'
                             }}>
                                 "{profile.goal || 'No goal set... Start running now!'}"
+                            </p>
+                        )}
+                    </div>
+
+                    {/* v25.0: 위치 정보 (날씨 자동 입력용) */}
+                    <div style={{ padding: '0 10px' }}>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                            <MapPin size={10} color={theme.color} /> 러닝 위치 (RUNNING LOCATION)
+                        </div>
+                        {isEditing ? (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <input
+                                    type="text"
+                                    value={profile.locationCity || ''}
+                                    onChange={(e) => onEditChange?.('locationCity', e.target.value)}
+                                    placeholder="도시 (예: 광주)"
+                                    style={{
+                                        flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none',
+                                        borderRadius: '12px', color: 'white', padding: '10px 14px', fontSize: '0.9rem',
+                                        outline: 'none', borderBottom: `2px solid var(--electric-blue)`,
+                                        boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)', transition: 'all 0.3s'
+                                    }}
+                                />
+                                <input
+                                    type="text"
+                                    value={profile.locationStation || ''}
+                                    onChange={(e) => onEditChange?.('locationStation', e.target.value)}
+                                    placeholder="동/측정소 (예: 서석동)"
+                                    style={{
+                                        flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none',
+                                        borderRadius: '12px', color: 'white', padding: '10px 14px', fontSize: '0.9rem',
+                                        outline: 'none', borderBottom: `2px solid var(--electric-blue)`,
+                                        boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)', transition: 'all 0.3s'
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <p className="mobile-font-md" style={{
+                                margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)',
+                                fontWeight: '500', textAlign: 'center'
+                            }}>
+                                {profile.locationCity ? (
+                                    <><MapPin size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{profile.locationCity} {profile.locationStation || ''}</>
+                                ) : (
+                                    <span style={{ opacity: 0.4 }}>위치 미설정 — 프로필 수정에서 설정하세요</span>
+                                )}
                             </p>
                         )}
                     </div>

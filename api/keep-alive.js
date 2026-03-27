@@ -12,7 +12,8 @@ export default async function handler(req, res) {
                 return res.status(500).json({ status: 'error', message: 'Missing environment variables.' });
             }
 
-            const response = await fetch(`${url}/rest/v1/`, {
+            // Supabase 테이블 엔드포인트에 요청을 보내 활동성 유지 (4/8 보안 변경 대응)
+            const response = await fetch(`${url}/rest/v1/records?select=id&limit=1`, {
                 method: 'GET',
                 headers: {
                     apikey: key,
