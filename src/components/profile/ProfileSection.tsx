@@ -170,7 +170,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                             <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
                                 <ChevronRight size={22} className="neon-text-blue" /> 진급 단계 (Evolution Stages)
                             </h3>
-                            <span className="mobile-hide" style={{ fontSize: '0.8rem', opacity: 0.5 }}>레벨업하여 새로운 모습을 해금하세요 ✨</span>
+                            <span className="mobile-hide" style={{ fontSize: '0.8rem', opacity: 0.5 }}>새로운 모습으로 나아가세요 ✨</span>
                         </div>
 
                         <div className="custom-scrollbar" style={{

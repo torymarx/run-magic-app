@@ -101,14 +101,14 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem', // v25.0: 수정창 잘림 방지를 위해 1.5rem -> 1rem 축소
-                padding: '1.8rem', // 2.2rem -> 1.8rem 축소
+                gap: '1rem',
+                padding: '1.5rem', // 모바일 컷 추가 방지 1.8rem -> 1.5rem
                 background: 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.6) 100%)',
                 borderRadius: '36px',
                 border: `1px solid ${theme.color}44`,
                 boxShadow: `0 30px 60px rgba(0,0,0,0.6), inset 0 40px ${theme.color}11`,
                 width: '100%',
-                maxWidth: '680px',
+                maxWidth: '800px', // v25.0: 사용자 요청 - 가로로 더 넓게 (680px -> 800px)
                 position: 'relative',
                 overflow: 'hidden',
                 margin: '0 auto',
@@ -170,10 +170,10 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             </div>
 
             {/* Main Content: Character (Left) & Status Dashboard (Right) */}
-            <div className="mobile-stack" style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', zIndex: 2, minHeight: '320px' }}>
+            <div className="mobile-stack" style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', zIndex: 2, minHeight: '260px' }}>
 
                 {/* Character Area */}
-                <div className="mobile-w-full" style={{ position: 'relative', width: '240px', height: '320px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                <div className="mobile-w-full" style={{ position: 'relative', width: '240px', height: '260px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
                     <img
                         src={characterUrl}
                         alt={levelInfo.name}
@@ -198,7 +198,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
                     {/* Attributes Section */}
                     <div className="mobile-compact-padding" style={{
-                        background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '24px',
+                        background: 'rgba(0,0,0,0.2)', padding: '12px 16px', borderRadius: '24px',
                         border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.4)'
                     }}>
                         <h4 style={{ margin: '0 0 15px 0', fontSize: '0.9rem', color: theme.color, fontWeight: '900', letterSpacing: '2px' }}>핵심 능력치 (CORE ATTRIBUTES)</h4>
@@ -218,8 +218,8 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                 onChange={(e) => onEditChange?.('goal', e.target.value)}
                                 style={{
                                     width: '100%', background: 'rgba(255,255,255,0.08)', border: 'none',
-                                    borderRadius: '12px', color: 'white', padding: '10px 12px', fontSize: '0.9rem',
-                                    outline: 'none', borderBottom: `2px solid var(--electric-blue)`, height: '54px', resize: 'none',
+                                    borderRadius: '12px', color: 'white', padding: '10px 12px', fontSize: '0.85rem',
+                                    outline: 'none', borderBottom: `2px solid var(--electric-blue)`, height: '48px', resize: 'none',
                                     boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)',
                                     transition: 'all 0.3s'
                                 }}
@@ -250,7 +250,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                     placeholder="도시 (예: 광주)"
                                     style={{
                                         flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none',
-                                        borderRadius: '12px', color: 'white', padding: '10px 14px', fontSize: '0.9rem',
+                                        borderRadius: '12px', color: 'white', padding: '8px 12px', fontSize: '0.85rem',
                                         outline: 'none', borderBottom: `2px solid var(--electric-blue)`,
                                         boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)', transition: 'all 0.3s'
                                     }}
@@ -262,7 +262,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                     placeholder="동/측정소 (예: 서석동)"
                                     style={{
                                         flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none',
-                                        borderRadius: '12px', color: 'white', padding: '10px 14px', fontSize: '0.9rem',
+                                        borderRadius: '12px', color: 'white', padding: '8px 12px', fontSize: '0.85rem',
                                         outline: 'none', borderBottom: `2px solid var(--electric-blue)`,
                                         boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)', transition: 'all 0.3s'
                                     }}
