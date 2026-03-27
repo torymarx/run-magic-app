@@ -101,12 +101,12 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem',
-                padding: '2.2rem',
+                gap: '1rem', // v25.0: 수정창 잘림 방지를 위해 1.5rem -> 1rem 축소
+                padding: '1.8rem', // 2.2rem -> 1.8rem 축소
                 background: 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.6) 100%)',
                 borderRadius: '36px',
                 border: `1px solid ${theme.color}44`,
-                boxShadow: `0 30px 60px rgba(0,0,0,0.6), inset 0 0 40px ${theme.color}11`,
+                boxShadow: `0 30px 60px rgba(0,0,0,0.6), inset 0 40px ${theme.color}11`,
                 width: '100%',
                 maxWidth: '680px',
                 position: 'relative',
@@ -187,7 +187,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                 </div>
 
                 {/* Status Dashboard Area (AL-CHA-GE!) */}
-                <div className="mobile-w-full" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="mobile-w-full" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
                     {/* Physical Specs (Horizontal Chips) */}
                     <div className="mobile-grid-2" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -198,7 +198,7 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
 
                     {/* Attributes Section */}
                     <div className="mobile-compact-padding" style={{
-                        background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '24px',
+                        background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '24px',
                         border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.4)'
                     }}>
                         <h4 style={{ margin: '0 0 15px 0', fontSize: '0.9rem', color: theme.color, fontWeight: '900', letterSpacing: '2px' }}>핵심 능력치 (CORE ATTRIBUTES)</h4>
@@ -218,8 +218,8 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
                                 onChange={(e) => onEditChange?.('goal', e.target.value)}
                                 style={{
                                     width: '100%', background: 'rgba(255,255,255,0.08)', border: 'none',
-                                    borderRadius: '12px', color: 'white', padding: '12px', fontSize: '0.9rem',
-                                    outline: 'none', borderBottom: `2px solid var(--electric-blue)`, height: '80px', resize: 'none',
+                                    borderRadius: '12px', color: 'white', padding: '10px 12px', fontSize: '0.9rem',
+                                    outline: 'none', borderBottom: `2px solid var(--electric-blue)`, height: '54px', resize: 'none',
                                     boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)',
                                     transition: 'all 0.3s'
                                 }}
