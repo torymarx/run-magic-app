@@ -166,21 +166,29 @@ export const useAICoachSystem = (
                 }
             };
 
+            let todayPres: any = null;
+            if (todayStats && effectiveRecord) {
+                todayPres = getDetailedPrescription(diagnoseRunnerProfile(effectiveRecord), selectedCoachId, {
+                    heartRate: todayStats.heartRate,
+                    cadence: todayStats.cadence,
+                    weight: profile?.weight,
+                    pace: todayStats.paceSec
+                });
+            }
+
             const coachScripts: Record<string, any> = {
                 generic: {
                     msg: getCoachMessage(selectedCoachId),
                     rect: {
                         title: todayStats ? `오늘의 전술적 질주 분석 & 처방` : "로드맵 진화 가이드",
-                        detail: todayStats && effectiveRecord
+                        detail: todayStats && effectiveRecord && todayPres
                             ? (() => {
-                                const profileType = diagnoseRunnerProfile(effectiveRecord);
-                                const pres = getDetailedPrescription(profileType, selectedCoachId);
                                 const vdotPaces = getRecommendedPaces(todayStats.vdot);
                                 let vdotTip = "";
                                 if (todayStats.vdot > 0) {
                                     vdotTip = `\n\n📊 VDOT 분석(${todayStats.vdot.toFixed(1)}): 이 기록을 바탕으로 산출된 추천 훈련 페이스입니다.\n• 조깅(Easy): ${vdotPaces.easy}\n• 유산소역치: ${vdotPaces.threshold}\n• 인터벌: ${vdotPaces.interval}`;
                                 }
-                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}) 분석 결과입니다.\n\n⚠️ 현재 상태: ${pres.issue}\n\n💡 개선점: ${pres.improvement}\n\n🗓️ 내일의 과제: ${pres.nextTask}${vdotTip}`;
+                                return `오늘 ${todayStats.distance}km 주행(${todayStats.paceStr}) 분석 결과입니다.\n\n⚠️ 현재 상태: ${todayPres.issue}\n\n💡 개선점: ${todayPres.improvement}\n\n🗓️ 내일의 과제: ${todayPres.nextTask}${vdotTip}`;
                             })()
                             : (() => {
                                 const weight = profile?.weight || 70;
@@ -188,16 +196,16 @@ export const useAICoachSystem = (
                                 const initial = getInitialConsultation(weight, height, selectedCoachId);
                                 return `환영합니다! 아직 기록이 없지만, 런너님의 신체 데이터(BMI: ${initial.bmi.toFixed(1)})를 기반으로 수립한 초기 전략입니다.\n\n⚠️ 가이드라인: ${initial.advice.issue}\n\n💡 추천 시작법: ${initial.advice.improvement}\n\n🗓️ 첫 번째 미션: ${initial.advice.nextTask}`;
                             })(),
-                        insight: todayStats && effectiveRecord 
-                            ? `런싱크 프로파일 진단: ${getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord))}. 심박수(${todayStats?.heartRate || 'N/A'})와 케이던스(${todayStats?.cadence || 'N/A'}) 분석 결과, ${todayStats?.heartRate && todayStats.heartRate > 170 ? '심장 부하가 관찰되니 강도를 조절하세요.' : '안정적인 궤적을 유지하고 있습니다.'}${todayStats && todayStats.vdot > 0 ? ` [강도: ${getIntensityLabel(todayStats.vdot, todayStats.paceSec)}]` : ''}`
+                        insight: todayStats && effectiveRecord && todayPres
+                            ? `런싱크 진단: ${getProfileKoreanName(diagnoseRunnerProfile(effectiveRecord))}. ${todayPres.insight}${todayStats && todayStats.vdot > 0 ? ` [강도: ${getIntensityLabel(todayStats.vdot, todayStats.paceSec)}]` : ''}`
                             : (() => {
                                 const weight = profile?.weight || 70;
                                 const height = profile?.height || 175;
                                 const initial = getInitialConsultation(weight, height, selectedCoachId);
                                 return `신체 프로필 분석 결과: ${initial.bmiCategory}군에 해당합니다. ${initial.advice.insight}`;
                             })(),
-                        mental: todayStats && effectiveRecord
-                            ? (selectedCoachId === 'apex' ? "고통은 한계를 뚫고 나가는 소리입니다." : "지속 가능한 성장이 진정한 승리입니다.")
+                        mental: todayStats && effectiveRecord && todayPres
+                            ? todayPres.mental
                             : (() => {
                                 const weight = profile?.weight || 70;
                                 const height = profile?.height || 175;

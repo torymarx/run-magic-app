@@ -76,7 +76,11 @@ export const getProfileKoreanName = (profile: RunnerProfile): string => {
 /**
  * 프로파일별 구조화된 처방 데이터를 코치의 성향에 맞춰 제공합니다.
  */
-export const getDetailedPrescription = (profile: RunnerProfile, coachId: string) => {
+export const getDetailedPrescription = (
+    profile: RunnerProfile, 
+    coachId: string, 
+    stats?: { heartRate?: number | null, cadence?: number | null, weight?: number | null, pace?: number | null }
+) => {
     const prescriptions: Record<RunnerProfile, Record<string, { issue: string; improvement: string; nextTask: string; insight: string; mental: string; }>> = {
         'AEROBIC_SIEVE': {
             'apex': {
@@ -345,7 +349,43 @@ export const getDetailedPrescription = (profile: RunnerProfile, coachId: string)
     };
 
     const profilePrescriptions = prescriptions[profile] || prescriptions['UNKNOWN'];
-    return profilePrescriptions[coachId] || profilePrescriptions['wellness'] || profilePrescriptions['insight'];
+    const baseAdvice = profilePrescriptions[coachId] || profilePrescriptions['wellness'] || profilePrescriptions['insight'];
+
+    let { issue, improvement, nextTask, insight, mental } = baseAdvice;
+
+    // 동적 데이터(stats) 연동 로직
+    if (stats) {
+        const { heartRate, cadence, weight } = stats;
+        
+        // 1. 과체중(80kg 이상) + 낮은 케이던스(165 미만) 경고 (수직 충격)
+        if (weight && weight >= 80 && cadence && cadence < 165) {
+            if (coachId === 'insight' || coachId === 'apex') {
+                issue += ` 특히 현재 입력된 체중(${weight}kg)이 실린 상태에서 케이던스(${cadence}spm)가 낮아 무릎에 가해지는 수직 충격이 평소의 3배에 달합니다.`;
+            } else if (coachId === 'wellness' || coachId === 'atlas') {
+                improvement += ` 체중(${weight}kg)을 고려할 때, 케이던스(${cadence}spm)를 높여야 관절 건강을 지킬 수 있어요.`;
+            }
+        }
+
+        // 2. 심박수가 매우 높을 때 (170 초과)
+        if (heartRate && heartRate > 170) {
+            if (coachId === 'apex') {
+                insight += ` 현재 심박수(${heartRate}bpm)는 무산소 한계점(Zone 4-5)에 도달해 있습니다. 강도를 즉각 낮춰야 합니다.`;
+            } else if (coachId === 'atlas') {
+                issue += ` 심박수(${heartRate}bpm)가 너무 높습니다. 80:20 법칙의 80% 조깅 영역을 완전히 벗어났습니다.`;
+            } else if (coachId === 'zen') {
+                improvement += ` 요동치는 심박수(${heartRate}bpm)를 가라앉히기 위해 호흡에 집중하세요.`;
+            }
+        }
+        
+        // 3. 심박수가 낮고 케이던스가 높을 때 (가장 효율적)
+        if (heartRate && heartRate > 0 && heartRate < 150 && cadence && cadence >= 170) {
+            if (coachId === 'insight' || coachId === 'swift' || coachId === 'marathon') {
+                insight = `현재 케이던스(${cadence}spm)와 심박수(${heartRate}bpm)의 조화가 이상적입니다. 완벽한 지면 반발력과 에너지 효율을 보여주고 있습니다.`;
+            }
+        }
+    }
+
+    return { issue, improvement, nextTask, insight, mental };
 };
 
 /**
