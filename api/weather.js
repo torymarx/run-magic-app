@@ -39,8 +39,17 @@ export default async function handler(req, res) {
     // 1. OpenWeatherMap — 도시명으로 현재 날씨 조회
     if (openWeatherKey) {
         try {
-            // 한글 도시명 + 국가코드(KR)로 조회
-            const encodedCity = encodeURIComponent(city);
+            // 한글 도시명 매핑 (OpenWeatherMap은 일부 한글명을 404 처리함)
+            const cityMap = {
+                '서울': 'Seoul', '부산': 'Busan', '대구': 'Daegu', '인천': 'Incheon',
+                '광주': 'Gwangju', '대전': 'Daejeon', '울산': 'Ulsan', '세종': 'Sejong',
+                '경기': 'Gyeonggi-do', '강원': 'Gangwon-do', '충북': 'Chungcheongbuk-do',
+                '충남': 'Chungcheongnam-do', '전북': 'Jeollabuk-do', '전남': 'Jeollanam-do',
+                '경북': 'Gyeongsangbuk-do', '경남': 'Gyeongsangnam-do', '제주': 'Jeju'
+            };
+            const mappedCity = cityMap[city] || city;
+            
+            const encodedCity = encodeURIComponent(mappedCity);
             const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodedCity},KR&appid=${openWeatherKey}&units=metric&lang=kr`;
             const weatherRes = await fetch(weatherUrl);
 

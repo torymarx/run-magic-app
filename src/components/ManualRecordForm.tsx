@@ -642,7 +642,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                                 color: 'var(--electric-blue)', fontWeight: '600'
                             }}>
                                 <CloudSun size={16} />
-                                🌤️ {profile?.locationCity} 날씨 정보를 자동으로 불러왔습니다 (수정 가능)
+                                🌤️ {profile?.locationCity} 날씨(기온: {temp}°C, 미세먼지: {dust === 'good' ? '좋음' : dust === 'soso' ? '보통' : '나쁨'}) 정보를 자동으로 불러왔습니다 (수정 가능)
                             </div>
                         )}
                         {isWeatherLoading && (
