@@ -20,7 +20,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         name: '비기너 런너',
         title: 'NOVICE RUNNER',
         minPoints: 0,
-        maxPoints: 2500,
+        maxPoints: 5000,
         description: '입문 단계. 약간 통통한 일반인 체형. 헐렁한 면티와 유선 이어폰에서 시작되는 위대한 변화.',
         visual: 'beginner',
         theme: { color: '#00D1FF', secondary: 'rgba(0, 209, 255, 0.1)' }
@@ -29,8 +29,8 @@ export const LEVEL_DATA: LevelDetail[] = [
         level: 2,
         name: '아마추어 러너',
         title: 'ACTIVE RUNNER',
-        minPoints: 2501,
-        maxPoints: 7500,
+        minPoints: 5001,
+        maxPoints: 15000,
         description: '습관 형성. 군살이 빠진 슬림한 체형. 브랜드 기능성 웨어와 함께 본격적인 질주가 시작됩니다.',
         visual: 'amateur',
         theme: { color: '#39FF14', secondary: 'rgba(57, 255, 20, 0.1)' }
@@ -39,8 +39,8 @@ export const LEVEL_DATA: LevelDetail[] = [
         level: 3,
         name: '프로 러너',
         title: 'ACE RUNNER',
-        minPoints: 7501,
-        maxPoints: 20000,
+        minPoints: 15001,
+        maxPoints: 40000,
         description: '중급 정착. 탄탄한 근육질 몸매. 전문 장비를 장착하고 자신만의 페이스를 개척하는 런너.',
         visual: 'professional',
         theme: { color: '#FFD700', secondary: 'rgba(255, 215, 0, 0.1)' }
@@ -49,8 +49,8 @@ export const LEVEL_DATA: LevelDetail[] = [
         level: 4,
         name: '엘리트 나이트',
         title: 'ELITE RUNNER',
-        minPoints: 20001,
-        maxPoints: 50000,
+        minPoints: 40001,
+        maxPoints: 100000,
         description: '고급 단계. 데피니션이 선명한 강력한 신체. 1년의 꾸준함이 빚어낸 명예로운 경지.',
         visual: 'elite',
         theme: { color: '#BD00FF', secondary: 'rgba(189, 0, 255, 0.1)' }
@@ -59,7 +59,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         level: 5,
         name: '그랜드 마스터',
         title: 'LEGENDARY RUNNER',
-        minPoints: 50001,
+        minPoints: 100001,
         maxPoints: 999999,
         description: '정점의 완성. 완벽한 육체와 압도적인 오라. 풀코스 마라톤을 완주한 전설의 런칭 아크메이지.',
         visual: 'master',
@@ -86,12 +86,12 @@ export const POINT_RULES = {
     SPECIAL_TIME: 15,    
     // 메달 등급별 포인트 차등 적용 (recalculateAllAchievements에서 적용)
     MEDAL_RARITY: {
-        COMMON: 10,
-        UNCOMMON: 20,
-        RARE: 50,
-        EPIC: 100,
-        LEGENDARY: 200,
-        MYTHIC: 500
+        COMMON: 100,
+        UNCOMMON: 200,
+        RARE: 500,
+        EPIC: 1000,
+        LEGENDARY: 2500,
+        MYTHIC: 5000
     }
 };
 
