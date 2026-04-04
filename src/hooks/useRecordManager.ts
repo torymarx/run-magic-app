@@ -331,19 +331,37 @@ export const useRecordManager = (
 
         // v24.1: 스트릭 로컬 계산 (상태 비동기 문제 해결)
         let currentStreak = 0;
+        let maxStreak = 0;
         if (recordsData.length > 0) {
-            const dates = [...new Set(recordsData.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+            const datesDesc = [...new Set(recordsData.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+            const datesAsc = [...datesDesc].reverse();
             const today = getLocalDateString(new Date());
             const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
 
-            if (dates[0] === today || dates[0] === yesterday) {
+            // 1. 현재 스트릭 계산 (UI 표시용 및 최신 상태 유지)
+            if (datesDesc[0] === today || datesDesc[0] === yesterday) {
                 currentStreak = 1;
-                for (let i = 0; i < dates.length - 1; i++) {
-                    const current = new Date(dates[i]);
-                    const next = new Date(dates[i + 1]);
+                for (let i = 0; i < datesDesc.length - 1; i++) {
+                    const current = new Date(datesDesc[i]);
+                    const next = new Date(datesDesc[i + 1]);
                     const diffDays = Math.ceil(Math.abs(current.getTime() - next.getTime()) / (1000 * 60 * 60 * 24));
                     if (diffDays === 1) currentStreak++;
                     else break;
+                }
+            }
+
+            // 2. 역대 최대 스트릭 계산 (메달 달성 조건용)
+            let tempStreak = 1;
+            maxStreak = 1;
+            for (let i = 0; i < datesAsc.length - 1; i++) {
+                const current = new Date(datesAsc[i]);
+                const next = new Date(datesAsc[i + 1]);
+                const diffDays = Math.ceil(Math.abs(next.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays === 1) {
+                    tempStreak++;
+                    maxStreak = Math.max(maxStreak, tempStreak);
+                } else {
+                    tempStreak = 1;
                 }
             }
         }
@@ -390,8 +408,8 @@ export const useRecordManager = (
 
                 // Phase 2
                 case 'm6':
-                    // v24.1: 로컬 변수 currentStreak 사용
-                    if (currentStreak >= 3) {
+                    // v24.1: 역대 최대 스트릭(maxStreak) 사용하도록 수정 (과거 달성 내역 보존)
+                    if (maxStreak >= 3) {
                         isUnlocked = true;
                         achievementDate = chronologicalData[chronologicalData.length - 1].date;
                     }
@@ -1013,17 +1031,21 @@ export const useRecordManager = (
             time: records.reduce((acc, r) => acc + (parseTimeToSeconds(r.totalTime) / 60 || 0), 0),
             streak: (() => {
                 if (records.length === 0) return 0;
-                const dates = [...new Set(records.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
-                const today = getLocalDateString(new Date());
-                const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
-                if (dates[0] !== today && dates[0] !== yesterday) return 0;
-                let count = 1;
-                for (let i = 0; i < dates.length - 1; i++) {
-                    const diffDays = Math.ceil(Math.abs(new Date(dates[i]).getTime() - new Date(dates[i+1]).getTime()) / (1000 * 60 * 60 * 24));
-                    if (diffDays === 1) count++;
-                    else break;
+                const datesAsc = [...new Set(records.map(r => r.date))].sort();
+                let maxStreakFound = 1;
+                let tempStreak = 1;
+                for (let i = 0; i < datesAsc.length - 1; i++) {
+                    const current = new Date(datesAsc[i]);
+                    const next = new Date(datesAsc[i + 1]);
+                    const diffDays = Math.ceil(Math.abs(next.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) {
+                        tempStreak++;
+                        maxStreakFound = Math.max(maxStreakFound, tempStreak);
+                    } else {
+                        tempStreak = 1;
+                    }
                 }
-                return count;
+                return maxStreakFound;
             })(),
             bestPace: records.length > 0 ? Math.min(...records.filter(r => r.distance > 0).map(r => parseTimeToSeconds(r.pace))) : 9999,
             // v24.0: 상세 미션 카운터 추가
