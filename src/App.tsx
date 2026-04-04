@@ -53,6 +53,7 @@ function App() {
     const {
         profile,
         updateProfile,
+        recordAiFeedback, // v26.0 추가
         refreshProfile: refreshProfileData,
         isProfileLoaded
     } = useProfileManager(user?.id);
@@ -201,6 +202,7 @@ function App() {
                     periodStats={periodStats}
                     runnerProfile={runnerProfile}
                     onClose={() => setShowCoachReport(false)}
+                    recordAiFeedback={recordAiFeedback} // v26.0 추가
                 />
             )}
 

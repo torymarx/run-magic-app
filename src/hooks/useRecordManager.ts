@@ -266,6 +266,55 @@ export const useRecordManager = (
     // v17.0: 메달 달성 시점(날짜) 추적을 위한 상태 추가
     const [medalAchievements, setMedalAchievements] = useState<{ [id: string]: string }>({});
 
+    // v26.4: 포인트 DB 동기화 및 이력 기록 🛡️
+    const syncPointsToCloud = async (currentPoints: number) => {
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') return;
+        
+        // 프로필 데이터가 있고, 저장된 포인트와 현재 계산된 포인트가 다를 때만 실행
+        if (profile && profile.points === currentPoints) return;
+
+        try {
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const prevPoints = profile?.points || 0;
+            const changeAmount = currentPoints - prevPoints;
+
+            // 1. profiles 테이블의 포인트 스냅샷 업데이트
+            await supabase.from('profiles').update({ 
+                points: currentPoints,
+                updated_at: new Date().toISOString()
+            }).eq('id', userId);
+
+            // 2. point_logs 기록 (오늘의 첫 기록이면 insert, 이미 있으면 update)
+            const { data: existingLog } = await supabase
+                .from('point_logs')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('log_date', todayStr)
+                .maybeSingle();
+
+            if (existingLog) {
+                // 오늘 이미 로그가 있다면 누적 변동량 업데이트 (최종 점수 갱신)
+                await supabase.from('point_logs').update({
+                    total_points: currentPoints,
+                    change_amount: currentPoints - (existingLog.total_points - existingLog.change_amount),
+                    reason: '일간 활동 실시간 정산'
+                }).eq('id', existingLog.id);
+            } else {
+                // 오늘 첫 로그 생성
+                await supabase.from('point_logs').insert([{
+                    user_id: userId,
+                    log_date: todayStr,
+                    total_points: currentPoints,
+                    change_amount: changeAmount,
+                    reason: '시스템 대개편 및 활동 정산'
+                }]);
+            }
+            console.log(`📊 [DB Sync] 포인트 ${currentPoints}P 저장 완료 (변동: ${changeAmount})`);
+        } catch (err) {
+            console.error("❌ 포인트 DB 동기화 실패:", err);
+        }
+    };
+
     // v15.0/v17.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
     const recalculateAllAchievements = (recordsData: any[]) => {
         if (!recordsData) return;
@@ -746,37 +795,54 @@ export const useRecordManager = (
             if (isUnlocked) {
                 newMedals.push(medal.id);
                 newMedalAchievements[medal.id] = achievementDate.replace(/-/g, '.');
-                recalculatedPoints += medal.points;
+                
+                // v26.0: 등급별 포인트 차등 적용 💎
+                const rarityPoints = POINT_RULES.MEDAL_RARITY[medal.rarity as keyof typeof POINT_RULES.MEDAL_RARITY] || 10;
+                recalculatedPoints += rarityPoints;
             }
         });
 
-        // v16.0 -> v24.6: 활동 포인트 정밀 산출 (일일 퀘스트 반영)
+        // v16.0 -> v26.0: 활동 포인트 정밀 산출 (일일 퀘스트 반영)
         let activityPoints = 0;
-        // 기존 파라미터 data를 그대로 사용합니다.
 
         // 1. 일일 방문 퀘스트 (Attendance) - 프로필의 실제 방문 내역 기준
         const attendanceDays = profile?.attendanceDates?.length || 0;
         activityPoints += attendanceDays * POINT_RULES.ATTENDANCE;
 
         // 2. 일일 러닝 인증 (Running Session) - 레코드가 기록된 고유 날짜 기준
-        const runningDays = new Set(recordsData.map((r: any) => r.date)).size;
+        const runningDateSet = new Set(recordsData.map((r: any) => r.date));
+        const runningDays = runningDateSet.size;
         activityPoints += runningDays * POINT_RULES.RUNNING_SESSION;
 
-        // 2. 연속 러닝 보너스 (50P): 3, 7, 14, 30일 등 주요 마일스톤 시점
-        if (currentStreak >= 3) activityPoints += POINT_RULES.STREAK_BONUS;
-        if (currentStreak >= 7) activityPoints += POINT_RULES.STREAK_BONUS;
-        if (currentStreak >= 14) activityPoints += POINT_RULES.STREAK_BONUS;
+        // 3. 연속 러닝 보너스 (누적 상태 보너스)
+        if (currentStreak >= 3) activityPoints += POINT_RULES.STREAK_3DAY;
+        if (currentStreak >= 7) activityPoints += POINT_RULES.STREAK_7DAY;
+        if (currentStreak >= 14) activityPoints += POINT_RULES.STREAK_14DAY;
+        if (currentStreak >= 30) activityPoints += POINT_RULES.STREAK_30DAY;
 
-        // 3. 특정 시간대 보너스 (20P)
-        const specialRuns = recordsData.filter((r: any) => {
+        // 4. 특정 시간대 보너스 (새벽/야간) - 일 1회 한정으로 강화 🛡️
+        const specialDays = new Set(recordsData.filter((r: any) => {
             const h = parseInt(r.time.split(':')[0]);
             return h < 6 || h >= 21; // 얼리버드 or 나이트런
-        }).length;
-        activityPoints += specialRuns * POINT_RULES.SPECIAL_TIME;
+        }).map(r => r.date)).size;
+        activityPoints += specialDays * POINT_RULES.SPECIAL_TIME;
+
+        // 5. AI 코칭 피드백 보상 (v26.0 추가)
+        const aiFeedbackDays = profile?.aiFeedbackDates?.length || 0;
+        activityPoints += aiFeedbackDays * POINT_RULES.AI_FEEDBACK;
+
+        // 6. 주행 거리 보충 포인트 (1km당 10P) - v26.0 핵심 개편 ✨
+        const totalDistance = recordsData.reduce((acc: number, r: any) => acc + (r.distance || 0), 0);
+        const distancePoints = Math.floor(totalDistance * POINT_RULES.DISTANCE_KM);
+        activityPoints += distancePoints;
 
         // 결과 업데이트
         const finalPoints = recalculatedPoints + activityPoints;
         setPoints(finalPoints);
+
+        // v26.4: DB 영구 저장 및 이력 로그 기록 (비동기)
+        syncPointsToCloud(finalPoints);
+
         setUnlockedMedals(newMedals);
         setMedalAchievements(newMedalAchievements); // v17.0
         setUnlockedBadges([]);
@@ -802,7 +868,7 @@ export const useRecordManager = (
 
         const progress = nextLevel ? Math.min(Math.floor((currentXP / range) * 100), 100) : 100;
         const xpToNext = nextLevel ? (nextLevel.minPoints - totalPoints) : 0;
-        const isStuckAtLevel4 = currentLevel.level === 4 && totalPoints >= 15001;
+        const isStuckAtLevel4 = currentLevel.level === 4 && totalPoints >= 50001; // v26.0 임계값 반영
 
         return {
             ...currentLevel,

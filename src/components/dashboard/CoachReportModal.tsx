@@ -36,12 +36,21 @@ interface CoachReportModalProps {
     periodStats: any;
     runnerProfile?: string;
     onClose: () => void;
+    recordAiFeedback?: () => void; // v26.0 추가
 }
 
 const CoachReportModal: React.FC<CoachReportModalProps> = ({
-    coach, coachMessage, recommendation, periodStats, runnerProfile, onClose
+    coach, coachMessage, recommendation, periodStats, runnerProfile, onClose, recordAiFeedback
 }) => {
     const runningTip = React.useMemo(() => getRandomRunningTip(), []);
+
+    // v26.0: 리포트 조회 시 경험치 보상 트리거
+    React.useEffect(() => {
+        if (recordAiFeedback) {
+            recordAiFeedback();
+        }
+    }, [recordAiFeedback]);
+
 
     return (
         <div style={{

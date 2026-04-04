@@ -11,6 +11,8 @@ export interface UserProfile {
     gender: string;
     characterId: number;
     attendanceDates?: string[]; // v24.6
+    aiFeedbackDates?: string[]; // v26.0: AI 피드백 보상을 위한 기록
+    points?: number;            // v26.4: 최종 합산 포인트 스냅샷 💎
     locationCity?: string;    // v25.0: 도시명 (예: '광주', '서울')
     locationStation?: string; // v25.0: 에어코리아 측정소명 (예: '서석동')
     updated_at: string;
@@ -26,10 +28,13 @@ const DEFAULT_PROFILE: UserProfile = {
     gender: 'male',
     characterId: 1,
     attendanceDates: [],
+    aiFeedbackDates: [],
+    points: 0,
     locationCity: '',    // v25.0: 기본 미설정
     locationStation: '', // v25.0: 기본 미설정
     updated_at: new Date().toISOString()
 };
+
 
 export const useProfileManager = (userId?: string) => {
     const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
@@ -119,7 +124,6 @@ export const useProfileManager = (userId?: string) => {
             return;
         }
 
-        // characterId는 레벨 시스템에 의해 자동 결정되므로 수동 업데이트에서 필터링하거나 보호
         const newProfile = { ...profile, ...updates, id: userId, updated_at: new Date().toISOString() };
 
         try {
@@ -133,18 +137,34 @@ export const useProfileManager = (userId?: string) => {
                 console.log("✅ 프로필이 구름 요새에 저장되었습니다.");
             } else {
                 console.error("❌ 프로필 저장 에러:", error);
-                alert(`저장 실패: ${error.message} (데이터베이스 상태를 확인해 주세요)`);
+                alert(`저장 실패: ${error.message}`);
             }
         } catch (err) {
             console.error("Profile Update Error:", err);
         }
     };
 
+    const recordAiFeedback = async () => {
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') return;
+        
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        const currentFeedback = profile.aiFeedbackDates || [];
+        
+        if (!currentFeedback.includes(todayStr)) {
+            const updatedFeedback = [...currentFeedback, todayStr];
+            await updateProfile({ aiFeedbackDates: updatedFeedback });
+            console.log("💎 AI 피드백 보상 획득! [XP +5]");
+        }
+    };
+
+
     return {
         profile,
         updateProfile,
+        recordAiFeedback,
         isLoading,
         isProfileLoaded,
         refreshProfile: fetchProfile
     };
 };
+
