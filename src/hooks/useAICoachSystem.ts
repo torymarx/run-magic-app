@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { parseTimeToSeconds, formatPace } from '../utils/calculations';
-import { diagnoseRunnerProfile, getProfileKoreanName, getDetailedPrescription, getInitialConsultation, InitialConsultation } from '../utils/coachUtils';
+import { diagnoseRunnerProfile, getProfileKoreanName, getDetailedPrescription, getInitialConsultation, InitialConsultation, getCoachAdvice } from '../utils/coachUtils';
 import { calculateVDOT, getRecommendedPaces, getIntensityLabel, RecommendedPaces } from '../utils/vdotUtils';
+import { coaches } from '../data/coaches';
 
 interface Recommendation {
     title: string;
@@ -69,13 +70,13 @@ export const useAICoachSystem = (
     const todayStats = useMemo(() => {
         if (effectiveRecord) {
             const paceSec = parseTimeToSeconds(effectiveRecord.pace || "0:00");
-            const distance = effectiveRecord.distance || 0;
+            const distanceValue = effectiveRecord.distance || 0;
             const timeMin = parseTimeToSeconds(effectiveRecord.totalTime || "0:00") / 60;
-            const vdotValue = calculateVDOT(distance, timeMin);
+            const vdotValue = calculateVDOT(distanceValue, timeMin);
 
             return {
                 paceSec,
-                distance,
+                distance: distanceValue,
                 isImproved: effectiveRecord.isImproved,
                 paceStr: effectiveRecord.pace || "0'00\"",
                 heartRate: effectiveRecord.heart_rate || effectiveRecord.hr,
@@ -155,6 +156,13 @@ export const useAICoachSystem = (
             recommendation = script.rect;
         } else {
             const getCoachMessage = (coachId: string) => {
+                const coach = coaches.find(c => c.id === coachId) || coaches[coaches.length - 1];
+                
+                // 데이터 기반 정밀 멘트 우선 (기록이 있을 때)
+                if (effectiveRecord && coach) {
+                    return getCoachAdvice(effectiveRecord, coach);
+                }
+
                 switch(coachId) {
                     case 'apex': return `[성장 로드맵] ${runnerName}님, 현재 '${currentLevel}' 단계에 계시군요. "${runnerGoal}"이라는 목표는 단순한 열망을 넘어, 정밀한 훈련 데이터를 통해 충분히 요격 가능한 사거리 안에 들어왔습니다. 🔥`;
                     case 'insight': return `[알고리즘 분석 리포트] ${runnerName}님의 프로필과 주행 빅데이터를 정밀 교차 분석했습니다. '${currentLevel}' 단계에서의 대사 효율과 에너지 효율성은 이미 상위 15%의 안정 궤도에 진입했습니다. 🐟`;
@@ -162,7 +170,7 @@ export const useAICoachSystem = (
                     case 'swift': return `[리듬 플레이리스트] 활력이 넘치는군요, ${runnerName}님! '${currentLevel}'의 에너지가 질주 리듬에 고스란히 묻어납니다. ⚡`;
                     case 'zen': return `[심신 안정 가이드] 평온한 질주였나요? '${currentLevel}' 단계에서 몸의 소리를 듣는 법을 익히셨네요. 🧘`;
                     case 'marathon': return `[코스 전략 리포트] 꾸준함이 돋보입니다. '${currentLevel}' 레벨에서의 성실함이 "${runnerGoal}" 달성의 열쇠가 될 것입니다. 🏃‍♂️`;
-                    default: return `[바이오 리드믹 가이드] 따뜻한 응원을 보냅니다, ${runnerName}님! 벌써 ${overallStats?.count}번이나 세상을 향해 발을 내디디셨네요. '${currentLevel}' 단계의 정성 어린 기록들이 당신의 미래를 밝히고 있습니다. 🌿`;
+                    default: return `[바이오 리듬 가이드] 따뜻한 응원을 보냅니다, ${runnerName}님! 벌써 ${overallStats?.count}번이나 세상을 향해 발을 내디디셨네요. '${currentLevel}' 단계의 정성 어린 기록들이 당신의 미래를 밝히고 있습니다. 🌿`;
                 }
             };
 
@@ -235,7 +243,7 @@ export const useAICoachSystem = (
                 mental: recommendation.mental || "승리는 철저한 분석과 흔들리지 않는 실행의 결과입니다."
             }
         };
-    }, [selectedCoachId, isRecording, distance, timer, records, profile, levelInfo, overallStats, recentStats, todayStats]);
+    }, [selectedCoachId, isRecording, distance, timer, records, profile, levelInfo, overallStats, recentStats, todayStats, effectiveRecord]);
 
     return { 
         message: feedback.message, 

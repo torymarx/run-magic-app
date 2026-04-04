@@ -406,6 +406,34 @@ export const calculateBMI = (weight: number, height: number): { value: number; c
 };
 
 /**
+ * v26.6: 구간 기록(Splits) 정밀 분석 유틸리티
+ */
+export const analyzeSplits = (splits: string[]) => {
+    if (!splits || splits.length === 0) return null;
+    
+    const secondsArray = splits.map(s => parseTimeToSeconds(s));
+    const fastestSec = Math.min(...secondsArray);
+    const slowestSec = Math.max(...secondsArray);
+    const fastestIdx = secondsArray.indexOf(fastestSec);
+    const slowestIdx = secondsArray.indexOf(slowestSec);
+    
+    // 페이스 변화 추이 (후반부 페이스 저하 여부)
+    const firstHalf = secondsArray.slice(0, Math.ceil(secondsArray.length / 2));
+    const secondHalf = secondsArray.slice(Math.ceil(secondsArray.length / 2));
+    const isFading = secondHalf.length > 0 && 
+        (secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length) > 
+        (firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length) + 10;
+        
+    return {
+        fastestKM: fastestIdx + 1,
+        fastestPace: splits[fastestIdx],
+        slowestKM: slowestIdx + 1,
+        slowestPace: splits[slowestIdx],
+        isFading
+    };
+};
+
+/**
  * 기록이 없는 신규 사용자를 위한 초기 진단 컨설팅 시나리오
  */
 export const getInitialConsultation = (weight: number, height: number, coachId: string): InitialConsultation => {
@@ -547,18 +575,30 @@ export const getCoachAdvice = (record: any, coach: Coach): string => {
         }
     }
 
-    // 5. 일반적인 조언 (데이터 기반 전문가 피드백)
+    // 5. 일반적인 조언 (데이터 기반 전문가 피드백) - v26.6 수치 주입 강화 💉
+    const splitReport = record.splits ? analyzeSplits(record.splits) : null;
+    const splitText = splitReport ? ` 가장 빨랐던 구간은 ${splitReport.fastestKM}km(${splitReport.fastestPace})였고, ` : '';
+    const hrVal = hr || record.heart_rate || 'N/A';
+    const cadVal = cad || record.cadence || 'N/A';
+
     const coachAdvice: Record<string, string> = {
-        apex: `[고강도 처방] 심박수 ${record.heart_rate || 'N/A'}bpm 분석 결과, 심폐 시스템의 임계치를 높이기 위한 점진적 과부하가 필요합니다. 다음 세션은 최대 심박수의 85-90% 구간을 유지하는 인터벌 훈련을 권장합니다. 🔥`,
-        insight: `[생체역학 분석] 케이던스 ${record.cadence || 'N/A'}spm과 ${weight}kg의 하중 이동을 분석한 결과, 지면 접촉 시간(GCT)을 5% 더 줄여 대사 효율을 극대화하는 전경 자세가 필요합니다. 🐟`,
-        wellness: `[회복 및 예방] 심박 변동성이 안정적입니다. 근육의 미세 파열 회복을 위해 수면 8시간 준수와 마그네슘 섭취 비중을 높이는 전략이 유효합니다. 🌿`,
-        zen: `[신경계 리셋] 자율신경계가 안정된 상태입니다. 기록이라는 압박을 내려놓고 심박수 노이즈를 최소화하는 명상적 러닝이 오늘의 성과입니다. 🧘`,
-        atlas: `[기초 지구력] Zone 2 영역의 심박수를 유지하며 미토콘드리아의 크기를 키우는 초장거리(LSD) 질주에 집중하세요. 기초 체력이 모든 속도의 근원입니다. 🏛️`,
-        swift: `[신경-근육 동기화] 현재 케이던스(${record.cadence || 'N/A'}spm)와 팔 스윙의 진자 운동 리듬을 최적화하세요. 신경계 반응 속도를 높이기 위해 종료 후 80m 전력 질주 3세트를 추가하십시오. ⚡`,
-        marathon: `[마라톤 전략] 케이던스 리듬과 심박수 관리가 순조롭습니다. 미드풋 착지의 탄성을 영리하게 활용하여 관절 부하를 분산하고 효율적인 에너지 분배에 집중하세요. 🏃‍♂️`
+        apex: `[고강도 처방] ${splitText}심박수 ${hrVal}bpm 분석 결과, 현재 단계에서 임계치를 높이려면 주간 마일리지의 20%는 최대 심박수 90% 이상의 인터벌이 필수입니다. 🔥`,
+        insight: `[생체역학 분석] 케이던스 ${cadVal}spm과 ${weight}kg의 부하 이동을 교차 분석했습니다.${splitText} 지면 접촉 시간을 5% 더 줄여 대사 효율을 극대화하십시오. 🐟`,
+        wellness: `[회복 및 예방] 심박수 ${hrVal}bpm을 통해 본 생체 리듬이 안정적입니다.${splitText} 근육 미세 파열 회복을 위해 수면과 영양 밸런스에 집중하세요. 🌿`,
+        zen: `[신경계 리셋] 자율신경계가 ${hrVal}bpm 부근에서 안정되었습니다. 기록에 매몰되지 않고 ${cadVal}spm의 리듬을 느낀 것이 오늘의 명상적 성과입니다. 🧘`,
+        atlas: `[기초 지구력] ${cadVal}spm의 일정한 리듬으로 유산소 베이스를 단단히 다지셨군요.${splitText} 지금의 조깅 강도가 당신의 엔진 크기를 키웁니다. 🏛️`,
+        swift: `[신경-근육 동기화] 현재 케이던스(${cadVal}spm)와 리드미컬한 팔 스윙이 이상적입니다.${splitText} 피로 상태에서도 이 폼을 유지하는 훈련을 추가하세요. ⚡`,
+        marathon: `[마라톤 전략] ${splitText}케이던스(${cadVal}spm) 리듬과 심박수(${hrVal}bpm) 관리가 최적의 레이스 페이싱을 보여줍니다. 완주를 향한 완벽한 튜닝입니다. 🏃‍♂️`
     };
 
-    return coachAdvice[coach.id] || `${distance}km 질주 완료. 심박(${record.heart_rate || '-'})/케이던스(${record.cadence || '-'}) 데이터를 기반으로 다음 도약을 준비하세요. ✨`;
+    let finalMessage = coachAdvice[coach.id] || `${distance}km 질주 완료. 심박(${hrVal})/케이던스(${cadVal})를 기반으로 분석을 마쳤습니다. ✨`;
+    
+    // 후반 페이스 저하 탐지 시 추가 조언
+    if (splitReport?.isFading) {
+        finalMessage += ` 구반부에 페이스가 처지는 현상이 감지되었습니다. 후반 근지구력 보강이 필요해 보이네요! ⚠️`;
+    }
+
+    return finalMessage;
 };
 
 /**
