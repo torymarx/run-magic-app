@@ -20,7 +20,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         name: '비기너 런너',
         title: 'NOVICE RUNNER',
         minPoints: 0,
-        maxPoints: 5000,
+        maxPoints: 3000,
         description: '입문 단계. 약간 통통한 일반인 체형. 헐렁한 면티와 유선 이어폰에서 시작되는 위대한 변화.',
         visual: 'beginner',
         theme: { color: '#00D1FF', secondary: 'rgba(0, 209, 255, 0.1)' }
@@ -29,8 +29,8 @@ export const LEVEL_DATA: LevelDetail[] = [
         level: 2,
         name: '아마추어 러너',
         title: 'ACTIVE RUNNER',
-        minPoints: 5001,
-        maxPoints: 15000,
+        minPoints: 3001,
+        maxPoints: 12000,
         description: '습관 형성. 군살이 빠진 슬림한 체형. 브랜드 기능성 웨어와 함께 본격적인 질주가 시작됩니다.',
         visual: 'amateur',
         theme: { color: '#39FF14', secondary: 'rgba(57, 255, 20, 0.1)' }
@@ -39,7 +39,7 @@ export const LEVEL_DATA: LevelDetail[] = [
         level: 3,
         name: '프로 러너',
         title: 'ACE RUNNER',
-        minPoints: 15001,
+        minPoints: 12001,
         maxPoints: 40000,
         description: '중급 정착. 탄탄한 근육질 몸매. 전문 장비를 장착하고 자신만의 페이스를 개척하는 런너.',
         visual: 'professional',
@@ -86,12 +86,12 @@ export const POINT_RULES = {
     SPECIAL_TIME: 15,    
     // 메달 등급별 포인트 차등 적용 (recalculateAllAchievements에서 적용)
     MEDAL_RARITY: {
-        COMMON: 100,
-        UNCOMMON: 200,
-        RARE: 500,
-        EPIC: 1000,
-        LEGENDARY: 2500,
-        MYTHIC: 5000
+        COMMON: 50,
+        UNCOMMON: 100,
+        RARE: 250,
+        EPIC: 500,
+        LEGENDARY: 1250,
+        MYTHIC: 2500
     }
 };
 
