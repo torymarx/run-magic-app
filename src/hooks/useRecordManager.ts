@@ -833,10 +833,10 @@ export const useRecordManager = (
         activityPoints += runningDays * POINT_RULES.RUNNING_SESSION;
 
         // 3. 연속 러닝 보너스 (누적 상태 보너스)
-        if (currentStreak >= 3) activityPoints += POINT_RULES.STREAK_3DAY;
-        if (currentStreak >= 7) activityPoints += POINT_RULES.STREAK_7DAY;
-        if (currentStreak >= 14) activityPoints += POINT_RULES.STREAK_14DAY;
-        if (currentStreak >= 30) activityPoints += POINT_RULES.STREAK_30DAY;
+        if (maxStreak >= 3) activityPoints += POINT_RULES.STREAK_3DAY;
+        if (maxStreak >= 7) activityPoints += POINT_RULES.STREAK_7DAY;
+        if (maxStreak >= 14) activityPoints += POINT_RULES.STREAK_14DAY;
+        if (maxStreak >= 30) activityPoints += POINT_RULES.STREAK_30DAY;
 
         // 4. 특정 시간대 보너스 (새벽/야간) - 일 1회 한정으로 강화 🛡️
         const specialDays = new Set(recordsData.filter((r: any) => {
