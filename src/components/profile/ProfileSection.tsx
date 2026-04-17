@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Edit3, X, ShieldCheck, RefreshCw, ChevronRight } from 'lucide-react';
+import { Edit3, X, ShieldCheck, RefreshCw, ChevronRight, History } from 'lucide-react';
 import { UserProfile } from '../../hooks/useProfileManager';
 import CharacterLevelWidget from './CharacterLevelWidget';
+import PointHistoryModal from './PointHistoryModal';
 import { LEVEL_DATA, getCharacterImageUrl } from '../../data/progression';
 
 interface ProfileSectionProps {
@@ -19,6 +20,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     points, calculateLevelInfo
 }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
 
     const handleSave = () => {
@@ -71,14 +73,36 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         isEditing={isEditing}
                         onEditChange={(field, value) => {
                             let processedValue: any = value;
-                            // weight나 height는 입력 중에는 문자열로 유지하여 ". " 등을 입력 가능하게 함
-                            setEditData(prev => ({ ...prev, [field]: processedValue }));
+                            setEditData((prev: any) => ({ ...prev, [field]: processedValue }));
                         }}
 
                     />
 
                     {/* Action Buttons Row */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', padding: '0 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', padding: '0 1rem', flexWrap: 'wrap' }}>
+                        {!isEditing && (
+                            <button
+                                onClick={() => setShowHistory(true)}
+                                className="nav-chip"
+                                style={{
+                                    padding: '0.7rem 1.5rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.6rem',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    fontWeight: '900',
+                                    cursor: 'pointer',
+                                    borderRadius: '16px',
+                                    fontSize: '0.9rem',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                <History size={18} className="neon-text-blue" /> 마법 통장 (Bank Book)
+                            </button>
+                        )}
+                        
                         {!isEditing ? (
                             <button
                                 onClick={() => { setIsEditing(true); setEditData(profile); }}
@@ -305,6 +329,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                             진단 실행 (RUN DIAGNOSTIC)
                         </button>
                     </div>
+                )}
+                {/* Point History Modal Overlay */}
+                {showHistory && (
+                    <PointHistoryModal
+                        userId={profile.id}
+                        onClose={() => setShowHistory(false)}
+                        totalPoints={points}
+                    />
                 )}
             </section>
         </div>
