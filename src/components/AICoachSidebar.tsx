@@ -24,21 +24,52 @@ const AICoachSidebar: React.FC<AICoachSidebarProps> = ({
             boxShadow: isRecording ? `0 0 20px ${selectedCoach.color}22` : 'none',
             transition: 'all 0.5s ease-in-out'
         }}>
-            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem', fontFamily: 'Outfit, sans-serif' }} className="neon-text-blue">
-                <span style={{ fontSize: '1.3rem' }}>{selectedCoach.emoji}</span>
-                <span style={{ color: selectedCoach.color, fontSize: '1.1rem' }}>{selectedCoach.name} 코칭 스튜디오</span>
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${selectedCoach.color}44`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0
+                }}>
+                    {selectedCoach.imageUrl ? (
+                        <img 
+                            src={selectedCoach.imageUrl} 
+                            alt={selectedCoach.name} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                                // 이미지 로드 실패 시 이모지로 대체
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as any).parentElement.innerHTML = `<span style="font-size: 1.5rem">${selectedCoach.emoji}</span>`;
+                            }}
+                        />
+                    ) : (
+                        <span style={{ fontSize: '1.5rem' }}>{selectedCoach.emoji}</span>
+                    )}
+                </div>
+                <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: selectedCoach.color, letterSpacing: '-0.5px' }}>
+                        {selectedCoach.name} 코칭 스튜디오
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.4 }}>{selectedCoach.role}</p>
+                </div>
+            </div>
 
             {/* Coach Selection */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
                 {coaches.map(coach => (
                     <button
                         key={coach.id}
                         onClick={() => onCoachSelect(coach)}
                         style={{
                             flexShrink: 0,
-                            width: '40px',
-                            height: '40px',
+                            width: '42px',
+                            height: '42px',
                             borderRadius: '50%',
                             border: selectedCoach.id === coach.id ? `2px solid ${coach.color}` : '1px solid rgba(255,255,255,0.1)',
                             background: selectedCoach.id === coach.id ? `${coach.color}22` : 'rgba(255,255,255,0.05)',
@@ -46,12 +77,16 @@ const AICoachSidebar: React.FC<AICoachSidebarProps> = ({
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
-                            fontSize: '1rem',
+                            overflow: 'hidden',
                             transition: 'all 0.2s'
                         }}
                         title={coach.name}
                     >
-                        {coach.emoji}
+                        {coach.imageUrl ? (
+                            <img src={coach.imageUrl} alt={coach.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: selectedCoach.id === coach.id ? 1 : 0.5 }} />
+                        ) : (
+                            <span style={{ fontSize: '1rem' }}>{coach.emoji}</span>
+                        )}
                     </button>
                 ))}
             </div>
