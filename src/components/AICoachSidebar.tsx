@@ -167,7 +167,7 @@ const AICoachSidebar: React.FC<AICoachSidebarProps> = ({
                     }}>
                         {selectedCoach.id === 'apex' ? "케이던스의 비밀" :
                          selectedCoach.id === 'insight' ? "지면 반발력 활용" :
-                         selectedCoach.id === 'atlas' ? "심박수 Zone 2의 마법" :
+                         selectedCoach.id === 'atlas' ? "심박수 Zone 2의 효과" :
                          selectedCoach.id === 'swift' ? "팔 스윙의 리듬" :
                          selectedCoach.id === 'zen' ? "횡격막 호흡법" :
                          selectedCoach.id === 'marathon' ? "미드풋 착지의 경제성" :

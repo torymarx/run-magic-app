@@ -67,19 +67,16 @@ function App() {
         handleManualSave,
         handleDeleteRecord,
         handleImportRecords,
-        totalDays,
         lastSyncStatus,
         calculateLevelInfo,
         medalAchievements: currentMedalAchievements,
         totalStats
-    } = useRecordManager(setPoints, setUnlockedBadges, setUnlockedMedals, user?.id, profile);
+    } = useRecordManager(points, setPoints, setUnlockedBadges, setUnlockedMedals, user?.id, profile);
 
     // 4. Record Handlers (Operation Diet)
     const {
         handleEditRecord,
-        handleAddNewFromCalendar,
-        handleImport,
-        handleExport
+        handleAddNewFromCalendar
     } = useRecordHandlers(
         setEditingRecord,
         setShowManualForm,
@@ -134,23 +131,15 @@ function App() {
     }
 
     return (
-        <div className="app-container" style={{ position: 'relative', minHeight: '100vh', padding: '80px 1rem 2rem 1rem', maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="app-container">
             <AuroraBackground />
 
             <SyncOverlay isVisible={isSyncing} />
 
             <Header
-                isRecording={isRecording}
                 points={points}
-                totalDays={totalDays}
-                isCloudConnected={isCloudConnected}
-                profile={profile}
-                levelInfo={levelInfo}
-                hasRunToday={records.some(r => r.date === new Date().toLocaleDateString('en-CA'))}
                 onOpenManualForm={() => setShowManualForm(true)}
                 onOpenProfile={() => setShowProfileModal(true)}
-                onImport={handleImport}
-                onExport={handleExport}
                 onSignOut={handleSignOut}
             />
 
@@ -271,7 +260,7 @@ function App() {
                         <span onClick={() => setShowLegalModal(true)} style={{ cursor: 'pointer' }}>이용약관 및 개인정보처리방침</span>
                         <span>고객지원: naku.lab.studio@kakao.com</span>
                     </div>
-                    <p style={{ opacity: 0.3, fontSize: '0.7rem' }}>© 2026 Run-Magic AI. 런너님의 건강한 마법 같은 질주를 응원합니다! 💖</p>
+                    <p style={{ opacity: 0.3, fontSize: '0.7rem' }}>© 2026 Run-Magic AI. 런너님의 건강한 질주를 응원합니다! 💖</p>
                 </div>
             </footer>
         </div>

@@ -7,6 +7,7 @@ import { LEVEL_DATA, POINT_RULES } from '../data/progression';
 
 // 이 훅은 레코드 관리에 필요한 모든 복잡한 상태 관리를 캡슐화합니다.
 export const useRecordManager = (
+    points: number,
     setPoints: (p: number) => void,
     setUnlockedBadges: (b: string[]) => void,
     setUnlockedMedals: (m: string[]) => void,
@@ -257,8 +258,48 @@ export const useRecordManager = (
         updateStreak(updatedRecords);
         updateTotalDays(updatedRecords);
 
-        // v10.5: 단순 더하기가 아닌 전체 기록 기반 재계산 트리거
+        // v30.0: 포인트 개별 지급 (Ledger 방식)
+        let acquiredPoints = 0;
+        let newTransactions: any[] = [];
+
+        // 1. 달린 거리 포인트
+        const distPoints = Math.floor((newRecord.distance || 0) * POINT_RULES.DISTANCE_KM);
+        if (distPoints > 0) {
+            acquiredPoints += distPoints;
+            newTransactions.push({
+                amount: distPoints,
+                type: 'RUN',
+                reference_id: `record_dist:${newRecord.id}`,
+                description: `${newRecord.distance}km 질주 거리 보상 (${newRecord.date})`,
+                date: newRecord.date
+            });
+        }
+
+        // 2. 일일 첫 러닝 포인트 (오늘 다른 기록이 없었다면)
+        const hasRunToday = records.some(r => r.date === newRecord.date);
+        if (!hasRunToday) {
+            acquiredPoints += POINT_RULES.RUNNING_SESSION;
+            newTransactions.push({
+                amount: POINT_RULES.RUNNING_SESSION,
+                type: 'DAILY_QUEST',
+                reference_id: `daily_run:${newRecord.date}`,
+                description: `일일 첫 러닝 인증 (${newRecord.date})`,
+                date: newRecord.date
+            });
+        }
+
+        // v10.5: 메달 계산 트리거 (새로운 기록 포함하여 전체 분석)
         recalculateAllAchievements(updatedRecords);
+        
+        // (참고: 메달 지급 로직은 recalculateAllAchievements에서 기존 달성 여부를 추적해서
+        // 변화가 있을 때 포인트를 지급하는 방식으로 고도화할 수 있으나, 
+        // 현 단계에서는 러닝과 퀘스트만 장부에 기록하여 포인트 요동을 막습니다.)
+
+        if (acquiredPoints > 0) {
+            const finalPoints = points + acquiredPoints;
+            setPoints(finalPoints);
+            syncPointsToCloud(finalPoints, newTransactions);
+        }
 
         setLastSavedRecord(newRecord);
     };
@@ -774,76 +815,10 @@ export const useRecordManager = (
             }
         });
 
-        // 2. 활동 포인트 정산 및 트랜잭션 생성
-        let activityPoints = 0;
-
-        // 2.1 일일 방문 (Attendance)
-        if (profile?.attendanceDates) {
-            profile.attendanceDates.forEach((date: string) => {
-                activityPoints += POINT_RULES.ATTENDANCE;
-                transactions.push({
-                    amount: POINT_RULES.ATTENDANCE,
-                    type: 'ATTENDANCE',
-                    reference_id: `attendance:${date}`,
-                    description: `일일 출석 보상 (${date})`,
-                    date: date
-                });
-            });
-        }
-
-        // 2.2 일일 첫 러닝 인증
-        const runningDateSet = new Set(recordsData.map((r: any) => r.date));
-        runningDateSet.forEach((date: any) => {
-            activityPoints += POINT_RULES.RUNNING_SESSION;
-            transactions.push({
-                amount: POINT_RULES.RUNNING_SESSION,
-                type: 'DAILY_QUEST',
-                reference_id: `daily_run:${date}`,
-                description: `일일 첫 러닝 인증 (${date})`,
-                date: date
-            });
-        });
-
-        // 2.3 연속 러닝 보너스 (maxStreak 기준 영구 보존)
-        if (maxStreak >= 3) {
-            activityPoints += POINT_RULES.STREAK_3DAY;
-            transactions.push({ amount: POINT_RULES.STREAK_3DAY, type: 'STREAK', reference_id: 'streak:3day', description: '3일 연속 러닝 보너스' });
-        }
-        if (maxStreak >= 7) {
-            activityPoints += POINT_RULES.STREAK_7DAY;
-            transactions.push({ amount: POINT_RULES.STREAK_7DAY, type: 'STREAK', reference_id: 'streak:7day', description: '7일 연속 러닝 보너스' });
-        }
-        if (maxStreak >= 14) {
-            activityPoints += POINT_RULES.STREAK_14DAY;
-            transactions.push({ amount: POINT_RULES.STREAK_14DAY, type: 'STREAK', reference_id: 'streak:14day', description: '14일 연속 러닝 보너스' });
-        }
-        if (maxStreak >= 30) {
-            activityPoints += POINT_RULES.STREAK_30DAY;
-            transactions.push({ amount: POINT_RULES.STREAK_30DAY, type: 'STREAK', reference_id: 'streak:30day', description: '30일 연속 러닝 보너스' });
-        }
-
-        // 2.4 주행 거리 보상 (1km당 10P) - 개별 레코드 단위로 기록 🛡️
-        recordsData.forEach((r: any) => {
-            const distPoints = Math.floor((r.distance || 0) * POINT_RULES.DISTANCE_KM);
-            if (distPoints > 0) {
-                activityPoints += distPoints;
-                transactions.push({
-                    amount: distPoints,
-                    type: 'RUN',
-                    reference_id: `record_dist:${r.id}`,
-                    description: `${r.distance}km 질주 거리 보상 (${r.date})`,
-                    date: r.date
-                });
-            }
-        });
-
-        // 결과 업데이트
-        const finalPoints = recalculatedPoints + activityPoints;
-        setPoints(finalPoints);
-
-        // v26.5: 트랜잭션 기반 DB 동기화 실행 💰
-        syncPointsToCloud(finalPoints, transactions);
-
+        // v30.0: 포인트 전체 재계산 및 덮어쓰기 로직 제거 (Ledger 장부 방식 적용)
+        // 앱 실행 시에는 profile에 저장된 마지막 누적 포인트를 그대로 유지하며,
+        // 개별 이벤트(기록 저장, 메달 획득 등) 시에만 포인트를 가산합니다.
+        
         setUnlockedMedals(newMedals);
         setMedalAchievements(newMedalAchievements);
         setUnlockedBadges([]);
@@ -968,6 +943,10 @@ export const useRecordManager = (
             updateStreak(loadedRecords);
             updateTotalDays(loadedRecords);
             recalculateAllAchievements(loadedRecords);
+            
+            // v30.0: 포인트는 Ledger 장부 형식이므로 프로필의 누적 포인트를 그대로 가져와 사용
+            // ⚠️ profile이 비동기 로딩이라 여기서는 강제 덮어쓰기 하지 않음 → 아래 useEffect에서 처리
+            // setPoints(profile?.points || 0); <- 이 라인이 포인트를 0으로 날리던 원인이었음
 
             if (!silent) {
                 console.log(`✅ 동기화 완료: ${loadedRecords.length}개의 기록이 최신화되었습니다.`);
@@ -989,6 +968,14 @@ export const useRecordManager = (
             if (!silent) console.groupEnd();
         }
     };
+
+    // v30.1: 포인트 복원 - profile이 실제로 로드된 이후에만 동기화 (비동기 순서 보장)
+    useEffect(() => {
+        if (profile?.points !== undefined && profile.points > 0) {
+            console.log(`💰 [Profile Sync] 프로필에서 포인트 복원: ${profile.points}P`);
+            setPoints(profile.points);
+        }
+    }, [profile?.points]);
 
     return {
         records,

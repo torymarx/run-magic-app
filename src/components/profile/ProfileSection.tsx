@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Edit3, X, ShieldCheck, RefreshCw, ChevronRight, History } from 'lucide-react';
 import { UserProfile } from '../../hooks/useProfileManager';
 import CharacterLevelWidget from './CharacterLevelWidget';
 import PointHistoryModal from './PointHistoryModal';
 import { LEVEL_DATA, getCharacterImageUrl } from '../../data/progression';
+import { MEDAL_DATA } from '../../data/medals';
 
 interface ProfileSectionProps {
     profile: UserProfile;
@@ -22,6 +23,18 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
     const [editData, setEditData] = useState<Partial<UserProfile>>(profile);
+
+    // v30.0: 현재 단계 카드를 자동으로 화면 정중앙에 위치
+    const currentLevelRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (currentLevelRef.current) {
+            currentLevelRef.current.scrollIntoView({
+                behavior: 'instant',
+                block: 'nearest',
+                inline: 'center'
+            });
+        }
+    }, []);
 
     const handleSave = () => {
         const finalData = { ...editData };
@@ -50,7 +63,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
             }}
         >
             <section className="profile-glass-card custom-scrollbar" style={{
-                padding: '1.5rem', // 모바일/작은 화면 컷 방지를 위해 2.5rem -> 1.5rem
                 width: '100%',
                 maxWidth: '900px',
                 maxHeight: '92vh',
@@ -58,14 +70,47 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem', // 2.5rem -> 1.5rem
+                gap: '0',
                 animation: 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                 background: 'rgba(20, 25, 30, 0.8)',
                 border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '40px'
+                borderRadius: '40px',
+                padding: '0'
             }}>
+                {/* ── 상단 헤더 (내용과 함께 스크롤됨) ── */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '1.2rem 1.5rem 0.5rem',
+                    background: 'transparent',
+                }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', textTransform: 'uppercase' }}>Profile</span>
+                    {!isEditing && (
+                        <button
+                            onClick={onClose}
+                            style={{
+                                background: 'rgba(255,255,255,0.08)',
+                                border: 'none',
+                                color: 'white',
+                                cursor: 'pointer',
+                                width: '34px',
+                                height: '34px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'background 0.2s'
+                            }}
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+                </div>
+
                 {/* Master Profile Card Integration (v21.1) */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%', padding: '0.5rem 1.5rem 0' }}>
+
                     <CharacterLevelWidget
                         totalPoints={points}
                         calculateLevelInfo={calculateLevelInfo}
@@ -99,7 +144,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                     transition: 'all 0.3s ease'
                                 }}
                             >
-                                <History size={18} className="neon-text-blue" /> 마법 통장 (Bank Book)
+                                <History size={18} className="neon-text-blue" /> 포인트 내역
                             </button>
                         )}
                         
@@ -162,32 +207,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                 </button>
                             </div>
                         )}
-                        {!isEditing && (
-                            <button
-                                onClick={onClose}
-                                className="mobile-hide"
-                                style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: 'none',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    width: '46px',
-                                    height: '46px',
-                                    borderRadius: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <X size={24} />
-                            </button>
-                        )}
+                        {/* 기존 X 버튼 위치에서 제거됨 — 상단 헤더로 이동 */}
                     </div>
                 </div>
 
                 {/* Lower Section: System Analysis Integration */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '0 1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '0 1.5rem 1.5rem' }}>
                     {/* Character Evolution Timeline */}
                     <div style={{ width: '100%' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -213,6 +238,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                 return (
                                     <div
                                         key={char.level}
+                                        ref={isCurrent ? currentLevelRef : undefined}
                                         style={{
                                             minWidth: '180px',
                                             padding: '1.5rem',
@@ -227,13 +253,23 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                                         }}
                                     >
                                         {isCurrent && (
-                                            <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'var(--electric-blue)', color: 'black', fontSize: '0.65rem', padding: '3px 8px', borderRadius: '8px', fontWeight: '900' }}>현재 단계</div>
+                                            <div style={{
+                                                display: 'inline-block',
+                                                background: 'var(--electric-blue)',
+                                                color: 'black',
+                                                fontSize: '0.62rem',
+                                                padding: '3px 10px',
+                                                borderRadius: '20px',
+                                                fontWeight: '900',
+                                                marginBottom: '0.8rem',
+                                                letterSpacing: '0.3px'
+                                            }}>현재 단계</div>
                                         )}
 
                                         <div style={{
                                             width: '120px',
                                             height: '150px',
-                                            margin: '0 auto 1.2rem',
+                                            margin: isCurrent ? '0 auto 1.2rem' : '1.8rem auto 1.2rem',
                                             display: 'flex',
                                             alignItems: 'flex-end',
                                             justifyContent: 'center',
@@ -266,7 +302,93 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         </div>
                     </div>
 
-                    {/* AI Analysis Section - Expanded to full width as Goal is now in Widget */}
+                    {/* Collection Inventory Section (v31.0) */}
+                    <div style={{ width: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
+                                <ChevronRight size={22} className="neon-text-purple" /> 컬렉션 인벤토리 (Inventory)
+                            </h3>
+                            <button 
+                                onClick={() => onRefreshData?.()} 
+                                style={{ background: 'none', border: 'none', color: 'white', opacity: 0.3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                            >
+                                <RefreshCw size={12} /> SHUFFLE
+                            </button>
+                        </div>
+
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                            gap: '0.8rem',
+                            padding: '0.5rem'
+                        }}>
+                            {(() => {
+                                // 1. 등급 가중치 설정
+                                const rarityWeight = { MYTHIC: 6, LEGENDARY: 5, EPIC: 4, RARE: 3, UNCOMMON: 2, COMMON: 1 };
+                                
+                                // 2. 정렬 및 셔플 로직
+                                // - 고등급 메달들(MYTHIC, LEGENDARY)은 항상 상위 그룹에 포함
+                                // - 그 외 메달들은 랜덤하게 섞임
+                                const sortedMedals = [...MEDAL_DATA].sort((a, b) => {
+                                    const weightA = rarityWeight[a.rarity as keyof typeof rarityWeight] || 0;
+                                    const weightB = rarityWeight[b.rarity as keyof typeof rarityWeight] || 0;
+                                    return weightB - weightA;
+                                });
+
+                                // 상위 12개만 추출 후, 그 안에서 랜덤하게 섞어서 보여줌 (진입 시마다 다른 느낌)
+                                const featuredMedals = sortedMedals.slice(0, 24)
+                                    .sort(() => Math.random() - 0.5);
+
+                                return featuredMedals.map(medal => (
+                                    <div 
+                                        key={medal.id}
+                                        style={{
+                                            background: 'rgba(255,255,255,0.02)',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            borderRadius: '20px',
+                                            padding: '1rem 0.5rem',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            transition: 'transform 0.2s',
+                                            cursor: 'pointer'
+                                        }}
+                                        className="hover-bright"
+                                    >
+                                        <div style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '12px',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '1.2rem',
+                                            filter: rarityWeight[medal.rarity as keyof typeof rarityWeight] >= 5 ? 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' : 'none'
+                                        }}>
+                                            ✨
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '0.7rem', fontWeight: '800', color: 'white', opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '80px' }}>
+                                                {medal.name}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: '0.55rem', 
+                                                fontWeight: '900', 
+                                                color: medal.rarity === 'MYTHIC' ? '#FFD700' : medal.rarity === 'LEGENDARY' ? '#FF4B4B' : 'rgba(255,255,255,0.3)',
+                                                letterSpacing: '0.5px'
+                                            }}>
+                                                {medal.rarity}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* AI Analysis Section */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: '800', opacity: 0.6, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <ShieldCheck size={18} className="neon-text-purple" /> 시스템 분석 및 전략 (SYSTEM ANALYSIS & STRATEGY)
@@ -284,7 +406,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         }}>
                             <p className="mobile-font-md" style={{ fontSize: '1.1rem', lineHeight: '1.7', margin: 0, opacity: 0.9, color: 'white', fontWeight: '500' }}>
                                 {profile.weight && profile.height ?
-                                    `현재 런너님은 [${levelInfo.name}] 단계의 정점에 서 있습니다. ${points.toLocaleString()}XP를 달성했으며, 다음 진전을 위해 ${levelInfo.xpToNext.toLocaleString()}XP가 더 필요합니다. 당신의 신체 능력치는 레벨과 기록에 따라 실시간으로 진화하며, 마법진이 그 모든 땀방울을 기록하고 있습니다.` :
+                                    `현재 런너님은 [${levelInfo.name}] 단계의 정점에 서 있습니다. ${points.toLocaleString()}P를 달성했으며, 다음 진전을 위해 ${levelInfo.xpToNext.toLocaleString()}P가 더 필요합니다. 당신의 신체 능력치는 레벨과 기록에 따라 실시간으로 진화하며, Run Magic이 그 모든 땀방울을 기록하고 있습니다.` :
                                     "런너의 신체 데이터를 입력하면 더욱 정밀한 코칭 알고리즘이 가동되어 성장을 지원합니다. 현재 기본 성능으로 시스템이 대기 중입니다."}
                             </p>
                             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>

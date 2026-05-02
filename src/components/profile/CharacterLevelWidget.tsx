@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Weight, Ruler, Shield, Target, Zap, Heart, Sword, MapPin } from 'lucide-react';
+import { User, Weight, Ruler, Zap, Heart, Sword } from 'lucide-react';
 
 interface CharacterLevelWidgetProps {
     totalPoints: number;
@@ -22,8 +22,7 @@ const StatBar = ({ label, value, icon: Icon, color }: any) => (
             <div style={{
                 height: '100%',
                 width: `${value}%`,
-                background: `linear-gradient(90deg, ${color}66, ${color})`,
-                boxShadow: `0 0 10px ${color}44`,
+                background: color,
                 borderRadius: '3px',
                 transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }} />
@@ -38,33 +37,29 @@ const SpecChip = ({ icon: Icon, value, label, field, isEditing, profile, onEditC
         <div
             onClick={() => isEditing && field === 'gender' && onEditChange?.('gender', profile.gender === 'male' ? 'female' : 'male')}
             style={{
-                background: isEditing ? 'rgba(0, 209, 255, 0.1)' : 'rgba(255,255,255,0.03)',
+                background: 'rgba(255,255,255,0.03)',
                 padding: '6px 12px',
                 borderRadius: '12px',
-                border: isEditing ? `1px solid var(--electric-blue)` : '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
                 cursor: isEditing && field === 'gender' ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                boxShadow: isEditing ? '0 0 10px rgba(0, 209, 255, 0.2)' : 'none'
+                transition: 'all 0.2s'
             }}
-            className={isEditing && field === 'gender' ? 'hover-glow' : ''}
         >
-            <Icon size={12} style={{ opacity: isEditing ? 1 : 0.5, color: isEditing ? 'var(--electric-blue)' : 'inherit' }} />
+            <Icon size={12} style={{ opacity: 0.4 }} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.6rem', opacity: isEditing ? 0.8 : 0.4, lineHeight: 1, color: isEditing ? 'var(--electric-blue)' : 'inherit' }}>{label}</span>
+                <span style={{ fontSize: '0.6rem', opacity: 0.3 }}>{label}</span>
                 {isEditing && isNumericField ? (
                     <input
                         type="text"
                         inputMode="decimal"
                         value={field === 'weight' ? profile.weight : profile.height}
                         onChange={(e) => onEditChange?.(field, e.target.value)}
-                        className="minimal-input"
                         style={{
-                            background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', width: '60px', outline: 'none', padding: 0
+                            background: 'none', border: 'none', color: 'white', fontSize: '0.85rem', fontWeight: 'bold', width: '50px', outline: 'none', padding: 0
                         }}
-                        placeholder="0.0"
                     />
                 ) : (
                     <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>{value}</span>
@@ -82,18 +77,13 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
     onEditChange
 }) => {
     const levelInfo = calculateLevelInfo(totalPoints);
-    const theme = levelInfo.theme;
     const progress = (levelInfo.currentLevelPoints / levelInfo.pointsToNextLevel) * 100;
 
-    // v21.2: 능력치 계산 로직 (임시 시각화용)
     const stats = {
         stamina: Math.min(100, 20 + (levelInfo.level * 15) + (totalPoints / 200)),
         speed: Math.min(100, 30 + (levelInfo.level * 10)),
-        willpower: 85 // 나중에 연속 일수 등으로 연동 가능
+        willpower: 85
     };
-
-    const safeGender = profile.gender === 'female' ? 'female' : 'male';
-    const characterUrl = `/assets/characters/${safeGender}_lv${levelInfo.level}.png`;
 
     return (
         <div
@@ -101,207 +91,88 @@ const CharacterLevelWidget: React.FC<CharacterLevelWidgetProps> = ({
             style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem',
-                padding: '1.5rem', // 모바일 컷 추가 방지 1.8rem -> 1.5rem
-                background: 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.6) 100%)',
-                borderRadius: '36px',
-                border: `1px solid ${theme.color}44`,
-                boxShadow: `0 30px 60px rgba(0,0,0,0.6), inset 0 40px ${theme.color}11`,
+                gap: '2rem',
+                padding: '2rem',
+                background: 'rgba(20, 20, 20, 0.4)',
+                borderRadius: '32px',
+                border: '1px solid rgba(255,255,255,0.06)',
                 width: '100%',
-                maxWidth: '800px', // v25.0: 사용자 요청 - 가로로 더 넓게 (680px -> 800px)
+                maxWidth: '800px',
                 position: 'relative',
-                overflow: 'hidden',
                 margin: '0 auto',
-                backdropFilter: 'blur(20px)'
+                backdropFilter: 'blur(30px)'
             }}
         >
-            {/* Header: Name & Identity */}
-            <div className="mobile-stack" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 }}>
-                <div className="mobile-text-center">
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
                     {isEditing ? (
                         <input
                             type="text"
                             value={profile.name}
                             onChange={(e) => onEditChange?.('name', e.target.value)}
-                            className="neon-input mobile-w-full"
                             style={{
-                                background: 'rgba(255,255,255,0.05)', border: 'none', borderBottom: `3px solid var(--electric-blue)`,
-                                color: 'white', fontSize: '2.4rem', fontWeight: '900', outline: 'none', width: '280px',
-                                padding: '4px 8px', borderRadius: '4px 4px 0 0',
-                                boxShadow: '0 4px 15px rgba(0, 209, 255, 0.1)'
+                                background: 'none', border: 'none', borderBottom: '1px solid white',
+                                color: 'white', fontSize: '1.8rem', fontWeight: '200', outline: 'none'
                             }}
                         />
                     ) : (
-                        <h2 className="mobile-font-lg" style={{
-                            margin: 0, fontSize: '2.8rem', fontWeight: '900', letterSpacing: '-1.5px',
-                            background: `linear-gradient(135deg, #fff 0%, ${theme.color} 100%)`,
-                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                            textShadow: `0 10px 30px ${theme.color}44`, lineHeight: 1
-                        }}>
-                            {profile.name}
-                        </h2>
+                        <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: '200', color: 'white' }}>{profile.name}</h2>
                     )}
-                    <div className="mobile-text-center" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                        <span style={{
-                            padding: '4px 12px', background: `${theme.color}22`, color: theme.color,
-                            borderRadius: '20px', fontSize: '0.75rem', fontWeight: '900', letterSpacing: '1px',
-                            border: `1px solid ${theme.color}44`
-                        }}>
-                            {levelInfo.title}
-                        </span>
-                        <div className="mobile-hide" style={{ height: '4px', width: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
-                        <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>Lv.{levelInfo.level} {levelInfo.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', opacity: 0.3 }}>
+                        <span style={{ fontSize: '0.8rem' }}>{levelInfo.title}</span>
+                        <div style={{ height: '3px', width: '3px', borderRadius: '50%', background: 'white' }} />
+                        <span style={{ fontSize: '0.8rem' }}>LEVEL {levelInfo.level}</span>
                     </div>
                 </div>
 
-                {/* Level Badge Shield */}
-                <div className="mobile-hide" style={{ textAlign: 'right', position: 'relative' }}>
-                    <div style={{
-                        width: '60px', height: '60px', borderRadius: '18px',
-                        background: `linear-gradient(135deg, ${theme.color}, ${theme.color}aa)`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: `0 10px 20px ${theme.color}44`, border: '1px solid rgba(255,255,255,0.3)',
-                        position: 'relative', zIndex: 1
-                    }}>
-                        <Shield size={32} color="white" />
-                        <span style={{ position: 'absolute', fontSize: '1.2rem', fontWeight: '900', color: 'white' }}>{levelInfo.level}</span>
+                <div style={{ 
+                    width: '80px', height: '80px', borderRadius: '50%', 
+                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <User size={40} strokeWidth={0.5} color="rgba(255,255,255,0.2)" />
+                </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                    <SpecChip icon={User} label="GENDER" value={profile.gender?.toUpperCase()} field="gender" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                    <SpecChip icon={Weight} label="WEIGHT" value={`${profile.weight} KG`} field="weight" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                    <SpecChip icon={Ruler} label="HEIGHT" value={`${profile.height} CM`} field="height" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <StatBar label="STAMINA" value={stats.stamina} icon={Heart} color="white" />
+                    <StatBar label="SPEED" value={stats.speed} icon={Zap} color="white" />
+                    <StatBar label="WILLPOWER" value={stats.willpower} icon={Sword} color="white" />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.2, letterSpacing: '1px', marginBottom: '8px' }}>AMBITION</div>
+                        <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)', fontWeight: '300' }}>
+                            "{profile.goal || 'Run for the better life.'}"
+                        </p>
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.2, letterSpacing: '1px', marginBottom: '8px' }}>LOCATION</div>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', fontWeight: '300' }}>
+                            {profile.locationCity || 'Location not set.'}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content: Character (Left) & Status Dashboard (Right) */}
-            <div className="mobile-stack" style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', zIndex: 2, minHeight: '260px' }}>
-
-                {/* Character Area */}
-                <div className="mobile-w-full" style={{ position: 'relative', width: '240px', height: '260px', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
-                    <img
-                        src={characterUrl}
-                        alt={levelInfo.name}
-                        className="mobile-w-full"
-                        style={{
-                            width: '100%', height: '110%', objectFit: 'contain',
-                            filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.8))',
-                            position: 'relative', zIndex: 1, marginTop: '-20px'
-                        }}
-                    />
+            {/* Footer */}
+            <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '10px', opacity: 0.3 }}>
+                    <span>PROGRESS</span>
+                    <span>{Math.round(progress)}%</span>
                 </div>
-
-                {/* Status Dashboard Area (AL-CHA-GE!) */}
-                <div className="mobile-w-full" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-                    {/* Physical Specs (Horizontal Chips) */}
-                    <div className="mobile-grid-2" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <SpecChip icon={User} label="성별 (GENDER)" value={profile.gender === 'male' ? '남성' : '여성'} field="gender" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
-                        <SpecChip icon={Weight} label="체중 (WEIGHT)" value={`${profile.weight}kg`} field="weight" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
-                        <SpecChip icon={Ruler} label="신장 (HEIGHT)" value={`${profile.height}cm`} field="height" isEditing={isEditing} profile={profile} onEditChange={onEditChange} />
-                    </div>
-
-                    {/* Attributes Section */}
-                    <div className="mobile-compact-padding" style={{
-                        background: 'rgba(0,0,0,0.2)', padding: '12px 16px', borderRadius: '24px',
-                        border: '1px solid rgba(255,255,255,0.03)', boxShadow: 'inset 0 4px 20px rgba(0,0,0,0.4)'
-                    }}>
-                        <h4 style={{ margin: '0 0 15px 0', fontSize: '0.9rem', color: theme.color, fontWeight: '900', letterSpacing: '2px' }}>핵심 능력치 (CORE ATTRIBUTES)</h4>
-                        <StatBar label="지구력 (STAMINA)" value={stats.stamina} icon={Heart} color="#FF4B4B" />
-                        <StatBar label="속도 (SPEED)" value={stats.speed} icon={Zap} color="#FFD700" />
-                        <StatBar label="의지력 (WILLPOWER)" value={stats.willpower} icon={Sword} color="#00D1FF" />
-                    </div>
-
-                    {/* Runner's Ambition (Goal) */}
-                    <div style={{ padding: '0 10px' }}>
-                        <div style={{ fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                            <Target size={10} color={theme.color} /> 런너의 야망 (RUNNER'S AMBITION)
-                        </div>
-                        {isEditing ? (
-                            <textarea
-                                value={profile.goal}
-                                onChange={(e) => onEditChange?.('goal', e.target.value)}
-                                style={{
-                                    width: '100%', background: 'rgba(255,255,255,0.08)', border: 'none',
-                                    borderRadius: '12px', color: 'white', padding: '10px 12px', fontSize: '0.85rem',
-                                    outline: 'none', borderBottom: `2px solid var(--electric-blue)`, height: '48px', resize: 'none',
-                                    boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)',
-                                    transition: 'all 0.3s'
-                                }}
-                                placeholder="당신의 질주 목표를 입력하세요..."
-                            />
-                        ) : (
-                            <p className="mobile-font-md" style={{
-                                margin: 0, fontSize: '1rem', color: 'rgba(255,255,255,0.9)',
-                                fontStyle: 'italic', fontWeight: '500', lineHeight: 1.4,
-                                textShadow: '0 2px 10px rgba(0,0,0,0.5)', textAlign: 'center'
-                            }}>
-                                "{profile.goal || 'No goal set... Start running now!'}"
-                            </p>
-                        )}
-                    </div>
-
-                    {/* v25.0: 위치 정보 (날씨 자동 입력용) */}
-                    <div style={{ padding: '0 10px' }}>
-                        <div style={{ fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                            <MapPin size={10} color={theme.color} /> 러닝 위치 (RUNNING LOCATION)
-                        </div>
-                        {isEditing ? (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <input
-                                    type="text"
-                                    value={profile.locationCity || ''}
-                                    onChange={(e) => onEditChange?.('locationCity', e.target.value)}
-                                    placeholder="도시 (예: 광주)"
-                                    style={{
-                                        flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none',
-                                        borderRadius: '12px', color: 'white', padding: '8px 12px', fontSize: '0.85rem',
-                                        outline: 'none', borderBottom: `2px solid var(--electric-blue)`,
-                                        boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)', transition: 'all 0.3s'
-                                    }}
-                                />
-                                <input
-                                    type="text"
-                                    value={profile.locationStation || ''}
-                                    onChange={(e) => onEditChange?.('locationStation', e.target.value)}
-                                    placeholder="동/측정소 (예: 서석동)"
-                                    style={{
-                                        flex: 1, background: 'rgba(255,255,255,0.08)', border: 'none',
-                                        borderRadius: '12px', color: 'white', padding: '8px 12px', fontSize: '0.85rem',
-                                        outline: 'none', borderBottom: `2px solid var(--electric-blue)`,
-                                        boxShadow: '0 0 15px rgba(0, 209, 255, 0.1)', transition: 'all 0.3s'
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <p className="mobile-font-md" style={{
-                                margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)',
-                                fontWeight: '500', textAlign: 'center'
-                            }}>
-                                {profile.locationCity ? (
-                                    <><MapPin size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />{profile.locationCity} {profile.locationStation || ''}</>
-                                ) : (
-                                    <span style={{ opacity: 0.4 }}>위치 미설정 — 프로필 수정에서 설정하세요</span>
-                                )}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* EXP Gauge Footer */}
-            <div style={{ marginTop: '0.5rem', zIndex: 2 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '8px', fontWeight: 'bold' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>경험치 진행 (EXP PROGRESS)</span>
-                    <span style={{ color: theme.color }}>{Math.round(progress)}%</span>
-                </div>
-                <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '5px', overflow: 'hidden', padding: '2px' }}>
-                    <div style={{
-                        height: '100%',
-                        width: `${progress}%`,
-                        background: `linear-gradient(90deg, ${theme.color}88, ${theme.color}, #fff)`,
-                        boxShadow: `0 0 20px ${theme.color}66`,
-                        borderRadius: '3px',
-                        transition: 'width 1.2s cubic-bezier(0.22, 1, 0.36, 1)'
-                    }} />
-                </div>
-                <div style={{ marginTop: '6px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontWeight: 'bold' }}>
-                    다음 레벨까지 <span style={{ color: theme.color }}>{levelInfo.pointsToNextLevel - levelInfo.currentLevelPoints} MP</span> 더 필요합니다 (PTS TO LEVEL UP)
+                <div style={{ height: '2px', background: 'rgba(255,255,255,0.05)', borderRadius: '1px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${progress}%`, background: 'white' }} />
                 </div>
             </div>
         </div>

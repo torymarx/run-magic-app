@@ -52,7 +52,8 @@ const Stepper = ({ label, value, onChange, step, unit, icon }: any) => {
                 </button>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
                     <input
-                        type="text"
+                        type="number"
+                        pattern="[0-9.]*"
                         inputMode="decimal"
                         value={inputValue}
                         onChange={handleTextChange}
@@ -89,6 +90,14 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
     onSave, onCancel, onDelete, lastRecord, allRecords = [],
     initialDate, isCloudConnected = false, profile
 }) => {
+    // v30.0: 모바일 환경 감지 (인라인 스타일 우선 적용)
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [distance, setDistance] = useState<number>(lastRecord?.distance || 3);
     const [splits, setSplits] = useState<string[]>(lastRecord?.splits || ['06:33', '06:52', '06:44']);
     // v8.9: UTC가 아닌 로컬 타임(KST) 기준 날짜 생성 (오전 러닝 날짜 오류 수정)
@@ -418,23 +427,30 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
     };
 
     return (
-        <div className="glass-card" style={{
+        <div className="glass-card mobile-form-container" style={{
             position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '95vw',
+            top: isMobile ? 'auto' : '50%',
+            bottom: isMobile ? 0 : 'auto',
+            left: isMobile ? 0 : '50%',
+            transform: isMobile ? 'none' : 'translate(-50%, -50%)',
+            width: isMobile ? '100vw' : '95vw',
             maxWidth: '1000px',
-            maxHeight: '90vh', // 85vh에서 90vh로 유연성 확대
-            height: 'auto', // 고정 높이 대신 내용에 맞게 조정
+            height: isMobile ? '90vh' : 'auto',
+            maxHeight: '90vh',
             display: 'flex',
             flexDirection: 'column',
-            animation: 'fadeIn 0.4s ease',
+            animation: isMobile ? 'slideUp 0.4s ease' : 'fadeIn 0.4s ease',
             zIndex: 1000,
             padding: 0,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            borderRadius: isMobile ? '24px 24px 0 0' : '24px'
         }}>
             <style>{`
+                @keyframes slideUp {
+                    from { transform: translateY(100%); }
+                    to { transform: translateY(0); }
+                }
+
                 .react-calendar {
                     background: transparent !important;
                     border: none !important;
@@ -509,9 +525,9 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                 </span>
             </div>
 
-            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+            <div className="mobile-flex-col" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flex: 1, overflow: isMobile ? 'auto' : 'hidden' }}>
                 {/* Left Side: Calendar & Quick Summary */}
-                <div style={{ flex: 1.2, padding: '1.5rem', borderRight: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+                <div className="mobile-form-left" style={{ flex: isMobile ? 'none' : 1.2, width: '100%', padding: '1.5rem', borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.05)', borderBottom: isMobile ? '1px solid rgba(255,255,255,0.05)' : 'none', background: 'rgba(0,0,0,0.2)', overflowY: isMobile ? 'visible' : 'auto', overscrollBehavior: 'contain' }}>
                     <div className="calendar-container premium-calendar">
                         <Calendar
                             onChange={(val) => handleDateChange(val as Date)}
@@ -568,7 +584,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                 </div>
 
                 {/* Right Side: Data Entry Form */}
-                <div style={{ flex: 1, padding: '1.5rem 2rem', overflowY: 'auto', background: 'rgba(255,255,255,0.01)', overscrollBehavior: 'contain' }}>
+                <div className="mobile-form-right" style={{ flex: isMobile ? 'none' : 1, width: '100%', padding: isMobile ? '1.5rem 1rem' : '1.5rem 2rem', overflowY: isMobile ? 'visible' : 'auto', background: 'rgba(255,255,255,0.01)', overscrollBehavior: 'contain' }}>
                     <form onSubmit={handleSubmit}>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', opacity: 0.6, marginBottom: '0.5rem' }}>
@@ -592,7 +608,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                         </div>
 
                         {/* Core Performance Metrics */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div className="mobile-grid-2" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                             <Stepper
                                 label="평균 심박수"
                                 value={heartRate}
@@ -658,7 +674,7 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                         )}
 
                         {/* Weather & Condition Section */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div className="mobile-grid-1" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.6, marginBottom: '0.5rem' }}>날씨</label>
                                 <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '10px' }}>

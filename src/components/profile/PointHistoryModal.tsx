@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Trophy, Calendar, ArrowUpRight, Wallet, History, ChevronRight } from 'lucide-react';
+import { X, Trophy, Calendar, ArrowUpRight, Zap, Activity, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 interface Transaction {
@@ -16,6 +16,23 @@ interface PointHistoryModalProps {
     onClose: () => void;
     totalPoints: number;
 }
+
+const TYPE_MAP: Record<string, { label: string; color: string; bg: string }> = {
+    RUN:        { label: '러닝',   color: '#00D1FF', bg: 'rgba(0,209,255,0.12)' },
+    MEDAL:      { label: '메달',   color: '#FFD700', bg: 'rgba(255,215,0,0.12)' },
+    DAILY_QUEST:{ label: '퀘스트', color: '#39FF14', bg: 'rgba(57,255,20,0.12)' },
+    ATTENDANCE: { label: '출석',   color: '#BD00FF', bg: 'rgba(189,0,255,0.12)' },
+};
+
+const getTypeIcon = (type: string) => {
+    switch (type) {
+        case 'MEDAL':       return <Trophy size={15} />;
+        case 'RUN':         return <Activity size={15} />;
+        case 'DAILY_QUEST': return <ChevronRight size={15} />;
+        case 'ATTENDANCE':  return <Calendar size={15} />;
+        default:            return <Zap size={15} />;
+    }
+};
 
 const PointHistoryModal: React.FC<PointHistoryModalProps> = ({ userId, onClose, totalPoints }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -35,194 +52,217 @@ const PointHistoryModal: React.FC<PointHistoryModalProps> = ({ userId, onClose, 
                 if (error) throw error;
                 setTransactions(data || []);
             } catch (err) {
-                console.error("Failed to fetch point history:", err);
+                console.error('Failed to fetch point history:', err);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchHistory();
     }, [userId]);
-
-    const getTypeIcon = (type: string) => {
-        switch (type) {
-            case 'MEDAL': return <Trophy size={16} className="text-yellow-400" />;
-            case 'RUN': return <ChevronRight size={16} className="text-blue-400" />;
-            case 'ATTENDANCE': return <Calendar size={16} className="text-green-400" />;
-            default: return <History size={16} className="text-gray-400" />;
-        }
-    };
 
     return (
         <div style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.85)',
+            background: 'rgba(0,0,0,0.75)',
             zIndex: 1100,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             padding: '1rem',
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)'
         }}>
-            <div className="profile-glass-card" style={{
+            <div style={{
                 width: '100%',
-                maxWidth: '550px',
-                height: '80vh',
+                maxWidth: '520px',
+                height: '82vh',
                 display: 'flex',
                 flexDirection: 'column',
-                background: 'rgba(15, 20, 25, 0.95)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '32px',
+                background: 'rgba(18, 18, 20, 0.96)',
+                border: '0.5px solid rgba(255,255,255,0.1)',
+                borderRadius: '28px',
                 overflow: 'hidden',
-                animation: 'slideUp 0.4s ease-out'
+                boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
+                animation: 'slideUp 0.3s ease-out'
             }}>
-                {/* Header: Bank Book Style */}
+
+                {/* ── 헤더 ── */}
                 <div style={{
-                    padding: '1.5rem 2rem',
-                    background: 'linear-gradient(135deg, var(--electric-blue) 0%, #005f73 100%)',
-                    color: 'black',
+                    padding: '1.4rem 1.6rem',
+                    borderBottom: '0.5px solid rgba(255,255,255,0.07)',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                 }}>
                     <div>
-                        <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', letterSpacing: '-0.5px' }}>
-                            마법 통장 (Point Ledger)
-                        </h2>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'bold' }}>
-                            RUN-MAGIC SPIRITUAL ASSETS
+                        <div style={{ fontSize: '0.7rem', opacity: 0.4, fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '2px' }}>
+                            Run-Magic
                         </div>
+                        <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700', letterSpacing: '-0.5px', color: 'white' }}>
+                            누적 포인트 상세
+                        </h2>
                     </div>
                     <button onClick={onClose} style={{
-                        background: 'rgba(0,0,0,0.1)',
+                        background: 'rgba(255,255,255,0.07)',
                         border: 'none',
                         cursor: 'pointer',
-                        width: '40px',
-                        height: '40px',
+                        width: '34px', height: '34px',
                         borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'white',
+                        transition: 'background 0.2s'
                     }}>
-                        <X size={20} color="black" />
+                        <X size={16} />
                     </button>
                 </div>
 
-                {/* Summary Row */}
+                {/* ── 요약 카드 ── */}
                 <div style={{
-                    padding: '1.5rem 2rem',
-                    background: 'rgba(255,255,255,0.03)',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    padding: '1.2rem 1.6rem',
+                    borderBottom: '0.5px solid rgba(255,255,255,0.07)',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    gap: '1rem'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            background: 'rgba(0, 209, 255, 0.1)',
-                            borderRadius: '14px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <Wallet className="neon-text-blue" size={24} />
+                    {/* 현재 포인트 */}
+                    <div style={{
+                        flex: 1,
+                        background: 'rgba(0,209,255,0.07)',
+                        border: '0.5px solid rgba(0,209,255,0.2)',
+                        borderRadius: '18px',
+                        padding: '1rem 1.2rem'
+                    }}>
+                        <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', fontWeight: '600', marginBottom: '6px' }}>
+                            현재 포인트
                         </div>
-                        <div>
-                            <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>현재 잔액 (Current Balance)</div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--electric-blue)' }}>
-                                {totalPoints.toLocaleString()} <span style={{ fontSize: '0.9rem' }}>XP</span>
-                            </div>
+                        <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#00D1FF', letterSpacing: '-0.5px', lineHeight: 1 }}>
+                            {totalPoints.toLocaleString()}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>
+                            Run Points
                         </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', opacity: 0.5 }}>총 거래수</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{transactions.length}건</div>
+
+                    {/* 포인트 입력수 */}
+                    <div style={{
+                        flex: 1,
+                        background: 'rgba(57,255,20,0.05)',
+                        border: '0.5px solid rgba(57,255,20,0.15)',
+                        borderRadius: '18px',
+                        padding: '1rem 1.2rem'
+                    }}>
+                        <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', fontWeight: '600', marginBottom: '6px' }}>
+                            포인트 입력수
+                        </div>
+                        <div style={{ fontSize: '1.7rem', fontWeight: '800', color: '#39FF14', letterSpacing: '-0.5px', lineHeight: 1 }}>
+                            {loading ? '—' : transactions.length}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>
+                            건의 기록
+                        </div>
                     </div>
                 </div>
 
-                {/* Transaction List */}
-                <div className="custom-scrollbar" style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: '1rem 0'
-                }}>
+                {/* ── 거래 목록 ── */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
                     {loading ? (
-                        <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', opacity: 0.5 }}>
-                            데이터를 분석 중입니다...
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '0.8rem', opacity: 0.4 }}>
+                            <Zap size={28} />
+                            <span style={{ fontSize: '0.9rem' }}>포인트 내역을 불러오는 중...</span>
                         </div>
                     ) : transactions.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '4rem 2rem', opacity: 0.4 }}>
-                            <History size={48} style={{ marginBottom: '1rem' }} />
-                            <p>아직 기록된 마법 거래가 없습니다.</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '0.8rem', opacity: 0.3 }}>
+                            <Activity size={36} />
+                            <p style={{ fontSize: '0.9rem', margin: 0 }}>포인트 내역이 없습니다.</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {transactions.map((tx) => (
-                                <div key={tx.id} style={{
-                                    padding: '1rem 2rem',
-                                    borderBottom: '1px solid rgba(255,255,255,0.03)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '15px',
-                                    transition: 'background 0.2s',
-                                    cursor: 'default'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                >
-                                    <div style={{
-                                        width: '36px',
-                                        height: '36px',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        borderRadius: '10px',
+                        <div>
+                            {transactions.map((tx) => {
+                                const meta = TYPE_MAP[tx.type] || { label: tx.type, color: '#aaa', bg: 'rgba(255,255,255,0.05)' };
+                                return (
+                                    <div key={tx.id} style={{
+                                        padding: '0.9rem 1.6rem',
+                                        borderBottom: '0.5px solid rgba(255,255,255,0.04)',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                        {getTypeIcon(tx.type)}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '2px' }}>
-                                            {tx.description}
+                                        gap: '12px',
+                                        transition: 'background 0.15s'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        {/* 타입 아이콘 */}
+                                        <div style={{
+                                            width: '36px', height: '36px',
+                                            background: meta.bg,
+                                            borderRadius: '12px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: meta.color,
+                                            flexShrink: 0
+                                        }}>
+                                            {getTypeIcon(tx.type)}
                                         </div>
-                                        <div style={{ fontSize: '0.7rem', opacity: 0.4, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                            <Calendar size={10} /> {new Date(tx.created_at).toLocaleDateString()}
+
+                                        {/* 설명 */}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{
+                                                fontSize: '0.87rem',
+                                                fontWeight: '600',
+                                                color: 'rgba(255,255,255,0.88)',
+                                                marginBottom: '3px',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}>
+                                                {tx.description}
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span style={{
+                                                    fontSize: '0.62rem',
+                                                    background: meta.bg,
+                                                    color: meta.color,
+                                                    padding: '1px 6px',
+                                                    borderRadius: '6px',
+                                                    fontWeight: '700'
+                                                }}>
+                                                    {meta.label}
+                                                </span>
+                                                <span style={{ fontSize: '0.68rem', opacity: 0.3 }}>
+                                                    {new Date(tx.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ 
-                                            fontSize: '1.1rem', 
-                                            fontWeight: '900', 
-                                            color: tx.amount > 0 ? 'var(--neon-green)' : '#ff4b2b',
+
+                                        {/* 포인트 */}
+                                        <div style={{
+                                            fontSize: '1rem',
+                                            fontWeight: '800',
+                                            color: tx.amount > 0 ? '#39FF14' : '#ff4b2b',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '4px',
-                                            justifyContent: 'flex-end'
+                                            gap: '2px',
+                                            flexShrink: 0
                                         }}>
-                                            {tx.amount > 0 ? '+' : ''}{tx.amount}
-                                            <ArrowUpRight size={14} />
+                                            {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString()}
+                                            {tx.amount > 0 && <ArrowUpRight size={13} />}
                                         </div>
-                                        <div style={{ fontSize: '0.65rem', opacity: 0.3 }}>{tx.type}</div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
 
-                {/* Footer */}
+                {/* ── 푸터 ── */}
                 <div style={{
-                    padding: '1rem 2rem',
-                    background: 'rgba(0,0,0,0.2)',
-                    fontSize: '0.7rem',
+                    padding: '0.9rem 1.6rem',
+                    borderTop: '0.5px solid rgba(255,255,255,0.05)',
+                    background: 'rgba(0,0,0,0.15)',
+                    fontSize: '0.68rem',
                     textAlign: 'center',
-                    opacity: 0.4,
-                    borderTop: '1px solid rgba(255,255,255,0.05)'
+                    color: 'rgba(255,255,255,0.2)'
                 }}>
-                    모든 포인트는 마법진의 증명(Proof of Spirit)에 의해 기록됩니다.
+                    포인트는 러닝·메달·퀘스트 완료 시 자동으로 누적됩니다.
                 </div>
             </div>
         </div>
