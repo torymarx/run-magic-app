@@ -113,7 +113,7 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         COMMON: 1
     };
 
-    // v17.0: 복합 정렬 로직 (획득 우선 -> Phase -> Rarity)
+    // v3.0: 복합 정렬 로직 (획득 우선 -> Rarity 높은 순 -> Phase 높은 순)
     const sortedItems = [...allItems].map(item => ({
         ...item,
         isUnlocked: item.type === 'trophy' ? unlockedBadges.includes(item.id) : unlockedMedals.includes(item.id),
@@ -122,13 +122,13 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
         // 1. 획득 여부 우선 (획득한 것이 위로)
         if (a.isUnlocked !== b.isUnlocked) return a.isUnlocked ? -1 : 1;
 
-        // 2. Phase 순 (낮은 단계부터)
-        if (a.phase !== b.phase) return a.phase - b.phase;
-
-        // 3. Rarity 순 (Common -> Legendary)
+        // 2. Rarity 순 (Mythic -> Common)
         const rankA = RARITY_RANK[a.rarity as keyof typeof RARITY_RANK];
         const rankB = RARITY_RANK[b.rarity as keyof typeof RARITY_RANK];
-        return rankA - rankB;
+        if (rankA !== rankB) return rankB - rankA;
+
+        // 3. Phase 순 (높은 단계부터)
+        return b.phase - a.phase;
     });
 
     // State for auto-scrolling & Info Panel
@@ -204,7 +204,8 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                     flexShrink: 0,
                     border: 'none', // Clip-path uses outline/shadow via pseudo or parent
                     boxShadow: isUnlocked && isSelected ? `0 0 20px ${color}88` : 'none',
-                    opacity: isUnlocked ? 1 : 0.4
+                    opacity: isUnlocked ? 1 : 0.4,
+                    scrollSnapAlign: 'start'
                 }}
             >
                 {/* Border layer using clip-path trick */}
@@ -317,7 +318,9 @@ const BadgeHallOfFame: React.FC<BadgeHallOfFameProps> = ({ unlockedBadges, unloc
                         paddingTop: '0.5rem',
                         maskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
                         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)',
-                        cursor: 'grab'
+                        cursor: 'grab',
+                        scrollSnapType: 'x proximity',
+                        scrollBehavior: 'smooth'
                     }}
                 >
                     <div style={{ minWidth: '10px' }} />
