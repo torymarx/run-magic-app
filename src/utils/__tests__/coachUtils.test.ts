@@ -3,9 +3,9 @@ import { getCoachAdvice, diagnoseRunnerProfile, getDetailedPrescription } from '
 import { Coach } from '../../data/coaches';
 
 describe('coachUtils - getCoachAdvice', () => {
-    const mockCoachHard: Coach = { id: 'apex', name: 'Apex', emoji: '🦾', role: '인터벌', color: '#ff4b4b', themeColor: 'rgba(255, 75, 75, 0.2)', tendency: 'hard', message: 'test' };
-    const mockCoachMental: Coach = { id: 'wellness', name: 'Wellness', emoji: '🌿', role: '부상 관리', color: '#4bff4b', themeColor: 'rgba(75, 255, 75, 0.2)', tendency: 'mental', message: 'test' };
-    const mockCoachIntel: Coach = { id: 'insight', name: 'Insight', emoji: '🐟', role: '분석', color: '#4b4bff', themeColor: 'rgba(75, 75, 255, 0.2)', tendency: 'intel', message: 'test' };
+    const mockCoachHard: Coach = { id: 'apex', name: 'Apex', emoji: '🦾', role: '인터벌', color: '#ff4b4b', themeColor: 'rgba(255, 75, 75, 0.2)', tendency: 'hard', message: 'test', imageUrl: 'test' };
+    const mockCoachMental: Coach = { id: 'wellness', name: 'Wellness', emoji: '🌿', role: '부상 관리', color: '#4bff4b', themeColor: 'rgba(75, 255, 75, 0.2)', tendency: 'mental', message: 'test', imageUrl: 'test' };
+    const mockCoachIntel: Coach = { id: 'insight', name: 'Insight', emoji: '🐟', role: '분석', color: '#4b4bff', themeColor: 'rgba(75, 75, 255, 0.2)', tendency: 'intel', message: 'test', imageUrl: 'test' };
 
     it('30도 이상의 폭염 상황에서 코치 성향에 맞는 조언을 반환한다', () => {
         const record = { temp: 30, distance: 5, weight: 70 };
@@ -21,7 +21,7 @@ describe('coachUtils - getCoachAdvice', () => {
 
     it('심박수가 높을 때 적절한 경고 및 격려 메시지를 반환한다', () => {
         const highHrRecord = { heart_rate: 180, distance: 5, weight: 70 };
-        const mockWellnessCoach: Coach = { id: 'wellness', name: 'Wellness', emoji: '🌿', role: '부상 관리', color: '#4bff4b', themeColor: 'rgba(75, 255, 75, 0.2)', tendency: 'mental', message: 'test' };
+        const mockWellnessCoach: Coach = { id: 'wellness', name: 'Wellness', emoji: '🌿', role: '부상 관리', color: '#4bff4b', themeColor: 'rgba(75, 255, 75, 0.2)', tendency: 'mental', message: 'test', imageUrl: 'test' };
 
         const advice = getCoachAdvice(highHrRecord, mockWellnessCoach);
         expect(advice).toContain('심박수');
@@ -64,7 +64,8 @@ describe('coachUtils - getCoachAdvice', () => {
             color: '#ff0000',
             message: 'test',
             tendency: 'hard',
-            themeColor: 'rgba(0,0,0,0)'
+            themeColor: 'rgba(0,0,0,0)',
+            imageUrl: 'test'
         };
         const advice = getCoachAdvice(mechanicalBrakeRecord, mockHardCoach);
         expect(advice).toContain('기계적 브레이크형');
@@ -76,7 +77,7 @@ describe('coachUtils - getCoachAdvice', () => {
         expect(getCoachAdvice(record, mockCoachHard)).toContain('영하');
         expect(getCoachAdvice(record, mockCoachHard)).toContain('워밍업');
 
-        const mockCoachCalm: Coach = { id: 'zen', name: 'Zen', emoji: '🧘', role: '호흡', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'calm', message: 'test' };
+        const mockCoachCalm: Coach = { id: 'zen', name: 'Zen', emoji: '🧘', role: '호흡', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'calm', message: 'test', imageUrl: 'test' };
         expect(getCoachAdvice(record, mockCoachCalm)).toContain('자율신경계');
     });
 
@@ -93,7 +94,7 @@ describe('coachUtils - getCoachAdvice', () => {
         expect(getCoachAdvice(record, mockCoachIntel)).toContain('역학적 밸런스');
         expect(getCoachAdvice(record, mockCoachIntel)).toContain('75kg');
 
-        const mockCoachPacer: Coach = { id: 'marathon', name: 'Marathon', emoji: '🏃‍♂️', role: '러닝', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'pacer', message: 'test' };
+        const mockCoachPacer: Coach = { id: 'marathon', name: 'Marathon', emoji: '🏃‍♂️', role: '러닝', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'pacer', message: 'test', imageUrl: 'test' };
         expect(getCoachAdvice(record, mockCoachPacer)).toContain('미드풋 착지');
     });
 
@@ -114,7 +115,7 @@ describe('coachUtils - getCoachAdvice', () => {
 
     it('케이던스가 최적 범위일 때 칭찬 메시지를 반환한다', () => {
         const record = { cadence: 180, heart_rate: 140, pace_seconds: 360, distance: 10, weight: 70 };
-        const mockCoachPacer: Coach = { id: 'marathon', name: 'Marathon', emoji: '🏃‍♂️', role: '러닝', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'pacer', message: 'test' };
+        const mockCoachPacer: Coach = { id: 'marathon', name: 'Marathon', emoji: '🏃‍♂️', role: '러닝', color: '#ffffff', themeColor: 'rgba(255, 255, 255, 0.2)', tendency: 'pacer', message: 'test', imageUrl: 'test' };
 
         // Matches EFFICIENT profile
         expect(getCoachAdvice(record, mockCoachPacer)).toContain('효율적 엔진형');

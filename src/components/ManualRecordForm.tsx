@@ -766,6 +766,8 @@ const ManualRecordForm: React.FC<ManualRecordFormProps> = ({
                                             <span style={{ fontSize: '0.8rem', width: '40px', opacity: 0.7 }}>{index + 1}km</span>
                                             <input
                                                 type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9:]*"
                                                 ref={el => splitRefs.current[index] = el}
                                                 value={split}
                                                 onChange={(e) => handleSplitChange(index, e.target.value)}

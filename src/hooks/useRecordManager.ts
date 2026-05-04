@@ -792,6 +792,34 @@ export const useRecordManager = (
                         if (accDist60 >= 40075) { isUnlocked = true; achievementDate = r.date; break; }
                     }
                     break;
+                case 'm61':
+                    const d61 = findFirstOccurrence(r => r.distance >= 4);
+                    if (d61) { isUnlocked = true; achievementDate = d61; }
+                    break;
+                case 'm62':
+                    const d62 = findFirstOccurrence(r => r.distance >= 5);
+                    if (d62) { isUnlocked = true; achievementDate = d62; }
+                    break;
+                case 'm63':
+                    const d63 = findFirstOccurrence(r => r.distance >= 6);
+                    if (d63) { isUnlocked = true; achievementDate = d63; }
+                    break;
+                case 'm64':
+                    const d64 = findFirstOccurrence(r => r.distance >= 3 && parseTimeToSeconds(r.pace) <= 330);
+                    if (d64) { isUnlocked = true; achievementDate = d64; }
+                    break;
+                case 'm65':
+                    const d65 = findFirstOccurrence(r => r.distance >= 4 && parseTimeToSeconds(r.pace) <= 330);
+                    if (d65) { isUnlocked = true; achievementDate = d65; }
+                    break;
+                case 'm66':
+                    const d66 = findFirstOccurrence(r => r.distance >= 5 && parseTimeToSeconds(r.pace) <= 330);
+                    if (d66) { isUnlocked = true; achievementDate = d66; }
+                    break;
+                case 'm67':
+                    const d67 = findFirstOccurrence(r => r.distance >= 10 && parseTimeToSeconds(r.totalTime) <= 3600);
+                    if (d67) { isUnlocked = true; achievementDate = d67; }
+                    break;
             }
 
             // switch문 바깥에서 추가된 Phase들 처리 (줄이기 위해 기존 로직 유지)

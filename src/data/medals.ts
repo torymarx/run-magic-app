@@ -90,4 +90,11 @@ export const MEDAL_DATA: Medal[] = [
     { id: 'm58', name: '광속의 수렴', points: 1000, criteria: '평균 페이스 4\'15" 진입', description: '상급자 수준의 페이스(4\'15")를 달성했습니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Lightning', targetValue: 255, category: 'pace' },
     { id: 'm59', name: '성좌의 수호자', points: 1000, criteria: '총 1,000회 러닝 달성', description: '총 러닝 횟수 1,000회를 달성했습니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Constellation', targetValue: 1000, category: 'sessions' },
     { id: 'm60', name: '지구 한 바퀴의 꿈', points: 1000, criteria: '누적 40,075km (최종 목표)', description: '누적 거리 40,075km의 거대 목표를 달성했습니다.', rarity: 'MYTHIC', phase: 8, iconType: 'Earth', targetValue: 40075, category: 'distance' },
+    { id: 'm61', name: '4킬로 런닝 성공', points: 100, criteria: '단일 기록으로 4km 완주', description: '4km 코스를 무사히 완주했습니다.', rarity: 'RARE', phase: 3, iconType: 'FastForward', targetValue: 4, category: 'special' },
+    { id: 'm62', name: '5킬로 런닝 성공', points: 100, criteria: '단일 기록으로 5km 완주', description: '5km 코스를 무사히 완주했습니다.', rarity: 'RARE', phase: 4, iconType: 'FastForward', targetValue: 5, category: 'special' },
+    { id: 'm63', name: '6킬로 런닝 성공', points: 100, criteria: '단일 기록으로 6km 완주', description: '6km 코스를 무사히 완주했습니다.', rarity: 'RARE', phase: 4, iconType: 'FastForward', targetValue: 6, category: 'special' },
+    { id: 'm64', name: '3km 전광석화 (5\'30")', points: 150, criteria: '3km 이상 주행 및 평균 페이스 5\'30" 이하', description: '3km를 5분 30초 페이스로 주행하는 데 성공했습니다.', rarity: 'RARE', phase: 4, iconType: 'Zap', targetValue: 330, category: 'pace' },
+    { id: 'm65', name: '4km 전광석화 (5\'30")', points: 150, criteria: '4km 이상 주행 및 평균 페이스 5\'30" 이하', description: '4km를 5분 30초 페이스로 주행하는 데 성공했습니다.', rarity: 'RARE', phase: 4, iconType: 'Zap', targetValue: 330, category: 'pace' },
+    { id: 'm66', name: '5km 전광석화 (5\'30")', points: 200, criteria: '5km 이상 주행 및 평균 페이스 5\'30" 이하', description: '5km를 5분 30초 페이스로 주행하는 데 성공했습니다.', rarity: 'EPIC', phase: 5, iconType: 'Lightning', targetValue: 330, category: 'pace' },
+    { id: 'm67', name: '10km 시공 돌파 (Sub-1)', points: 300, criteria: '10km 이상 주행 및 1시간 이내 완주', description: '마의 1시간 벽을 깨고 10km 완주에 성공했습니다.', rarity: 'EPIC', phase: 5, iconType: 'Clock', targetValue: 3600, category: 'special' },
 ];

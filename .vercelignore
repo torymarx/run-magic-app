@@ -1,0 +1,11 @@
+# Large data files
+supabase_search.csv
+
+# SQL updates (usually for local/DB setup)
+*.sql
+
+# Backups
+backups/
+
+# Logs
+*.log
