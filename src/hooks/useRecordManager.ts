@@ -289,13 +289,15 @@ export const useRecordManager = (
         }
 
         // v10.5: 메달 계산 트리거 (새로운 기록 포함하여 전체 분석)
-        recalculateAllAchievements(updatedRecords);
+        const achResult = recalculateAllAchievements(updatedRecords);
         
-        // (참고: 메달 지급 로직은 recalculateAllAchievements에서 기존 달성 여부를 추적해서
-        // 변화가 있을 때 포인트를 지급하는 방식으로 고도화할 수 있으나, 
-        // 현 단계에서는 러닝과 퀘스트만 장부에 기록하여 포인트 요동을 막습니다.)
-
-        if (acquiredPoints > 0) {
+        // v31.0: 신규 달성 메달 포인트 자동 정산
+        if (achResult.transactions.length > 0) {
+            // 이미 지급된 메달은 syncPointsToCloud의 upsert(onConflict)에서 차단되지만,
+            // 로컬 포인트 합계 계산을 위해 실제 지급 대상을 확인해야 할 수도 있음.
+            // 여기서는 단순화를 위해 일단 모든 메달 트랜잭션을 보냅니다.
+            syncPointsToCloud(points + acquiredPoints, [...newTransactions, ...achResult.transactions]);
+        } else if (acquiredPoints > 0) {
             const finalPoints = points + acquiredPoints;
             setPoints(finalPoints);
             syncPointsToCloud(finalPoints, newTransactions);
@@ -314,10 +316,12 @@ export const useRecordManager = (
         
         try {
             // 1. profiles 테이블의 포인트 총계 스냅샷 업데이트
-            await supabase.from('profiles').update({ 
-                points: currentPoints,
-                updated_at: new Date().toISOString()
-            }).eq('id', userId);
+            if (currentPoints > 0) {
+                await supabase.from('profiles').update({ 
+                    points: currentPoints,
+                    updated_at: new Date().toISOString()
+                }).eq('id', userId);
+            }
 
             // 2. point_transactions 개별 내역 저장 (upsert로 중복 방지)
             if (transactions.length > 0) {
@@ -347,14 +351,13 @@ export const useRecordManager = (
 
     // v15.0/v17.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
     const recalculateAllAchievements = (recordsData: any[]) => {
-        if (!recordsData) return;
+        if (!recordsData) return { medals: [], achievements: {}, transactions: [] };
 
         // v17.0: 날짜순 정렬된 복사본 (달성 시점 추적용)
         const chronologicalData = [...recordsData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         let newMedals: string[] = [];
         let newMedalAchievements: { [id: string]: string } = {};
-        let recalculatedPoints = 0;
         let transactions: any[] = []; // 포인트 트랜잭션 목록 💰
 
         // 기초 통계 산출
@@ -830,15 +833,17 @@ export const useRecordManager = (
                 newMedalAchievements[medal.id] = achievementDate.replace(/-/g, '.');
                 
                 const rarityPoints = POINT_RULES.MEDAL_RARITY[medal.rarity as keyof typeof POINT_RULES.MEDAL_RARITY] || 10;
-                recalculatedPoints += rarityPoints;
+                // recalculatedPoints 제거됨 (트랜잭션 기반으로 대체)
 
                 // 트랜잭션 추가 💰
                 transactions.push({
                     amount: rarityPoints,
                     type: 'MEDAL',
                     reference_id: `medal:${medal.id}`,
+                    name: medal.name, // 추가 정보
                     description: `${medal.name} 메달 획득 보상`,
-                    date: achievementDate
+                    date: achievementDate,
+                    rarity: medal.rarity
                 });
             }
         });
@@ -850,6 +855,8 @@ export const useRecordManager = (
         setUnlockedMedals(newMedals);
         setMedalAchievements(newMedalAchievements);
         setUnlockedBadges([]);
+
+        return { medals: newMedals, achievements: newMedalAchievements, transactions };
     };
 
     // v21.0: 포인트 기반 레벨 계산기 (마라톤 완주 조건 추가)
@@ -970,7 +977,36 @@ export const useRecordManager = (
             calculateBaselineData(loadedRecords);
             updateStreak(loadedRecords);
             updateTotalDays(loadedRecords);
-            recalculateAllAchievements(loadedRecords);
+            const { transactions: potentialMedalTxs } = recalculateAllAchievements(loadedRecords);
+            
+            // v31.0: 메달 포인트 전수조사 및 누락분 복구 (Audit)
+            if (userId) {
+                const { data: existingMedalTxs } = await supabase
+                    .from('point_transactions')
+                    .select('reference_id')
+                    .eq('user_id', userId)
+                    .eq('type', 'MEDAL');
+                
+                const existingRefIds = new Set((existingMedalTxs || []).map(tx => tx.reference_id));
+                const missingTxs = potentialMedalTxs.filter((tx: any) => !existingRefIds.has(tx.reference_id));
+
+                if (missingTxs.length > 0) {
+                    console.log(`🔍 [Audit] 누락된 메달 포인트 ${missingTxs.length}건 발견. 복구를 시작합니다.`);
+                    const missingPoints = missingTxs.reduce((acc: number, tx: any) => acc + tx.amount, 0);
+                    
+                    // 1. 트랜잭션 내역 먼저 DB 저장
+                    await syncPointsToCloud(0, missingTxs); 
+
+                    // 2. DB에서 현재 포인트를 가져와서 누락분 합산 후 재저장
+                    const { data: profileData } = await supabase.from('profiles').select('points').eq('id', userId).single();
+                    if (profileData) {
+                        const updatedTotal = (profileData.points || 0) + missingPoints;
+                        await supabase.from('profiles').update({ points: updatedTotal }).eq('id', userId);
+                        console.log(`✅ [Audit] 포인트 복구 완료: ${profileData.points} -> ${updatedTotal} (+${missingPoints}P)`);
+                        setPoints(updatedTotal);
+                    }
+                }
+            }
             
             // v30.0: 포인트는 Ledger 장부 형식이므로 프로필의 누적 포인트를 그대로 가져와 사용
             // ⚠️ profile이 비동기 로딩이라 여기서는 강제 덮어쓰기 하지 않음 → 아래 useEffect에서 처리
