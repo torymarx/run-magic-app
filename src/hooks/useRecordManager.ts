@@ -1,0 +1,1172 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { calculateAveragePace, calculateCalories, formatPace, formatSecondsToTime, parseTimeToSeconds, getLocalDateString } from '../utils/calculations';
+import { MEDAL_DATA } from '../data/medals';
+import { LEVEL_DATA, POINT_RULES } from '../data/progression';
+
+// 이 훅은 레코드 관리에 필요한 모든 복잡한 상태 관리를 캡슐화합니다.
+export const useRecordManager = (
+    _points: number,
+    setPoints: (p: number) => void,
+    setUnlockedBadges: (b: string[]) => void,
+    setUnlockedMedals: (m: string[]) => void,
+    _unlockedMedals: string[], // v31.2: 포인트 계산 비교를 위해 현재 메달 상태 추가
+    userId: string = '00000000-0000-0000-0000-000000000000',
+    profile?: any // v24.6: 일일 퀘스트 계산을 위한 프로필 데이터 추가
+) => {
+    const [records, setRecords] = useState<any[]>([]);
+    const [lastSavedRecord, setLastSavedRecord] = useState<any>(null);
+    const [lastSyncStatus, setLastSyncStatus] = useState<{ status: string, time: string, message: string }>({
+        status: 'IDLE',
+        time: '-',
+        message: '대기 중...'
+    });
+    const [streak, setStreak] = useState<number>(0);
+    const [totalDays, setTotalDays] = useState<number>(0);
+    const [baselines, setBaselines] = useState<any>({});
+    const [isCloudConnected, setIsCloudConnected] = useState<boolean>(false);
+
+    // v13.4: 통합된 데이터 로딩 프로세스
+    useEffect(() => {
+        if (userId && userId !== '00000000-0000-0000-0000-000000000000') {
+            fetchInitialData(false);
+        } else {
+            // v13.3+: 로그아웃 시 즉시 모든 로컬 상태 소거 (보안 및 잔상 제거)
+            setRecords([]);
+            setIsCloudConnected(false);
+            setPoints(0);
+            setUnlockedBadges([]);
+            setUnlockedMedals([]);
+            setMedalAchievements({}); // v17.0
+            setLastSyncStatus({
+                status: 'IDLE',
+                time: '-',
+                message: '런너님의 접속을 기다리고 있습니다... 🛡️'
+            });
+        }
+    }, [userId]);
+
+    const updateStreak = (data: any[]) => {
+        if (!data || data.length === 0) {
+            setStreak(0);
+            return;
+        }
+
+        const dates = [...new Set(data.map(r => r.date))].sort().reverse();
+        const getLocalDateStr = (d: Date) => {
+            return getLocalDateString(d);
+        };
+        const today = getLocalDateStr(new Date());
+        const yesterday = getLocalDateStr(new Date(Date.now() - 86400000));
+
+        if (dates[0] !== today && dates[0] !== yesterday) {
+            setStreak(0);
+            return;
+        }
+
+        let count = 1;
+        for (let i = 0; i < dates.length - 1; i++) {
+            const current = new Date(dates[i]);
+            const next = new Date(dates[i + 1]);
+            const diffTime = Math.abs(current.getTime() - next.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) count++;
+            else break;
+        }
+        setStreak(count);
+    };
+
+    const updateTotalDays = (data: any[]) => {
+        if (!data || data.length === 0) {
+            setTotalDays(0);
+            return;
+        }
+        const relevantDates = data
+            .filter(r => r.date >= '2026-01-01')
+            .map(r => r.date);
+
+        const uniqueTotalDays = new Set(relevantDates).size;
+        setTotalDays(uniqueTotalDays);
+    };
+
+    const calculateBaselineData = (recordsData: any[]) => {
+        if (!recordsData || recordsData.length === 0) return;
+
+        const now = new Date();
+        const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+
+        const monthlyRecords = recordsData.filter((r: any) => new Date(r.date) >= oneMonthAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
+        const weeklyRecords = recordsData.filter((r: any) => new Date(r.date) >= oneWeekAgo && r.distance > 0 && parseTimeToSeconds(r.pace) > 0);
+        const getPaceSeconds = (paceStr: string) => parseTimeToSeconds(paceStr);
+
+        const fastestPace = monthlyRecords.length > 0
+            ? Math.min(...monthlyRecords.map((r: any) => getPaceSeconds(r.pace)))
+            : null;
+
+        const yesterdayStr = getLocalDateString(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+        const yesterdayRecord = recordsData.find(r => r.date === yesterdayStr);
+
+        let monthlyAvgPace = null;
+        if (monthlyRecords.length > 0) {
+            const totalDist = monthlyRecords.reduce((acc: number, r: any) => acc + r.distance, 0);
+            const totalTime = monthlyRecords.reduce((acc: number, r: any) => acc + (getPaceSeconds(r.pace) * r.distance), 0);
+            monthlyAvgPace = totalDist > 0 ? totalTime / totalDist : 0;
+        }
+
+        let weeklyAvgPace = null;
+        if (weeklyRecords.length > 0) {
+            const totalDist = weeklyRecords.reduce((acc: number, r: any) => acc + r.distance, 0);
+            const totalTime = weeklyRecords.reduce((acc: number, r: any) => acc + (getPaceSeconds(r.pace) * r.distance), 0);
+            weeklyAvgPace = totalDist > 0 ? totalTime / totalDist : 0;
+        }
+
+        const slowestPace = weeklyRecords.length > 0
+            ? Math.max(...weeklyRecords.map((r: any) => getPaceSeconds(r.pace)))
+            : null;
+
+        setBaselines({
+            apex: fastestPace,
+            insight: yesterdayRecord ? getPaceSeconds(yesterdayRecord.pace) : (recordsData.length > 0 ? getPaceSeconds(recordsData[0].pace) : null),
+            atlas: monthlyAvgPace,
+            swift: weeklyAvgPace,
+            zen: slowestPace
+        });
+    };
+
+    const handleManualSave = async (data: any) => {
+        const recordDate = new Date(data.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
+
+        if (recordDateOnly > today) {
+            alert("미래의 날짜에는 기록을 등록할 수 없습니다. ⛔");
+            return;
+        }
+
+        // v32.0: 짜투리 구간(km@ 표시) 포함 시 시간 파싱 로직 개선
+        const totalSeconds = data.splits.reduce((acc: number, split: string) => {
+            const timePart = split.includes('km@') ? split.split('km@')[1] : split;
+            return acc + parseTimeToSeconds(timePart);
+        }, 0);
+        const avgPaceSeconds = calculateAveragePace(totalSeconds, data.distance);
+        const calories = calculateCalories(data.distance, totalSeconds, data.weight);
+        const prevPaceSeconds = baselines.atlas || parseTimeToSeconds("06:00");
+        const paceDiff = prevPaceSeconds - avgPaceSeconds;
+
+        const isEditing = !!data.id;
+        // v12.2: DB 타입 호환성을 위해 다시 숫자(BigInt 호환)로 복구
+        const recordId = data.id || Date.now();
+
+        // v12.1: 유저 정보가 없는 상태에서의 저장을 원천 봉쇄 (휘발 방지)
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            console.error("🛑 [Auth Guard] 인증되지 않은 사용자의 기록 저장이 차단되었습니다.");
+            alert("로그인 세션이 만료되었거나 정보가 없습니다. 다시 로그인해 주세요. ⛔");
+            return;
+        }
+
+        // v18.0: 버추얼 레이스 비교 데이터 산출 (어제의 나, 10일 평균)
+        const getComparisonData = () => {
+            const sortedByDate = [...records].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            // 1. 어제의 기록 (현재 기록 날짜 - 1일 기준 검색)
+            const d = new Date(data.date);
+            const yDate = getLocalDateString(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
+            const yesterdayRun = records.find(r => r.date === yDate);
+
+            // 2. 10일 평균 기록 (현재 기록 날짜 이전의 최신 10개 기록)
+            const previousRuns = sortedByDate
+                .filter(r => new Date(r.date) < new Date(data.date))
+                .slice(0, 10);
+
+            let avg10Run = null;
+            if (previousRuns.length > 0) {
+                const avgDist = previousRuns.reduce((acc, r) => acc + r.distance, 0) / previousRuns.length;
+                const avgTotalSeconds = previousRuns.reduce((acc, r) => acc + parseTimeToSeconds(r.totalTime), 0) / previousRuns.length;
+                avg10Run = {
+                    distance: Number(avgDist.toFixed(2)),
+                    totalTime: formatSecondsToTime(Math.round(avgTotalSeconds)),
+                    pace: formatPace(avgTotalSeconds / avgDist)
+                };
+            }
+
+            return { yesterdayRun, avg10Run };
+        };
+
+        const { yesterdayRun, avg10Run } = getComparisonData();
+
+        const newRecord = {
+            ...data,
+            id: recordId,
+            user_id: userId, // 계정 연동!
+            totalTime: formatSecondsToTime(totalSeconds),
+            pace: formatPace(avgPaceSeconds),
+            calories,
+            paceDiff: formatPace(Math.abs(paceDiff)),
+            isImproved: paceDiff > 0,
+            // v18.0: 레이스용 비교 데이터 스냅샷 저장
+            raceComparisons: {
+                yesterday: yesterdayRun ? { distance: yesterdayRun.distance, totalTime: yesterdayRun.totalTime, pace: yesterdayRun.pace } : null,
+                avg10: avg10Run
+            }
+        };
+
+        const updatedRecords = isEditing
+            ? records.map(r => r.id === recordId ? newRecord : r)
+            : [newRecord, ...records];
+
+        // v13.3: 로컬 상태 선제 업데이트 제거 (서버 성공 확인 후 업데이트)
+        // setRecords(updatedRecords); 
+
+        console.group(`💾 [Diagnostics] 기록 저장 시도: ${recordId}`);
+        console.log("User UUID:", userId);
+        console.log("Payload Sample:", { distance: data.distance, date: data.date });
+
+        const { error, status, statusText } = await supabase.from('records').upsert([newRecord]);
+
+        console.log(`Supabase Status: ${status} (${statusText})`);
+
+        if (error) {
+            console.error("❌ Save Error Details:", error);
+            setLastSyncStatus({
+                status: 'SAVE_ERROR',
+                time: new Date().toLocaleTimeString(),
+                message: error.message
+            });
+
+            // v18.1: 스키마 불일치 에러에 대한 구체적인 가이드 추가
+            const isSchemaError = error.message.includes('column') || error.message.includes('raceComparisons');
+            const alertMsg = isSchemaError
+                ? `클라우드 저장 실패! ⛔\n데이터베이스 스키마가 최신이 아닙니다.\n\n해결방법: 프로젝트의 'schema_update.sql' 파일 내용을 Supabase SQL Editor에서 실행해 주세요.`
+                : `클라우드 저장 실패! ⛔\n이유: ${error.message}`;
+
+            alert(alertMsg);
+            console.groupEnd();
+            throw error;
+        }
+
+        console.log("✅ [Cloud Sync] 저장 성공!");
+
+        // v13.3: 서버 저장 성공 확인 후 로컬 상태 업데이트
+        setRecords(updatedRecords);
+        setLastSyncStatus({
+            status: 'SAVE_SUCCESS',
+            time: new Date().toLocaleTimeString(),
+            message: '기록 저장 완료'
+        });
+        console.groupEnd();
+
+        calculateBaselineData(updatedRecords);
+        updateStreak(updatedRecords);
+        updateTotalDays(updatedRecords);
+
+        // v30.0: 포인트 개별 지급 (Ledger 방식)
+        let acquiredPoints = 0;
+        let newTransactions: any[] = [];
+
+        // 1. 달린 거리 포인트
+        const distPoints = Math.floor((newRecord.distance || 0) * POINT_RULES.DISTANCE_KM);
+        if (distPoints > 0) {
+            acquiredPoints += distPoints;
+            newTransactions.push({
+                amount: distPoints,
+                type: 'RUN',
+                reference_id: `record_dist:${newRecord.id}`,
+                description: `${newRecord.distance}km 질주 거리 보상 (${newRecord.date})`,
+                date: newRecord.date
+            });
+        }
+
+        // 2. 운동 기록 등록 보상 (세션당 지급)
+        acquiredPoints += POINT_RULES.RUNNING_SESSION;
+        newTransactions.push({
+            amount: POINT_RULES.RUNNING_SESSION,
+            type: 'DAILY_QUEST',
+            reference_id: `daily_run:${newRecord.id}`,
+            description: `러닝 운동 등록 완료 (${newRecord.date})`,
+            date: newRecord.date
+        });
+
+        // v10.5: 메달 계산 트리거 (새로운 기록 포함하여 전체 분석)
+        const achResult = recalculateAllAchievements(updatedRecords);
+        
+        // v31.2: 포인트 정산 로직 단순화 및 정합성 강화
+        // 1. 신규 획득 내역만 장부에 전송 (전송 후 장부 기반으로 총점 자동 재계산)
+        const totalToSync = [...newTransactions];
+        
+        // 신규 메달이 있다면 함께 전송 (syncPointsToCloud 내의 upsert가 중복 방지)
+        if (achResult.transactions.length > 0) {
+            totalToSync.push(...achResult.transactions);
+        }
+
+        if (totalToSync.length > 0) {
+            console.log(`💰 [Point Settlement] 장부 기록 시도 (${totalToSync.length}건)`);
+            await syncPointsToCloud(totalToSync);
+        }
+
+        setLastSavedRecord(newRecord);
+    };
+
+    // v17.0: 메달 달성 시점(날짜) 추적을 위한 상태 추가
+    const [medalAchievements, setMedalAchievements] = useState<{ [id: string]: string }>({});
+
+    // v26.5: 포인트 트랜잭션(통장) 기반 동기화 시스템 🛡️💰
+    // v31.2: 매개변수 구조 변경 - 트랜잭션만 받아서 장부 합산 기반으로 총점 자동 갱신
+    const syncPointsToCloud = async (transactions: any[] = []) => {
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') return;
+        
+        try {
+            // 1. point_transactions 개별 내역 저장 (upsert로 중복 방지)
+            if (transactions.length > 0) {
+                const formattedTransactions = transactions.map(tx => ({
+                    user_id: userId,
+                    amount: tx.amount,
+                    type: tx.type,
+                    reference_id: tx.reference_id,
+                    description: tx.description,
+                    created_at: tx.date ? new Date(tx.date).toISOString() : new Date().toISOString()
+                }));
+
+                const { error: txError } = await supabase
+                    .from('point_transactions')
+                    .upsert(formattedTransactions, { onConflict: 'user_id,reference_id' });
+
+                if (txError) {
+                    console.warn("⚠️ 일부 트랜잭션 저장 중 오류 (중복 차단 등):", txError.message);
+                }
+            }
+
+            // 2. 장부 전체 합산 기반으로 profiles 테이블의 포인트 총계 최종 업데이트 (정합성 보장 🛡️)
+            const { data: txSumData } = await supabase
+                .from('point_transactions')
+                .select('amount')
+                .eq('user_id', userId);
+            
+            const totalLedgerPoints = (txSumData || []).reduce((acc, tx) => acc + (tx.amount || 0), 0);
+            
+            await supabase.from('profiles').update({ 
+                points: totalLedgerPoints,
+                updated_at: new Date().toISOString()
+            }).eq('id', userId);
+
+            setPoints(totalLedgerPoints);
+            console.log(`📊 [Transaction Sync] 장부 합계 기반 정산 완료: ${totalLedgerPoints}P`);
+        } catch (err) {
+            console.error("❌ 포인트 트랜잭션 동기화 실패:", err);
+        }
+    };
+
+    // v15.0/v17.0: 50대 메달 대장정 시스템 - 모든 기록을 분석하여 메달 해금 및 포인트 정산
+    const recalculateAllAchievements = (recordsData: any[]) => {
+        if (!recordsData) return { medals: [], achievements: {}, transactions: [] };
+
+        // v17.0: 날짜순 정렬된 복사본 (달성 시점 추적용)
+        const chronologicalData = [...recordsData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        let newMedals: string[] = [];
+        let newMedalAchievements: { [id: string]: string } = {};
+        let transactions: any[] = []; // 포인트 트랜잭션 목록 💰
+
+        // 기초 통계 산출
+        const totalSessions = recordsData.length;
+
+        // v24.1: 스트릭 로컬 계산 (상태 비동기 문제 해결)
+        let currentStreak = 0;
+        let maxStreak = 0;
+        if (recordsData.length > 0) {
+            const datesDesc = [...new Set(recordsData.map(r => r.date))].sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+            const datesAsc = [...datesDesc].reverse();
+            const today = getLocalDateString(new Date());
+            const yesterday = getLocalDateString(new Date(Date.now() - 86400000));
+
+            // 1. 현재 스트릭 계산 (UI 표시용 및 최신 상태 유지)
+            if (datesDesc[0] === today || datesDesc[0] === yesterday) {
+                currentStreak = 1;
+                for (let i = 0; i < datesDesc.length - 1; i++) {
+                    const current = new Date(datesDesc[i]);
+                    const next = new Date(datesDesc[i + 1]);
+                    const diffDays = Math.ceil(Math.abs(current.getTime() - next.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) currentStreak++;
+                    else break;
+                }
+            }
+
+            // 2. 역대 최대 스트릭 계산 (메달 달성 조건용)
+            let tempStreak = 1;
+            maxStreak = 1;
+            for (let i = 0; i < datesAsc.length - 1; i++) {
+                const current = new Date(datesAsc[i]);
+                const next = new Date(datesAsc[i + 1]);
+                const diffDays = Math.ceil(Math.abs(next.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays === 1) {
+                    tempStreak++;
+                    maxStreak = Math.max(maxStreak, tempStreak);
+                } else {
+                    tempStreak = 1;
+                }
+            }
+        }
+
+        // 메달별 조건 체크 (50개)
+        MEDAL_DATA.forEach(medal => {
+            let isUnlocked = false;
+            let achievementDate = '-';
+
+            // 데이터 기반 분석용 헬퍼 함수
+            const findFirstOccurrence = (predicate: (r: any) => boolean) => {
+                const found = chronologicalData.find(predicate);
+                return found ? found.date : null;
+            };
+            
+            switch (medal.id) {
+                // Phase 1
+                case 'm1':
+                    isUnlocked = true;
+                    achievementDate = recordsData.length > 0 ? chronologicalData[0].date : getLocalDateString(new Date());
+                    break;
+                case 'm2':
+                    const d2 = findFirstOccurrence(r => r.distance >= 1);
+                    if (d2) { isUnlocked = true; achievementDate = d2; }
+                    break;
+                case 'm3':
+                    const d3 = findFirstOccurrence(r => parseTimeToSeconds(r.totalTime) >= 600);
+                    if (d3) { isUnlocked = true; achievementDate = d3; }
+                    break;
+                case 'm4':
+                    const d4 = findFirstOccurrence(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 5 && h < 9;
+                    });
+                    if (d4) { isUnlocked = true; achievementDate = d4; }
+                    break;
+                case 'm5':
+                    const d5 = findFirstOccurrence(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 19 || h < 24;
+                    });
+                    if (d5) { isUnlocked = true; achievementDate = d5; }
+                    break;
+
+                // Phase 2
+                case 'm6':
+                    if (maxStreak >= 3) {
+                        isUnlocked = true;
+                        achievementDate = chronologicalData[chronologicalData.length - 1].date;
+                    }
+                    break;
+                case 'm7':
+                    if (recordsData.length >= 3) {
+                        isUnlocked = true;
+                        achievementDate = chronologicalData[2].date;
+                    }
+                    break;
+                case 'm8':
+                    const d8 = findFirstOccurrence(r => {
+                        const day = new Date(r.date).getDay();
+                        return day === 0 || day === 6;
+                    });
+                    if (d8) { isUnlocked = true; achievementDate = d8; }
+                    break;
+                case 'm9':
+                    let accDist9 = 0;
+                    for (const r of chronologicalData) {
+                        accDist9 += r.distance;
+                        if (accDist9 >= 10) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm10':
+                    const d10 = findFirstOccurrence(r => r.distance >= 3);
+                    if (d10) { isUnlocked = true; achievementDate = d10; }
+                    break;
+
+                // Phase 3
+                case 'm11':
+                    const d11 = findFirstOccurrence(r => new Date(r.date).getDay() === 1);
+                    if (d11) { isUnlocked = true; achievementDate = d11; }
+                    break;
+                case 'm12':
+                    let accTime12 = 0;
+                    for (const r of chronologicalData) {
+                        accTime12 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime12 >= 100) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm13':
+                    const shortRuns = chronologicalData.filter(r => r.distance <= 2);
+                    if (shortRuns.length >= 5) { isUnlocked = true; achievementDate = shortRuns[4].date; }
+                    break;
+                case 'm14':
+                    const d14 = findFirstOccurrence(r => r.distance >= 7);
+                    if (d14) { isUnlocked = true; achievementDate = d14; }
+                    break;
+
+                // Phase 4
+                case 'm15':
+                    const d15 = findFirstOccurrence(r => parseTimeToSeconds(r.totalTime) >= 1800);
+                    if (d15) { isUnlocked = true; achievementDate = d15; }
+                    break;
+                case 'm16':
+                    const d16 = findFirstOccurrence(r => r.isImproved);
+                    if (d16) { isUnlocked = true; achievementDate = d16; }
+                    break;
+                case 'm17':
+                    const d17 = findFirstOccurrence(r => r.distance >= 5);
+                    if (d17) { isUnlocked = true; achievementDate = d17; }
+                    break;
+                case 'm18':
+                    let accDist18 = 0;
+                    for (const r of chronologicalData) {
+                        accDist18 += r.distance;
+                        if (accDist18 >= 30) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm19':
+                    const monthCounts19: { [key: string]: number } = {};
+                    for (const r of chronologicalData) {
+                        const m = r.date.substring(0, 7);
+                        monthCounts19[m] = (monthCounts19[m] || 0) + 1;
+                        if (monthCounts19[m] >= 10) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm20':
+                    const d20 = findFirstOccurrence(r => r.distance >= 10);
+                    if (d20) { isUnlocked = true; achievementDate = d20; }
+                    break;
+
+                // Phase 5 (누적 기록)
+                case 'm21':
+                    let accDist21 = 0;
+                    for (const r of chronologicalData) {
+                        accDist21 += r.distance;
+                        if (accDist21 >= 20) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm22':
+                    let accDist22 = 0;
+                    for (const r of chronologicalData) {
+                        accDist22 += r.distance;
+                        if (accDist22 >= 50) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm23':
+                    let accTime23 = 0;
+                    for (const r of chronologicalData) {
+                        accTime23 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime23 >= 300) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm24':
+                    if (totalSessions >= 15) { isUnlocked = true; achievementDate = chronologicalData[14].date; }
+                    break;
+                case 'm25':
+                    if (totalSessions >= 30) { isUnlocked = true; achievementDate = chronologicalData[29].date; }
+                    break;
+                case 'm26':
+                    let accDist26 = 0;
+                    for (const r of chronologicalData) {
+                        accDist26 += r.distance;
+                        if (accDist26 >= 100) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm27':
+                    let accTime27 = 0;
+                    for (const r of chronologicalData) {
+                        accTime27 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime27 >= 500) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm28':
+                    if (totalSessions >= 50) { isUnlocked = true; achievementDate = chronologicalData[49].date; }
+                    break;
+                case 'm29':
+                    let accTime29 = 0;
+                    for (const r of chronologicalData) {
+                        accTime29 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime29 >= 1000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm30':
+                    if (totalSessions >= 100) { isUnlocked = true; achievementDate = chronologicalData[99].date; }
+                    break;
+
+                // Phase 6
+                case 'm31':
+                    let accDist31 = 0;
+                    for (const r of chronologicalData) {
+                        accDist31 += r.distance;
+                        if (accDist31 >= 150) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm32':
+                    let accDist32 = 0;
+                    for (const r of chronologicalData) {
+                        accDist32 += r.distance;
+                        if (accDist32 >= 200) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm33':
+                    let accDist33 = 0;
+                    for (const r of chronologicalData) {
+                        accDist33 += r.distance;
+                        if (accDist33 >= 300) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm34':
+                    let accTime34 = 0;
+                    for (const r of chronologicalData) {
+                        accTime34 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime34 >= 2000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm35':
+                    let accTime35 = 0;
+                    for (const r of chronologicalData) {
+                        accTime35 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime35 >= 3000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm36':
+                    if (totalSessions >= 150) { isUnlocked = true; achievementDate = chronologicalData[149].date; }
+                    break;
+                case 'm37':
+                    const monthCounts37: { [key: string]: number } = {};
+                    chronologicalData.forEach(r => {
+                        const m = r.date.substring(0, 7);
+                        monthCounts37[m] = (monthCounts37[m] || 0) + 1;
+                    });
+                    const months = Object.keys(monthCounts37).sort();
+                    let consecutiveCount = 0;
+                    let lastMonth = "";
+                    for (const m of months) {
+                        if (monthCounts37[m] >= 5) {
+                            if (lastMonth === "") { consecutiveCount = 1; }
+                            else {
+                                const [y1, mm1] = lastMonth.split('-').map(Number);
+                                const [y2, mm2] = m.split('-').map(Number);
+                                if ((y2 * 12 + mm2) - (y1 * 12 + mm1) === 1) consecutiveCount++;
+                                else consecutiveCount = 1;
+                            }
+                            lastMonth = m;
+                            if (consecutiveCount >= 6) {
+                                isUnlocked = true;
+                                const lastRunInMonth = chronologicalData.filter(r => r.date.startsWith(m)).pop();
+                                achievementDate = lastRunInMonth ? lastRunInMonth.date : m + "-28";
+                                break;
+                            }
+                        } else {
+                            consecutiveCount = 0;
+                            lastMonth = m;
+                        }
+                    }
+                    break;
+                case 'm38':
+                    if (totalSessions >= 200) { isUnlocked = true; achievementDate = chronologicalData[199].date; }
+                    break;
+                case 'm39':
+                    let accTime39 = 0;
+                    for (const r of chronologicalData) {
+                        accTime39 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime39 >= 5000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm40':
+                    let accDist40 = 0;
+                    for (const r of chronologicalData) {
+                        accDist40 += r.distance;
+                        if (accDist40 >= 500) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+
+                // Phase 7
+                case 'm41':
+                    let accTime41 = 0;
+                    for (const r of chronologicalData) {
+                        accTime41 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime41 >= 7000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm42':
+                    let accDist42 = 0;
+                    for (const r of chronologicalData) {
+                        accDist42 += r.distance;
+                        if (accDist42 >= 777) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm43':
+                    if (totalSessions >= 250) { isUnlocked = true; achievementDate = chronologicalData[249].date; }
+                    break;
+                case 'm44':
+                    const seasonCounts = { spring: 0, summer: 0, autumn: 0, winter: 0 };
+                    for (const r of chronologicalData) {
+                        const m = parseInt(r.date.split('-')[1]);
+                        if (m >= 3 && m <= 5) seasonCounts.spring++;
+                        else if (m >= 6 && m <= 8) seasonCounts.summer++;
+                        else if (m >= 9 && m <= 11) seasonCounts.autumn++;
+                        else seasonCounts.winter++;
+                        if (seasonCounts.spring >= 10 && seasonCounts.summer >= 10 && seasonCounts.autumn >= 10 && seasonCounts.winter >= 10) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm45':
+                    let accTime45 = 0;
+                    for (const r of chronologicalData) {
+                        accTime45 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime45 >= 10000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm46':
+                    let accDist46 = 0;
+                    for (const r of chronologicalData) {
+                        accDist46 += r.distance;
+                        if (accDist46 >= 1000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm47':
+                    if (totalSessions >= 300) { isUnlocked = true; achievementDate = chronologicalData[299].date; }
+                    break;
+                case 'm48':
+                    if (chronologicalData.length >= 100) {
+                        const firstDate = new Date(chronologicalData[0].date);
+                        for (let i = 99; i < chronologicalData.length; i++) {
+                            const currentDate = new Date(chronologicalData[i].date);
+                            const diffDays = Math.floor((currentDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+                            if (diffDays >= 365) { isUnlocked = true; achievementDate = chronologicalData[i].date; break; }
+                        }
+                    }
+                    break;
+                case 'm49':
+                    if (totalSessions >= 365) { isUnlocked = true; achievementDate = chronologicalData[364].date; }
+                    break;
+                case 'm50':
+                    let accDist50 = 0, accTime50 = 0;
+                    for (let i = 0; i < chronologicalData.length; i++) {
+                        accDist50 += chronologicalData[i].distance;
+                        accTime50 += parseTimeToSeconds(chronologicalData[i].totalTime) / 60;
+                        if (accDist50 >= 1000 && accTime50 >= 10000 && (i + 1) >= 365) { isUnlocked = true; achievementDate = chronologicalData[i].date; break; }
+                    }
+                    break;
+
+                // Phase 8
+                case 'm51':
+                    let accDist51 = 0;
+                    for (const r of chronologicalData) {
+                        accDist51 += r.distance;
+                        if (accDist51 >= 1500) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm52':
+                    let accTime52 = 0;
+                    for (const r of chronologicalData) {
+                        accTime52 += parseTimeToSeconds(r.totalTime) / 60;
+                        if (accTime52 >= 15000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm53':
+                    if (totalSessions >= 500) { isUnlocked = true; achievementDate = chronologicalData[499].date; }
+                    break;
+                case 'm54':
+                    const earlyRuns = chronologicalData.filter(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 4 && h < 6;
+                    });
+                    if (earlyRuns.length >= 20) { isUnlocked = true; achievementDate = earlyRuns[19].date; }
+                    break;
+                case 'm55':
+                    const lateRuns = chronologicalData.filter(r => {
+                        const h = parseInt(r.time.split(':')[0]);
+                        return h >= 22 || h < 2;
+                    });
+                    if (lateRuns.length >= 20) { isUnlocked = true; achievementDate = lateRuns[19].date; }
+                    break;
+                case 'm56':
+                    const stormRuns = chronologicalData.filter(r => r.weather === 'rain' || r.weather === 'snow');
+                    if (stormRuns.length >= 10) { isUnlocked = true; achievementDate = stormRuns[9].date; }
+                    break;
+                case 'm57':
+                    let accDist57 = 0;
+                    for (const r of chronologicalData) {
+                        accDist57 += r.distance;
+                        if (accDist57 >= 2000) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm58':
+                    const d58 = findFirstOccurrence(r => r.distance > 0 && parseTimeToSeconds(r.pace) <= 255);
+                    if (d58) { isUnlocked = true; achievementDate = d58; }
+                    break;
+                case 'm59':
+                    if (totalSessions >= 1000) { isUnlocked = true; achievementDate = chronologicalData[999].date; }
+                    break;
+                case 'm60':
+                    let accDist60 = 0;
+                    for (const r of chronologicalData) {
+                        accDist60 += r.distance;
+                        if (accDist60 >= 40075) { isUnlocked = true; achievementDate = r.date; break; }
+                    }
+                    break;
+                case 'm61':
+                    const d61 = findFirstOccurrence(r => r.distance >= 4);
+                    if (d61) { isUnlocked = true; achievementDate = d61; }
+                    break;
+                case 'm62':
+                    const d62 = findFirstOccurrence(r => r.distance >= 5);
+                    if (d62) { isUnlocked = true; achievementDate = d62; }
+                    break;
+                case 'm63':
+                    const d63 = findFirstOccurrence(r => r.distance >= 6);
+                    if (d63) { isUnlocked = true; achievementDate = d63; }
+                    break;
+                case 'm64':
+                    const d64 = findFirstOccurrence(r => r.distance >= 3 && parseTimeToSeconds(r.pace) <= 330);
+                    if (d64) { isUnlocked = true; achievementDate = d64; }
+                    break;
+                case 'm65':
+                    const d65 = findFirstOccurrence(r => r.distance >= 4 && parseTimeToSeconds(r.pace) <= 330);
+                    if (d65) { isUnlocked = true; achievementDate = d65; }
+                    break;
+                case 'm66':
+                    const d66 = findFirstOccurrence(r => r.distance >= 5 && parseTimeToSeconds(r.pace) <= 330);
+                    if (d66) { isUnlocked = true; achievementDate = d66; }
+                    break;
+                case 'm67':
+                    const d67 = findFirstOccurrence(r => r.distance >= 10 && parseTimeToSeconds(r.totalTime) <= 3600);
+                    if (d67) { isUnlocked = true; achievementDate = d67; }
+                    break;
+            }
+
+            // switch문 바깥에서 추가된 Phase들 처리 (줄이기 위해 기존 로직 유지)
+            // 실제 구현시에는 모든 m21~m60 케이스가 포함되어야 함
+            
+            if (isUnlocked) {
+                newMedals.push(medal.id);
+                newMedalAchievements[medal.id] = achievementDate.replace(/-/g, '.');
+                
+                const rarityPoints = POINT_RULES.MEDAL_RARITY[medal.rarity as keyof typeof POINT_RULES.MEDAL_RARITY] || 10;
+                // recalculatedPoints 제거됨 (트랜잭션 기반으로 대체)
+
+                // 트랜잭션 추가 💰
+                transactions.push({
+                    amount: rarityPoints,
+                    type: 'MEDAL',
+                    reference_id: `medal:${medal.id}`,
+                    name: medal.name, // 추가 정보
+                    description: `${medal.name} 메달 획득 보상`,
+                    date: achievementDate,
+                    rarity: medal.rarity
+                });
+            }
+        });
+
+        // v30.0: 포인트 전체 재계산 및 덮어쓰기 로직 제거 (Ledger 장부 방식 적용)
+        // 앱 실행 시에는 profile에 저장된 마지막 누적 포인트를 그대로 유지하며,
+        // 개별 이벤트(기록 저장, 메달 획득 등) 시에만 포인트를 가산합니다.
+        
+        setUnlockedMedals(newMedals);
+        setMedalAchievements(newMedalAchievements);
+        setUnlockedBadges([]);
+
+        return { medals: newMedals, achievements: newMedalAchievements, transactions };
+    };
+
+    // v21.0: 포인트 기반 레벨 계산기 (마라톤 완주 조건 추가)
+    const calculateLevelInfo = (totalPoints: number) => {
+        let currentLevel = LEVEL_DATA.find(l => totalPoints >= l.minPoints && totalPoints <= l.maxPoints)
+            || LEVEL_DATA[LEVEL_DATA.length - 1];
+
+        if (currentLevel.level === 5) {
+            const hasMarathonRecord = records.some(r => r.distance >= 42.195);
+            if (!hasMarathonRecord) {
+                currentLevel = LEVEL_DATA.find(l => l.level === 4)!;
+            }
+        }
+
+        const nextLevel = LEVEL_DATA.find(l => l.level === currentLevel.level + 1);
+        const range = nextLevel
+            ? (nextLevel.minPoints - currentLevel.minPoints)
+            : (currentLevel.maxPoints - currentLevel.minPoints);
+        const currentXP = totalPoints - currentLevel.minPoints;
+
+        const progress = nextLevel ? Math.min(Math.floor((currentXP / range) * 100), 100) : 100;
+        const xpToNext = nextLevel ? (nextLevel.minPoints - totalPoints) : 0;
+        const isStuckAtLevel4 = currentLevel.level === 4 && totalPoints >= 50001; // v26.0 임계값 반영
+
+        return {
+            ...currentLevel,
+            currentLevelPoints: currentXP,
+            pointsToNextLevel: range,
+            progress: isStuckAtLevel4 ? 99 : progress,
+            xpToNext: isStuckAtLevel4 ? 0 : xpToNext,
+            nextLevelName: isStuckAtLevel4 ? '마라톤 완주 필요' : (nextLevel?.name || 'MAX'),
+            isBlockedByMarathon: isStuckAtLevel4
+        };
+    };
+
+    const handleDeleteRecord = async (id: number) => {
+        if (!window.confirm("정말로 이 기록을 삭제하시겠습니까?")) return;
+
+        const updatedRecords = records.filter(r => r.id !== id);
+        setRecords(updatedRecords);
+
+        const { error } = await supabase.from('records').delete().eq('id', id).eq('user_id', userId);
+        if (error) console.error("Supabase Delete Failed:", error);
+
+        calculateBaselineData(updatedRecords);
+        updateStreak(updatedRecords);
+        updateTotalDays(updatedRecords);
+
+        if (lastSavedRecord?.id === id) setLastSavedRecord(null);
+    };
+
+    const handleImportRecords = async (importedData: any[]) => {
+        if (!Array.isArray(importedData)) return;
+
+        // v13.3: 가져오기 시에도 인증 상태 체크 강화
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요. ⛔");
+            return;
+        }
+
+        console.log("📥 데이터 가져오기 시작...");
+        const existingIds = new Set(records.map(r => r.id));
+        const newRecords = importedData
+            .filter(r => !existingIds.has(r.id))
+            .map(r => ({ ...r, user_id: userId })); // 현재 유저 키 할당
+
+        if (newRecords.length === 0) {
+            alert("가져올 새로운 기록이 없습니다.");
+            return;
+        }
+
+        const { error } = await supabase.from('records').upsert(newRecords);
+        if (error) {
+            console.error("Supabase Import Failed:", error);
+            alert(`가져오기 실패: ${error.message}`);
+            return;
+        }
+
+        // v13.3: 서버 성공 확인 후 로컬 상태 업데이트
+        const updatedRecords = [...newRecords, ...records].sort((a, b) =>
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setRecords(updatedRecords);
+
+        calculateBaselineData(updatedRecords);
+        updateStreak(updatedRecords);
+        updateTotalDays(updatedRecords);
+
+        alert(`${newRecords.length}개의 기록을 성공적으로 가져오고 서버와 동기화했습니다! 🫡✨`);
+    };
+
+    const fetchInitialData = async (silent: boolean = false) => {
+        if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+            if (!silent) {
+                setIsCloudConnected(false);
+                setRecords([]);
+            }
+            return;
+        }
+
+        if (!silent) console.group(`📡 [Diagnostics] 클라우드 동기화 시작: ${userId}`);
+
+        try {
+            const { data: cloudRecords, error } = await supabase
+                .from('records')
+                .select('*')
+                .eq('user_id', userId)
+                .order('date', { ascending: false });
+
+            if (error) throw error;
+
+            setIsCloudConnected(true);
+            const loadedRecords = cloudRecords || [];
+            setRecords(loadedRecords);
+
+            // 데이터 기반 통계 및 업적 전수 재계산
+            calculateBaselineData(loadedRecords);
+            updateStreak(loadedRecords);
+            updateTotalDays(loadedRecords);
+            const { transactions: potentialMedalTxs } = recalculateAllAchievements(loadedRecords);
+            
+            // v31.1: 포인트 정합성 정밀 감사 (Deep Audit)
+            if (userId) {
+                // 1. 메달 포인트 전수조사 및 트랜잭션 누락분 복구
+                const { data: existingTxs } = await supabase
+                    .from('point_transactions')
+                    .select('reference_id')
+                    .eq('user_id', userId);
+                
+                const existingRefIds = new Set((existingTxs || []).map(tx => tx.reference_id));
+                let missingTxs: any[] = [];
+
+                // A. 메달 포인트 체크
+                const missingMedalTxs = potentialMedalTxs.filter((tx: any) => !existingRefIds.has(tx.reference_id));
+                if (missingMedalTxs.length > 0) missingTxs.push(...missingMedalTxs);
+
+                // B. 거리 보상 포인트 체크 (모든 기록 전수 조사)
+                loadedRecords.forEach(r => {
+                    const refId = `record_dist:${r.id}`;
+                    if (!existingRefIds.has(refId)) {
+                        const distPoints = Math.floor((r.distance || 0) * POINT_RULES.DISTANCE_KM);
+                        if (distPoints > 0) {
+                            missingTxs.push({
+                                amount: distPoints,
+                                type: 'RUN',
+                                reference_id: refId,
+                                description: `${r.distance}km 질주 거리 보상`,
+                                date: r.date
+                            });
+                        }
+                    }
+                });
+
+                // C. 운동 기록 등록 보상 체크 (모든 기록 전수 조사)
+                loadedRecords.forEach(r => {
+                    const refId = `daily_run:${r.id}`;
+                    const legacyRefId = `daily_run:${r.date}`;
+                    if (!existingRefIds.has(refId) && !existingRefIds.has(legacyRefId)) {
+                        missingTxs.push({
+                            amount: POINT_RULES.RUNNING_SESSION,
+                            type: 'DAILY_QUEST',
+                            reference_id: refId,
+                            description: `러닝 운동 등록 완료`,
+                            date: r.date
+                        });
+                    }
+                });
+
+                if (missingTxs.length > 0) {
+                    console.log(`🔍 [Full Audit] 누락된 포인트 ${missingTxs.length}건 발견. 장부 복구를 시작합니다.`);
+                    await syncPointsToCloud(missingTxs); // 장부에 기록
+                }
+
+                // 2. 장부(point_transactions)의 총합과 프로필 총점 대조 및 최종 복구
+                const { data: txSumData } = await supabase
+                    .from('point_transactions')
+                    .select('amount')
+                    .eq('user_id', userId);
+                
+                const totalLedgerPoints = (txSumData || []).reduce((acc, tx) => acc + (tx.amount || 0), 0);
+                
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('points')
+                    .eq('id', userId)
+                    .single();
+                
+                if (profileData && totalLedgerPoints > (profileData.points || 0)) {
+                    console.log(`🔍 [Deep Audit] 장부 합계(${totalLedgerPoints}P)가 프로필 점수(${profileData.points}P)보다 높습니다. 복구를 시작합니다.`);
+                    await supabase.from('profiles').update({ 
+                        points: totalLedgerPoints,
+                        updated_at: new Date().toISOString()
+                    }).eq('id', userId);
+                    setPoints(totalLedgerPoints);
+                    console.log(`✅ [Deep Audit] 포인트 복구 완료: -> ${totalLedgerPoints}P`);
+                } else if (profileData) {
+                    setPoints(profileData.points || 0);
+                }
+            }
+            
+            // v30.0: 포인트는 Ledger 장부 형식이므로 프로필의 누적 포인트를 그대로 가져와 사용
+            // ⚠️ profile이 비동기 로딩이라 여기서는 강제 덮어쓰기 하지 않음 → 아래 useEffect에서 처리
+            // setPoints(profile?.points || 0); <- 이 라인이 포인트를 0으로 날리던 원인이었음
+
+            if (!silent) {
+                console.log(`✅ 동기화 완료: ${loadedRecords.length}개의 기록이 최신화되었습니다.`);
+                setLastSyncStatus({
+                    status: 'FETCH_SUCCESS',
+                    time: new Date().toLocaleTimeString(),
+                    message: `${loadedRecords.length}개의 기록이 안전하게 연결되었습니다.`
+                });
+            }
+        } catch (error: any) {
+            console.error("❌ 데이터 동기화 실패:", error);
+            setIsCloudConnected(false);
+            setLastSyncStatus({
+                status: 'FETCH_ERROR',
+                time: new Date().toLocaleTimeString(),
+                message: error.message || '데이터를 불러오는 중 오류가 발생했습니다.'
+            });
+        } finally {
+            if (!silent) console.groupEnd();
+        }
+    };
+
+    // v30.1: 포인트 복원 - profile이 실제로 로드된 이후에만 동기화 (비동기 순서 보장)
+    useEffect(() => {
+        if (profile?.points !== undefined && profile.points > 0) {
+            console.log(`💰 [Profile Sync] 프로필에서 포인트 복원: ${profile.points}P`);
+            setPoints(profile.points);
+        }
+    }, [profile?.points]);
+
+    return {
+        records,
+        setRecords,
+        lastSavedRecord,
+        setLastSavedRecord,
+        streak,
+        baselines,
+        isCloudConnected,
+        handleManualSave,
+        handleDeleteRecord,
+        handleImportRecords,
+        calculateBaselineData,
+        updateStreak,
+        updateTotalDays,
+        totalDays,
+        lastSyncStatus,
+        medalAchievements, // v17.0: 달성 날짜 데이터 노출
+        calculateLevelInfo, // v16.0: 레벨 정보 계산기 노출
+        totalStats: {
+            distance: records.reduce((acc, r) => acc + (r.distance || 0), 0),
+            sessions: records.length,
+            time: records.reduce((acc, r) => acc + (parseTimeToSeconds(r.totalTime) / 60 || 0), 0),
+            streak: (() => {
+                if (records.length === 0) return 0;
+                const datesAsc = [...new Set(records.map(r => r.date))].sort();
+                let maxStreakFound = 1;
+                let tempStreak = 1;
+                for (let i = 0; i < datesAsc.length - 1; i++) {
+                    const current = new Date(datesAsc[i]);
+                    const next = new Date(datesAsc[i + 1]);
+                    const diffDays = Math.ceil(Math.abs(next.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) {
+                        tempStreak++;
+                        maxStreakFound = Math.max(maxStreakFound, tempStreak);
+                    } else {
+                        tempStreak = 1;
+                    }
+                }
+                return maxStreakFound;
+            })(),
+            bestPace: records.length > 0 ? Math.min(...records.filter(r => r.distance > 0).map(r => parseTimeToSeconds(r.pace))) : 9999,
+            // v24.0: 상세 미션 카운터 추가
+            dawnCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 5 && h < 9;
+            }).length,
+            nightCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 19 || h < 24;
+            }).length,
+            weekendCount: records.filter(r => {
+                const day = new Date(r.date).getDay();
+                return day === 0 || day === 6;
+            }).length,
+            mondayCount: records.filter(r => new Date(r.date).getDay() === 1).length,
+            shortRunCount: records.filter(r => r.distance <= 2).length,
+            earlyCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 4 && h < 6;
+            }).length,
+            lateCount: records.filter(r => {
+                const h = parseInt(r.time.split(':')[0]);
+                return h >= 22 || h < 2;
+            }).length,
+            stormCount: records.filter(r => r.weather === 'rain' || r.weather === 'snow').length
+        },
+        refreshData: () => fetchInitialData(false)
+    };
+};
